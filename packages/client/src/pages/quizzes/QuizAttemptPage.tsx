@@ -13,7 +13,15 @@ import {
 import toast from "react-hot-toast";
 import { useQuiz, useSubmitQuiz } from "@/api/hooks";
 
-type QuestionType = "mcq" | "multi-select" | "true-false" | "fill-blank" | "essay";
+// Server QuestionType values are snake_case
+type QuestionType =
+  | "mcq"
+  | "multi_select"
+  | "true_false"
+  | "fill_blank"
+  | "essay"
+  | "matching"
+  | "ordering";
 
 interface Question {
   id: string;
@@ -26,9 +34,13 @@ interface Question {
 interface QuizData {
   id: string;
   title: string;
-  time_limit?: number; // in minutes
+  // GET /quizzes/:id is the by-id adapter endpoint → camelCase (snake fallback)
+  timeLimitMinutes?: number; // in minutes
+  time_limit_minutes?: number;
+  passingScore?: number;
   passing_score?: number;
-  show_answers?: boolean;
+  showAnswers?: boolean | number;
+  show_answers?: boolean | number;
   questions: Question[];
 }
 
@@ -48,11 +60,12 @@ export default function QuizAttemptPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Initialize timer when quiz loads
+  const timeLimitMinutes = quiz?.timeLimitMinutes ?? quiz?.time_limit_minutes;
   useEffect(() => {
-    if (quiz?.time_limit && !submitted) {
-      setTimeLeft(quiz.time_limit * 60);
+    if (timeLimitMinutes && !submitted) {
+      setTimeLeft(timeLimitMinutes * 60);
     }
-  }, [quiz?.time_limit, submitted]);
+  }, [timeLimitMinutes, submitted]);
 
   // Countdown
   useEffect(() => {
@@ -129,7 +142,9 @@ export default function QuizAttemptPage() {
 
   // ── Results screen ──────────────────────────────────────────────────────
   if (submitted && result) {
-    const passed = result.passed ?? (result.score >= (quiz.passing_score ?? 70));
+    const passingScore = quiz.passingScore ?? quiz.passing_score ?? 70;
+    const showAnswers = quiz.showAnswers ?? quiz.show_answers;
+    const passed = result.passed ?? (result.score >= passingScore);
     return (
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="bg-white border rounded-xl p-8 text-center shadow-sm">
@@ -153,13 +168,13 @@ export default function QuizAttemptPage() {
               <p className="text-sm text-gray-500">Your Score</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-900">{quiz.passing_score ?? 70}%</p>
+              <p className="text-3xl font-bold text-gray-900">{passingScore}%</p>
               <p className="text-sm text-gray-500">Passing Score</p>
             </div>
           </div>
 
           {/* Correct answers review */}
-          {quiz.show_answers && result.review && (
+          {showAnswers && result.review && (
             <div className="text-left border-t pt-6 mt-6 space-y-4">
               <h3 className="font-semibold text-gray-900 mb-3">Answer Review</h3>
               {questions.map((q, idx) => {
@@ -284,7 +299,7 @@ export default function QuizAttemptPage() {
           )}
 
           {/* Multi-select */}
-          {currentQuestion.type === "multi-select" && (
+          {currentQuestion.type === "multi_select" && (
             <div className="space-y-3">
               {currentQuestion.options?.map((opt) => {
                 const selected: string[] = answers[currentQuestion.id] ?? [];
@@ -317,7 +332,7 @@ export default function QuizAttemptPage() {
           )}
 
           {/* True / False */}
-          {currentQuestion.type === "true-false" && (
+          {currentQuestion.type === "true_false" && (
             <div className="flex gap-4">
               {["true", "false"].map((val) => (
                 <button
@@ -336,7 +351,7 @@ export default function QuizAttemptPage() {
           )}
 
           {/* Fill in the blank */}
-          {currentQuestion.type === "fill-blank" && (
+          {currentQuestion.type === "fill_blank" && (
             <input
               type="text"
               value={answers[currentQuestion.id] ?? ""}

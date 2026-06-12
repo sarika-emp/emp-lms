@@ -227,9 +227,10 @@ export default function CourseListPage() {
               >
                 {/* Thumbnail */}
                 <div className="relative h-40 overflow-hidden bg-gray-100">
-                  {course.thumbnailUrl ? (
+                  {/* /courses list endpoint (db.raw) returns snake_case */}
+                  {(course.thumbnail_url ?? course.thumbnailUrl) ? (
                     <img
-                      src={course.thumbnailUrl}
+                      src={course.thumbnail_url ?? course.thumbnailUrl}
                       alt={course.title}
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
@@ -289,23 +290,24 @@ export default function CourseListPage() {
                   {course.title}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500">
-                  {course.instructorName ?? course.instructor?.name ?? "Instructor"}
+                  {course.instructor ?? course.instructorName ?? course.instructor_name ?? "Instructor"}
                 </p>
 
                 {/* Meta row */}
+                {/* /courses list endpoint (db.raw) returns snake_case */}
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                  {course.duration != null && (
+                  {(course.duration_minutes ?? course.duration) != null && (
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
-                      {formatDuration(course.duration)}
+                      {formatDuration(course.duration_minutes ?? course.duration)}
                     </span>
                   )}
                   <span className="inline-flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
-                    {course.enrollmentCount ?? 0}
+                    {course.enrollment_count ?? course.enrollmentCount ?? 0}
                   </span>
-                  {course.rating != null && (
-                    <StarRating rating={course.rating} />
+                  {Number(course.avg_rating ?? course.avgRating ?? 0) > 0 && (
+                    <StarRating rating={Number(course.avg_rating ?? course.avgRating ?? 0)} />
                   )}
                 </div>
               </div>

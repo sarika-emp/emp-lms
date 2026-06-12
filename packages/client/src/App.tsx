@@ -21,7 +21,6 @@ const LearnerRuntimePage = lazy(() => import("@/pages/courses/LearnerRuntimePage
 const MyLearningPage = lazy(() => import("@/pages/courses/MyLearningPage"));
 const LearningPathsPage = lazy(() => import("@/pages/learning-paths/LearningPathsPage"));
 const LearningPathDetailPage = lazy(() => import("@/pages/learning-paths/LearningPathDetailPage"));
-const QuizPage = lazy(() => import("@/pages/quizzes/QuizPage"));
 const QuizManagePage = lazy(() => import("@/pages/quizzes/QuizManagePage"));
 const QuizAttemptPage = lazy(() => import("@/pages/quizzes/QuizAttemptPage"));
 const ScormPlayerPage = lazy(() => import("@/pages/scorm/ScormPlayerPage"));
@@ -164,7 +163,9 @@ export default function App() {
             <Route path="/learning-paths" element={<LearningPathsPage />} />
             <Route path="/learning-paths/:id" element={<LearningPathDetailPage />} />
             <Route path="/quizzes/manage" element={<QuizManagePage />} />
-            <Route path="/quizzes/:id" element={<QuizPage />} />
+            {/* /quizzes/:id routes to the runner — the old QuizPage was an
+                unimplemented "Coming soon" stub, so Start/View went nowhere. */}
+            <Route path="/quizzes/:id" element={<QuizAttemptPage />} />
             <Route path="/quizzes/:id/attempt" element={<QuizAttemptPage />} />
             <Route path="/scorm/:packageId" element={<ScormPlayerPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />

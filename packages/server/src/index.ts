@@ -135,7 +135,7 @@ function registerEventListeners(): void {
       const { getDB } = await import("./db/adapters");
       const db = getDB();
       const templates = await db.raw<any[]>(
-        `SELECT id FROM certificate_templates WHERE organization_id = ? AND is_default = true LIMIT 1`,
+        `SELECT id FROM certificate_templates WHERE org_id = ? AND is_default = 1 LIMIT 1`,
         [data.orgId]
       );
       if (templates.length > 0) {

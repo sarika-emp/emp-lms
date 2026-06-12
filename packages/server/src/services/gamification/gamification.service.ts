@@ -9,6 +9,7 @@ import { getEmpCloudDB } from "../../db/empcloud";
 import { config } from "../../config/index";
 import { logger } from "../../utils/logger";
 import { NotFoundError } from "../../utils/errors";
+import { mysqlDateTime } from "../../utils/datetime";
 
 // ---------------------------------------------------------------------------
 // Rewards API config
@@ -380,7 +381,7 @@ export async function updateLearningStreak(
       total_points_earned: 0,
       current_streak_days: 1,
       longest_streak_days: 1,
-      last_activity_at: new Date().toISOString(),
+      last_activity_at: mysqlDateTime(),
     });
 
     return {
@@ -435,7 +436,7 @@ export async function updateLearningStreak(
   await db.update("user_learning_profiles", profile.id, {
     current_streak_days: currentStreak,
     longest_streak_days: longestStreak,
-    last_activity_at: now.toISOString(),
+    last_activity_at: mysqlDateTime(now),
   });
 
   // Check if streak deserves points
@@ -483,12 +484,12 @@ export async function updateUserLearningProfile(
       total_points_earned: 0,
       current_streak_days: 0,
       longest_streak_days: 0,
-      last_activity_at: new Date().toISOString(),
+      last_activity_at: mysqlDateTime(),
     });
   }
 
   const updateData: Record<string, any> = {
-    last_activity_at: new Date().toISOString(),
+    last_activity_at: mysqlDateTime(),
   };
 
   // findOne camelCases row keys; read camelCase with snake fallback so the

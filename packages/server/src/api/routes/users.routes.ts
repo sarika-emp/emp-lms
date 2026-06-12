@@ -32,7 +32,7 @@ router.get(
     const db = getEmpCloudDB();
     let query = db("users")
       .where({ organization_id: orgId, status: 1 })
-      .select("id", "first_name", "last_name", "email", "designation")
+      .select("id", "first_name", "last_name", "email", "designation", "role")
       .orderBy("first_name", "asc")
       .limit(limit);
 

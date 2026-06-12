@@ -120,7 +120,7 @@ export default function CourseFormPage() {
       short_description: "",
       category_id: "",
       difficulty: undefined,
-      duration: 0,
+      duration: 1,
       is_mandatory: false,
       is_featured: false,
       is_compliance: false,
@@ -307,15 +307,12 @@ export default function CourseFormPage() {
                       </option>
                     ))}
                 </select>
-                {categories.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    No categories yet —{" "}
-                    <Link to="/settings" className="font-medium text-indigo-600 hover:text-indigo-700">
-                      create one in Settings
-                    </Link>
-                    .
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  {categories.length === 0 ? "No categories yet — " : ""}
+                  <Link to="/settings" className="font-medium text-indigo-600 hover:text-indigo-700">
+                    Manage categories in Settings
+                  </Link>
+                </p>
               </Field>
 
               <Field label="Difficulty" error={errors.difficulty?.message} required>

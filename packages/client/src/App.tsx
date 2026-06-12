@@ -29,6 +29,7 @@ const CertificationsPage = lazy(() => import("@/pages/certifications/Certificati
 const CompliancePage = lazy(() => import("@/pages/compliance/CompliancePage"));
 const ILTPage = lazy(() => import("@/pages/ilt/ILTPage"));
 const ILTSessionDetailPage = lazy(() => import("@/pages/ilt/ILTSessionDetailPage"));
+const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const AnalyticsPage = lazy(() => import("@/pages/analytics/AnalyticsPage"));
 const MarketplacePage = lazy(() => import("@/pages/marketplace/MarketplacePage"));
 const DiscussionsPage = lazy(() => import("@/pages/courses/DiscussionsPage"));
@@ -175,6 +176,7 @@ export default function App() {
             <Route path="/discussions" element={<DiscussionsPage />} />
             <Route path="/bulk-enroll" element={<BulkEnrollPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Route>
 

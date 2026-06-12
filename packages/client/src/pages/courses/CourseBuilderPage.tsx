@@ -430,27 +430,29 @@ function ModuleSection({
       <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
         <GripVertical className="h-5 w-5 flex-shrink-0 text-gray-400" />
 
-        {/* Reorder arrows */}
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={index === 0}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-            title="Move up"
-          >
-            <ChevronUp className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={index === total - 1}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-            title="Move down"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </button>
-        </div>
+        {/* Reorder arrows — hidden entirely when there is nothing to reorder */}
+        {total > 1 && (
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={onMoveUp}
+              disabled={index === 0}
+              className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+              title={index === 0 ? "Already at the top" : "Move up"}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onMoveDown}
+              disabled={index === total - 1}
+              className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+              title={index === total - 1 ? "Already at the bottom" : "Move down"}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Title / edit inline */}
         <div className="min-w-0 flex-1">
@@ -569,25 +571,27 @@ function ModuleSection({
                   <div className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-3 py-2 hover:border-gray-200">
                     <GripVertical className="h-4 w-4 flex-shrink-0 text-gray-300" />
 
-                    {/* Lesson reorder */}
-                    <div className="flex flex-col">
-                      <button
-                        type="button"
-                        onClick={() => moveLessonUp(li)}
-                        disabled={li === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveLessonDown(li)}
-                        disabled={li === sortedLessons.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </div>
+                    {/* Lesson reorder — hidden when there is nothing to reorder */}
+                    {sortedLessons.length > 1 && (
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveLessonUp(li)}
+                          disabled={li === 0}
+                          className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveLessonDown(li)}
+                          disabled={li === sortedLessons.length - 1}
+                          className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
 
                     {contentTypeIcon(lesson.contentType)}
 

@@ -234,15 +234,18 @@ export default function DashboardPage() {
             Completion Rates
           </h2>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData}>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ bottom: 48 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   stroke="#9ca3af"
+                  interval={0}
+                  angle={-30}
+                  textAnchor="end"
                   tickFormatter={(name: string) =>
-                    name.length > 16 ? `${name.slice(0, 15)}…` : name
+                    name.length > 28 ? `${name.slice(0, 27)}…` : name
                   }
                 />
                 <YAxis

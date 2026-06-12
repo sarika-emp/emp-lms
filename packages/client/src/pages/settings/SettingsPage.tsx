@@ -13,6 +13,8 @@ import {
 import toast from "react-hot-toast";
 import { apiPut } from "@/api/client";
 import { useCategories } from "@/api/hooks";
+import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import CourseCategoriesSection from "./CourseCategoriesSection";
 
 interface Preferences {
   emailNotifications: boolean;
@@ -128,6 +130,8 @@ export default function SettingsPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const { data: catData } = useCategories();
   const categories: any[] = catData?.data ?? [];
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = isAdminRole(user?.role);
 
   // Only enable Save once the user has scrolled past the last section.
   // The layout's <main> has overflow-y-auto, so we need to find that scroll
@@ -377,6 +381,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </SectionCard>
+
+      {/* ── Course Categories (admins only) ──────────────────────────── */}
+      {isAdmin && <CourseCategoriesSection />}
 
       {/* Sentinel — flips hasReviewedAll to true when it scrolls into view */}
       <div ref={sentinelRef} aria-hidden className="h-1" />

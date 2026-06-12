@@ -28,6 +28,7 @@ const ScormPlayerPage = lazy(() => import("@/pages/scorm/ScormPlayerPage"));
 const CertificationsPage = lazy(() => import("@/pages/certifications/CertificationsPage"));
 const CompliancePage = lazy(() => import("@/pages/compliance/CompliancePage"));
 const ILTPage = lazy(() => import("@/pages/ilt/ILTPage"));
+const ILTSessionDetailPage = lazy(() => import("@/pages/ilt/ILTSessionDetailPage"));
 const AnalyticsPage = lazy(() => import("@/pages/analytics/AnalyticsPage"));
 const MarketplacePage = lazy(() => import("@/pages/marketplace/MarketplacePage"));
 const DiscussionsPage = lazy(() => import("@/pages/courses/DiscussionsPage"));
@@ -168,6 +169,7 @@ export default function App() {
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/ilt" element={<ILTPage />} />
+            <Route path="/ilt/:id" element={<ILTSessionDetailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/marketplace" element={<MarketplacePage />} />
             <Route path="/discussions" element={<DiscussionsPage />} />

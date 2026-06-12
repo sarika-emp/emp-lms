@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   MapPin,
@@ -7,42 +9,80 @@ import {
   Loader2,
   Clock,
   UserCheck,
+  Plus,
 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
-import { useILTSessions } from "@/api/hooks";
-import { apiPost } from "@/api/client";
+import { apiGet, apiPost } from "@/api/client";
+import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import {
+  IltSession,
+  normalizeSession,
+  isSessionFull,
+  apiErrorMessage,
+  SessionStatusBadge,
+  AttendanceStatusBadge,
+  FullBadge,
+  SessionFormModal,
+} from "./ilt-shared";
 
 type Tab = "upcoming" | "past" | "my";
 
-function sessionStatusBadge(status: string) {
-  const map: Record<string, { bg: string; text: string; label: string }> = {
-    open: { bg: "bg-green-100", text: "text-green-700", label: "Open" },
-    full: { bg: "bg-amber-100", text: "text-amber-700", label: "Full" },
-    completed: { bg: "bg-gray-100", text: "text-gray-600", label: "Completed" },
-    cancelled: { bg: "bg-red-100", text: "text-red-700", label: "Cancelled" },
-    registered: { bg: "bg-blue-100", text: "text-blue-700", label: "Registered" },
-  };
-  const s = map[status] ?? { bg: "bg-gray-100", text: "text-gray-600", label: status };
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${s.bg} ${s.text}`}>
-      {s.label}
-    </span>
-  );
-}
-
 export default function ILTPage() {
   const [activeTab, setActiveTab] = useState<Tab>("upcoming");
-  const { data, isLoading, refetch } = useILTSessions({ tab: activeTab });
-  const sessions: any[] = data?.data ?? [];
+  const [showCreate, setShowCreate] = useState(false);
+  const [registeringId, setRegisteringId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = isAdminRole(user?.role);
 
-  const handleRegister = async (sessionId: string) => {
+  // Stable "now" so react-query keys don't churn on every render
+  const nowIso = useMemo(() => new Date().toISOString(), []);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["ilt", "list", activeTab, nowIso],
+    queryFn: () => {
+      if (activeTab === "my") {
+        return apiGet<any[]>("/ilt/my/sessions", { limit: 100 });
+      }
+      if (activeTab === "past") {
+        return apiGet<any[]>("/ilt", {
+          end_date: nowIso,
+          sort: "start_time",
+          order: "desc",
+          limit: 100,
+        });
+      }
+      // upcoming
+      return apiGet<any[]>("/ilt", {
+        status: "scheduled",
+        start_date: nowIso,
+        sort: "start_time",
+        order: "asc",
+        limit: 100,
+      });
+    },
+  });
+
+  const sessions: IltSession[] = (data?.data ?? []).map(normalizeSession);
+
+  const handleRegister = async (e: React.MouseEvent, sessionId: string) => {
+    // The card is wrapped in a <Link>; keep the click from navigating
+    e.preventDefault();
+    e.stopPropagation();
+    setRegisteringId(sessionId);
     try {
-      await apiPost(`/ilt/${sessionId}/register`);
-      toast.success("Successfully registered!");
-      refetch();
-    } catch {
-      toast.error("Registration failed");
+      const res = await apiPost(`/ilt/sessions/${sessionId}/register`);
+      if (res.success) {
+        toast.success("Successfully registered!");
+        queryClient.invalidateQueries({ queryKey: ["ilt"] });
+      } else {
+        toast.error(res.error?.message ?? "Registration failed");
+      }
+    } catch (err: any) {
+      toast.error(apiErrorMessage(err, "Registration failed"));
+    } finally {
+      setRegisteringId(null);
     }
   };
 
@@ -52,19 +92,22 @@ export default function ILTPage() {
     { key: "my", label: "My Sessions" },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <CalendarDays className="h-7 w-7 text-brand-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Instructor-Led Training</h1>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <CalendarDays className="h-7 w-7 text-brand-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Instructor-Led Training</h1>
+        </div>
+        {isAdmin && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition"
+          >
+            <Plus className="h-4 w-4" />
+            Create Session
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -86,7 +129,11 @@ export default function ILTPage() {
         </nav>
       </div>
 
-      {sessions.length === 0 ? (
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+        </div>
+      ) : sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <CalendarDays className="h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">No sessions found</h3>
@@ -100,72 +147,92 @@ export default function ILTPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sessions.map((session: any) => (
-            <div
-              key={session.id}
-              className="flex flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
-            >
-              <div className="mb-3 flex items-start justify-between">
-                <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
-                  {session.title}
-                </h3>
-                {sessionStatusBadge(session.status)}
-              </div>
-
-              <dl className="flex-1 space-y-2 text-sm text-gray-500">
-                {session.instructor && (
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-gray-400" />
-                    <span>{session.instructor}</span>
+          {sessions.map((session) => {
+            const full = isSessionFull(session);
+            const canRegister =
+              activeTab === "upcoming" && session.status === "scheduled" && !full;
+            return (
+              <Link
+                key={session.id}
+                to={`/ilt/${session.id}`}
+                className="flex flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+              >
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                    {session.title}
+                  </h3>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <SessionStatusBadge status={session.status} />
+                    {full && session.status === "scheduled" && <FullBadge />}
+                    {activeTab === "my" && session.attendanceStatus && (
+                      <AttendanceStatusBadge status={session.attendanceStatus} />
+                    )}
                   </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span>
-                    {dayjs(session.startTime).format("MMM D, YYYY h:mm A")}
-                    {session.endTime && ` - ${dayjs(session.endTime).format("h:mm A")}`}
-                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {session.location ? (
-                    <>
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{session.location}</span>
-                    </>
-                  ) : session.url ? (
-                    <>
-                      <LinkIcon className="h-4 w-4 text-gray-400" />
-                      <a
-                        href={session.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand-600 hover:underline"
-                      >
-                        Virtual session link
-                      </a>
-                    </>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" />
-                  <span>
-                    {session.enrolled ?? 0}/{session.maxCapacity ?? "\u221E"} enrolled
-                  </span>
-                </div>
-              </dl>
 
-              {activeTab === "upcoming" && session.status === "open" && (
-                <button
-                  onClick={() => handleRegister(session.id)}
-                  className="mt-4 w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition"
-                >
-                  Register
-                </button>
-              )}
-            </div>
-          ))}
+                <dl className="flex-1 space-y-2 text-sm text-gray-500">
+                  {session.instructorName && (
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-gray-400" />
+                      <span>{session.instructorName}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-gray-400" />
+                    <span>
+                      {dayjs(session.startTime).format("MMM D, YYYY h:mm A")}
+                      {session.endTime && ` - ${dayjs(session.endTime).format("h:mm A")}`}
+                    </span>
+                  </div>
+                  {(session.location || session.meetingUrl) && (
+                    <div className="flex items-center gap-2">
+                      {session.location ? (
+                        <>
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <span>{session.location}</span>
+                        </>
+                      ) : (
+                        <>
+                          <LinkIcon className="h-4 w-4 text-gray-400" />
+                          <span className="text-brand-600">Virtual session</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-gray-400" />
+                    <span>
+                      {session.enrolledCount}/{session.maxAttendees ?? "∞"} enrolled
+                    </span>
+                  </div>
+                </dl>
+
+                {canRegister && (
+                  <button
+                    onClick={(e) => handleRegister(e, session.id)}
+                    disabled={registeringId === session.id}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 transition"
+                  >
+                    {registeringId === session.id && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    Register
+                  </button>
+                )}
+              </Link>
+            );
+          })}
         </div>
       )}
+
+      <SessionFormModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onSaved={() => {
+          toast.success("Session created");
+          queryClient.invalidateQueries({ queryKey: ["ilt"] });
+        }}
+      />
     </div>
   );
 }

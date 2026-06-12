@@ -103,6 +103,15 @@ router.post(
 
       const db = getDB();
 
+      // Only allow rating a course in the caller's own org.
+      const course = await db.findOne<any>("courses", {
+        id: course_id,
+        org_id: orgId,
+      });
+      if (!course) {
+        throw new NotFoundError("Course", course_id);
+      }
+
       // Check if user already rated this course
       const existing = await db.findOne<any>("course_ratings", {
         course_id,
@@ -166,14 +175,15 @@ router.put(
 
       await db.update("course_ratings", req.params.id, updates);
 
-      // Update course average rating
+      // Update course average rating (findOne camelCases the row → courseId)
+      const courseId = existing.courseId ?? existing.course_id;
       const [avg] = await db.raw<any[]>(
         `SELECT AVG(rating) as avg_rating, COUNT(*) as rating_count FROM course_ratings WHERE course_id = ?`,
-        [existing.course_id]
+        [courseId]
       );
       await db.raw(
         `UPDATE courses SET avg_rating = ?, rating_count = ? WHERE id = ?`,
-        [Math.round((avg?.avg_rating ?? 0) * 10) / 10, avg?.rating_count ?? 0, existing.course_id]
+        [Math.round((avg?.avg_rating ?? 0) * 10) / 10, avg?.rating_count ?? 0, courseId]
       );
 
       sendSuccess(res, { ...existing, ...updates });
@@ -201,8 +211,11 @@ router.delete(
         throw new NotFoundError("Rating", req.params.id);
       }
 
+      // findOne camelCases the row → userId / courseId
+      const ratingUserId = existing.userId ?? existing.user_id;
+      const courseId = existing.courseId ?? existing.course_id;
       const isAdmin = ["super_admin", "org_admin", "hr_admin"].includes(req.user!.role);
-      if (!isAdmin && existing.user_id !== userId) {
+      if (!isAdmin && ratingUserId !== userId) {
         return res.status(403).json({
           success: false,
           error: { code: "FORBIDDEN", message: "You can only delete your own ratings" },
@@ -214,11 +227,11 @@ router.delete(
       // Update course average rating
       const [avg] = await db.raw<any[]>(
         `SELECT AVG(rating) as avg_rating, COUNT(*) as rating_count FROM course_ratings WHERE course_id = ?`,
-        [existing.course_id]
+        [courseId]
       );
       await db.raw(
         `UPDATE courses SET avg_rating = ?, rating_count = ? WHERE id = ?`,
-        [Math.round((avg?.avg_rating ?? 0) * 10) / 10, avg?.rating_count ?? 0, existing.course_id]
+        [Math.round((avg?.avg_rating ?? 0) * 10) / 10, avg?.rating_count ?? 0, courseId]
       );
 
       sendSuccess(res, null, 204);

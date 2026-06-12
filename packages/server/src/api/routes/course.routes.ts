@@ -357,6 +357,9 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Confirm the course belongs to the caller's org (404s cross-org)
+      // before exposing its modules.
+      await courseService.getCourse(req.user!.empcloudOrgId, req.params.id);
       const modules = await moduleService.listModules(req.params.id);
       sendSuccess(res, modules);
     } catch (err) {
@@ -446,6 +449,11 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Gate on course ownership (404s cross-org) AND confirm the module
+      // actually belongs to that course — otherwise a caller could pair their
+      // own course id with another org's module id and read its lessons.
+      await courseService.getCourse(req.user!.empcloudOrgId, req.params.id);
+      await moduleService.getModule(req.params.id, req.params.moduleId);
       const lessons = await lessonService.listLessons(req.params.moduleId);
       sendSuccess(res, lessons);
     } catch (err) {

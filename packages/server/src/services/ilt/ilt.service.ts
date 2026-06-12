@@ -13,7 +13,11 @@ import {
 } from "../../utils/errors";
 import { lmsEvents } from "../../events/index";
 import { logger } from "../../utils/logger";
+import { safeSortColumn, safeSortOrder } from "../../utils/sql-sort";
 import type { QueryOptions } from "../../db/adapters/interface";
+
+// Columns ILT sessions can be sorted by (interpolated into ORDER BY).
+const ILT_SORTABLE = ["start_time", "end_time", "created_at", "title", "status"];
 
 // ---------------------------------------------------------------------------
 // Session CRUD
@@ -40,8 +44,8 @@ export async function listSessions(
     limit: filters?.limit || 20,
     filters: { org_id: orgId },
     sort: {
-      field: filters?.sort || "start_time",
-      order: filters?.order || "asc",
+      field: safeSortColumn(filters?.sort, ILT_SORTABLE, "start_time"),
+      order: (filters?.order ?? "asc") === "asc" ? "asc" : "desc",
     },
   };
 
@@ -80,8 +84,8 @@ export async function listSessions(
     const page = filters?.page || 1;
     const limit = filters?.limit || 20;
     const offset = (page - 1) * limit;
-    const sortField = filters?.sort || "start_time";
-    const sortOrder = filters?.order || "asc";
+    const sortField = safeSortColumn(filters?.sort, ILT_SORTABLE, "start_time");
+    const sortOrder = safeSortOrder(filters?.order ?? "asc");
 
     const countResult = await db.raw<any[]>(
       `SELECT COUNT(*) as total FROM ilt_sessions WHERE ${conditions.join(" AND ")}`,
@@ -453,17 +457,26 @@ export async function registerUser(
     throw new NotFoundError("User", String(userId));
   }
 
+  // Atomically claim a seat: the conditional UPDATE enforces capacity in SQL
+  // so concurrent registrations can't overbook past max_attendees. For an
+  // UPDATE, db.raw returns the mysql2 [ResultSetHeader, fields] tuple (the
+  // adapter only unwraps array-of-rows results), so affectedRows is at [0].
+  const claim: any = await db.raw(
+    `UPDATE ilt_sessions SET enrolled_count = enrolled_count + 1
+     WHERE id = ? AND (max_attendees IS NULL OR enrolled_count < max_attendees)`,
+    [sessionId],
+  );
+  const affected = claim?.[0]?.affectedRows ?? claim?.affectedRows ?? 0;
+  if (affected === 0) {
+    throw new BadRequestError("Session is full");
+  }
+
   const attendanceId = uuidv4();
   const attendance = await db.create<any>("ilt_attendance", {
     id: attendanceId,
     session_id: sessionId,
     user_id: userId,
     status: "registered",
-  });
-
-  // Increment enrolled_count
-  await db.update("ilt_sessions", sessionId, {
-    enrolled_count: (session.enrolledCount || 0) + 1,
   });
 
   logger.info(`User ${userId} registered for ILT session ${sessionId}`);
@@ -495,11 +508,11 @@ export async function unregisterUser(
 
   await db.delete("ilt_attendance", attendance.id);
 
-  // Decrement enrolled_count
-  const newCount = Math.max(0, (session.enrolledCount || 0) - 1);
-  await db.update("ilt_sessions", sessionId, {
-    enrolled_count: newCount,
-  });
+  // Atomic decrement, floored at 0 so it can't drift negative.
+  await db.raw(
+    `UPDATE ilt_sessions SET enrolled_count = GREATEST(enrolled_count - 1, 0) WHERE id = ?`,
+    [sessionId],
+  );
 
   logger.info(`User ${userId} unregistered from ILT session ${sessionId}`);
   return { sessionId, userId, unregistered: true };

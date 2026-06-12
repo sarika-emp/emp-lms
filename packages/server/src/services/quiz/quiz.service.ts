@@ -68,8 +68,26 @@ interface GradedAnswer extends SubmittedAnswer {
 // Quiz CRUD
 // ---------------------------------------------------------------------------
 
-export async function listQuizzes(courseId: string) {
+// Quizzes carry no org_id — tenancy flows through the parent course. Load a
+// quiz and confirm its course belongs to the caller's org, or throw NotFound
+// (not Forbidden, so a cross-org id is indistinguishable from a missing one).
+async function loadQuizForOrg(
+  db: ReturnType<typeof getDB>,
+  quizId: string,
+  orgId: number,
+) {
+  const quiz = await db.findById<any>("quizzes", quizId);
+  if (!quiz) throw new NotFoundError("Quiz", quizId);
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) throw new NotFoundError("Quiz", quizId);
+  return quiz;
+}
+
+export async function listQuizzes(orgId: number, courseId: string) {
   const db = getDB();
+  // Only list quizzes for a course this org owns.
+  const course = await db.findOne<any>("courses", { id: courseId, org_id: orgId });
+  if (!course) return [];
   const result = await db.findMany<any>("quizzes", {
     filters: { course_id: courseId },
     sort: { field: "sort_order", order: "asc" },
@@ -124,12 +142,9 @@ export async function listAllQuizzes(
   return { data: result.data, total: result.total, page, limit };
 }
 
-export async function getQuiz(quizId: string) {
+export async function getQuiz(orgId: number, quizId: string) {
   const db = getDB();
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
 
   const questionsResult = await db.findMany<any>("questions", {
     filters: { quiz_id: quizId },
@@ -145,12 +160,10 @@ export async function getQuiz(quizId: string) {
   return { ...quiz, questions };
 }
 
-export async function getQuizForAttempt(quizId: string, userId: number) {
+export async function getQuizForAttempt(orgId: number, quizId: string, userId: number) {
   const db = getDB();
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
+  void userId;
 
   const questionsResult = await db.findMany<any>("questions", {
     filters: { quiz_id: quizId },
@@ -425,19 +438,22 @@ export async function submitQuizAttempt(
 ) {
   const db = getDB();
 
-  // Load quiz
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  // Load quiz (org-scoped via its parent course)
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
 
-  // Verify enrollment
+  // Verify enrollment belongs to this user AND is for this quiz's course —
+  // otherwise a learner could complete an unrelated course by passing a
+  // trivial quiz (the completion side-effect keys off enrollmentId).
   const enrollment = await db.findById<any>("enrollments", enrollmentId);
   if (!enrollment) {
     throw new NotFoundError("Enrollment", enrollmentId);
   }
   if (enrollment.userId !== userId || enrollment.orgId !== orgId) {
     throw new ForbiddenError("Enrollment does not belong to this user");
+  }
+  const enrollmentCourseId = enrollment.courseId ?? enrollment.course_id;
+  if (enrollmentCourseId !== quiz.courseId) {
+    throw new BadRequestError("Enrollment is not for this quiz's course");
   }
 
   // Check max attempts
@@ -611,13 +627,10 @@ export async function submitQuizAttempt(
 // Attempts
 // ---------------------------------------------------------------------------
 
-export async function getAttempts(quizId: string, userId: number) {
+export async function getAttempts(orgId: number, quizId: string, userId: number) {
   const db = getDB();
 
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  await loadQuizForOrg(db, quizId, orgId);
 
   const result = await db.findMany<any>("quiz_attempts", {
     filters: { quiz_id: quizId, user_id: userId },
@@ -631,11 +644,22 @@ export async function getAttempts(quizId: string, userId: number) {
   }));
 }
 
-export async function getAttempt(attemptId: string) {
+export async function getAttempt(
+  attemptId: string,
+  orgId: number,
+  userId: number,
+  isAdmin: boolean,
+) {
   const db = getDB();
 
   const attempt = await db.findById<any>("quiz_attempts", attemptId);
   if (!attempt) {
+    throw new NotFoundError("Quiz Attempt", attemptId);
+  }
+
+  // Tenancy via the attempt's quiz → course; non-admins may only read their own.
+  await loadQuizForOrg(db, attempt.quizId, orgId);
+  if (!isAdmin && attempt.userId !== userId) {
     throw new NotFoundError("Quiz Attempt", attemptId);
   }
 
@@ -649,13 +673,10 @@ export async function getAttempt(attemptId: string) {
 // Quiz Stats
 // ---------------------------------------------------------------------------
 
-export async function getQuizStats(quizId: string) {
+export async function getQuizStats(orgId: number, quizId: string) {
   const db = getDB();
 
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  await loadQuizForOrg(db, quizId, orgId);
 
   const attemptsResult = await db.findMany<any>("quiz_attempts", {
     filters: { quiz_id: quizId },

@@ -43,7 +43,8 @@ export const createCourseSchema = z.object({
   slug: z.string().min(2).max(300).optional(),
   description: z.string().optional(),
   short_description: z.string().max(500).optional(),
-  thumbnail_url: z.string().url().optional(),
+  // nullable so the edit form can clear a previously saved thumbnail
+  thumbnail_url: z.string().url().optional().nullable(),
   category_id: z.string().uuid().optional(),
   instructor_id: z.number().int().optional(),
   difficulty: z.nativeEnum(DifficultyLevel).default(DifficultyLevel.BEGINNER),

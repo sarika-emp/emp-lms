@@ -167,8 +167,8 @@ export async function updateCategory(
     updateData.slug = newSlug;
   }
 
-  // Validate parent if changed
-  if (data.parent_id && data.parent_id !== category.parent_id) {
+  // Validate parent if changed (camelCased row read)
+  if (data.parent_id && data.parent_id !== category.parentId) {
     if (data.parent_id === id) {
       throw new BadRequestError("Category cannot be its own parent");
     }
@@ -207,7 +207,8 @@ export async function deleteCategory(orgId: number, id: string) {
     await db.updateMany(
       "courses",
       { category_id: id },
-      { category_id: category.parent_id || null }
+      // findOne camelCases rows — parent_id arrives as parentId
+      { category_id: category.parentId || null }
     );
   }
 
@@ -215,7 +216,7 @@ export async function deleteCategory(orgId: number, id: string) {
   await db.updateMany(
     "course_categories",
     { parent_id: id, org_id: orgId },
-    { parent_id: category.parent_id || null }
+    { parent_id: category.parentId || null }
   );
 
   await db.delete("course_categories", id);

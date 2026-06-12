@@ -129,8 +129,10 @@ export async function replyToDiscussion(
   const id = uuidv4();
   const reply = await db.create<any>("discussions", {
     id,
-    course_id: parent.course_id,
-    lesson_id: parent.lesson_id,
+    // findOne camelCases the parent row; fall back to snake so the reply
+    // inherits the parent's course/lesson instead of storing NULLs.
+    course_id: parent.courseId ?? parent.course_id,
+    lesson_id: parent.lessonId ?? parent.lesson_id,
     user_id: userId,
     org_id: orgId,
     parent_id: parentId,
@@ -170,7 +172,7 @@ export async function updateDiscussion(
     throw new NotFoundError("Discussion", discussionId);
   }
 
-  if (discussion.user_id !== userId) {
+  if ((discussion.userId ?? discussion.user_id) !== userId) {
     throw new ForbiddenError("You can only edit your own discussions");
   }
 
@@ -202,17 +204,19 @@ export async function deleteDiscussion(
     throw new NotFoundError("Discussion", discussionId);
   }
 
-  if (!isAdmin && discussion.user_id !== userId) {
+  if (!isAdmin && (discussion.userId ?? discussion.user_id) !== userId) {
     throw new ForbiddenError("You can only delete your own discussions");
   }
 
   await db.delete("discussions", discussionId);
 
-  // Decrement parent reply count if this was a reply
-  if (discussion.parent_id) {
+  // Decrement parent reply count if this was a reply.
+  // findOne camelCases parent_id → parentId.
+  const parentId = discussion.parentId ?? discussion.parent_id;
+  if (parentId) {
     await db.raw(
       `UPDATE discussions SET reply_count = GREATEST(0, reply_count - 1) WHERE id = ?`,
-      [discussion.parent_id]
+      [parentId]
     );
   }
 
@@ -234,7 +238,7 @@ export async function togglePin(orgId: number, discussionId: string) {
     throw new NotFoundError("Discussion", discussionId);
   }
 
-  const isPinned = !discussion.is_pinned;
+  const isPinned = !(discussion.isPinned ?? discussion.is_pinned);
   await db.update("discussions", discussionId, { is_pinned: isPinned });
   return { ...discussion, is_pinned: isPinned };
 }
@@ -254,7 +258,7 @@ export async function toggleResolve(orgId: number, discussionId: string) {
     throw new NotFoundError("Discussion", discussionId);
   }
 
-  const isResolved = !discussion.is_resolved;
+  const isResolved = !(discussion.isResolved ?? discussion.is_resolved);
   await db.update("discussions", discussionId, { is_resolved: isResolved });
   return { ...discussion, is_resolved: isResolved };
 }

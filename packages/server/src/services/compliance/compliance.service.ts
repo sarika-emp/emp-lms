@@ -465,16 +465,22 @@ export async function markCompleted(orgId: number, recordId: string) {
     throw new NotFoundError("Compliance record", recordId);
   }
 
+  // Idempotent: already completed → return as-is, don't re-emit the event.
+  if (record.status === "completed") {
+    return record;
+  }
+
   const now = new Date();
   const updated = await db.update<any>("compliance_records", recordId, {
     status: "completed",
     completed_at: now,
   });
 
+  // findOne camelCases course_id → courseId, user_id → userId.
   lmsEvents.emit("compliance.completed", {
     complianceId: recordId,
-    courseId: record.course_id,
-    userId: record.user_id,
+    courseId: record.courseId ?? record.course_id,
+    userId: record.userId ?? record.user_id,
     orgId,
     completedAt: now,
   });

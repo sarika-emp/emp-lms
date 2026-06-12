@@ -47,8 +47,10 @@ export async function enrollUser(
     throw new BadRequestError("Cannot enroll in an unpublished course");
   }
 
-  // Check max enrollments
-  if (course.max_enrollments && course.enrollment_count >= course.max_enrollments) {
+  // Check max enrollments (findOne camelCases the course row)
+  const maxEnrollments = course.maxEnrollments ?? course.max_enrollments;
+  const enrollmentCount = course.enrollmentCount ?? course.enrollment_count ?? 0;
+  if (maxEnrollments && enrollmentCount >= maxEnrollments) {
     throw new BadRequestError("Course has reached maximum enrollment capacity");
   }
 
@@ -374,10 +376,14 @@ export async function markLessonComplete(
   });
 
   if (existingProgress) {
+    // findOne camelCases the row → timeSpentMinutes; reading the snake key
+    // reset the accumulator to just the latest delta.
+    const priorMinutes =
+      existingProgress.timeSpentMinutes ?? existingProgress.time_spent_minutes ?? 0;
     await db.update("lesson_progress", existingProgress.id, {
       is_completed: true,
       completed_at: mysqlDateTime(),
-      time_spent_minutes: (existingProgress.time_spent_minutes || 0) + (timeSpent || 0),
+      time_spent_minutes: priorMinutes + (timeSpent || 0),
       attempts: (existingProgress.attempts || 0) + 1,
     });
   } else {

@@ -91,13 +91,17 @@ export async function getRecommendations(
   let preferredDifficulty: string | null = null;
 
   if (profile) {
-    preferredDifficulty = profile.preferred_difficulty || null;
-    if (profile.preferred_categories) {
+    // findOne camelCases row keys; read camelCase with snake fallback.
+    preferredDifficulty =
+      profile.preferredDifficulty ?? profile.preferred_difficulty ?? null;
+    const rawCategories =
+      profile.preferredCategories ?? profile.preferred_categories;
+    if (rawCategories) {
       try {
         preferredCategories =
-          typeof profile.preferred_categories === "string"
-            ? JSON.parse(profile.preferred_categories)
-            : profile.preferred_categories;
+          typeof rawCategories === "string"
+            ? JSON.parse(rawCategories)
+            : rawCategories;
       } catch {
         preferredCategories = [];
       }
@@ -412,28 +416,34 @@ export async function getSimilarCourses(
     throw new NotFoundError("Course", courseId);
   }
 
+  // findOne camelCases row keys; read camelCase with snake fallback so
+  // similar-course matching on category/difficulty/tags actually applies.
+  const courseCategoryId = course.categoryId ?? course.category_id;
+  const courseDifficulty = course.difficulty; // single word, unchanged by camelCase
+  const courseTags = course.tags; // single word, unchanged by camelCase
+
   // Find courses with same category, difficulty, or overlapping tags
   const params: any[] = [orgId, courseId];
   let conditions: string[] = [];
 
-  if (course.category_id) {
+  if (courseCategoryId) {
     conditions.push("c.category_id = ?");
-    params.push(course.category_id);
+    params.push(courseCategoryId);
   }
 
-  if (course.difficulty) {
+  if (courseDifficulty) {
     conditions.push("c.difficulty = ?");
-    params.push(course.difficulty);
+    params.push(courseDifficulty);
   }
 
   // Also match on tags if available
   let tagCondition = "";
-  if (course.tags) {
+  if (courseTags) {
     try {
       const tags =
-        typeof course.tags === "string"
-          ? JSON.parse(course.tags)
-          : course.tags;
+        typeof courseTags === "string"
+          ? JSON.parse(courseTags)
+          : courseTags;
       if (Array.isArray(tags)) {
         for (const tag of tags) {
           conditions.push("JSON_CONTAINS(c.tags, ?)");

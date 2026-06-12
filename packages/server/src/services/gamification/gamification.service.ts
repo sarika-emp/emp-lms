@@ -392,13 +392,18 @@ export async function updateLearningStreak(
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+  // findOne camelCases row keys; read camelCase with snake fallback so the
+  // streak accumulates across consecutive days instead of resetting to 1.
+  const lastActivityAt = profile.lastActivityAt ?? profile.last_activity_at;
   let lastActivity: Date | null = null;
-  if (profile.last_activity_at) {
-    lastActivity = new Date(profile.last_activity_at);
+  if (lastActivityAt) {
+    lastActivity = new Date(lastActivityAt);
   }
 
-  let currentStreak = profile.current_streak_days || 0;
-  let longestStreak = profile.longest_streak_days || 0;
+  let currentStreak =
+    profile.currentStreakDays ?? profile.current_streak_days ?? 0;
+  let longestStreak =
+    profile.longestStreakDays ?? profile.longest_streak_days ?? 0;
 
   if (lastActivity) {
     const lastActivityDate = new Date(
@@ -486,18 +491,22 @@ export async function updateUserLearningProfile(
     last_activity_at: new Date().toISOString(),
   };
 
+  // findOne camelCases row keys; read camelCase with snake fallback so the
+  // running totals accumulate instead of being clobbered to the latest delta.
   switch (event.type) {
     case "course_completed":
       updateData.total_courses_completed =
-        (profile.total_courses_completed || 0) + 1;
+        (profile.totalCoursesCompleted ?? profile.total_courses_completed ?? 0) + 1;
       break;
     case "time_spent":
       updateData.total_time_spent_minutes =
-        (profile.total_time_spent_minutes || 0) + (event.value || 0);
+        (profile.totalTimeSpentMinutes ?? profile.total_time_spent_minutes ?? 0) +
+        (event.value || 0);
       break;
     case "points_earned":
       updateData.total_points_earned =
-        (profile.total_points_earned || 0) + (event.value || 0);
+        (profile.totalPointsEarned ?? profile.total_points_earned ?? 0) +
+        (event.value || 0);
       break;
   }
 

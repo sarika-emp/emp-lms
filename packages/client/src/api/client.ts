@@ -15,15 +15,58 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Single-flight refresh: concurrent 401s share one /auth/refresh call
+// instead of racing each other and rotating the token multiple times.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+  try {
+    // Plain axios (not `api`) so this request skips the interceptors.
+    const { data } = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+      `${API_BASE}/auth/refresh`,
+      { refreshToken },
+    );
+    if (!data.success || !data.data) return null;
+    localStorage.setItem("access_token", data.data.accessToken);
+    localStorage.setItem("refresh_token", data.data.refreshToken);
+    return data.data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+function redirectToLogin() {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user");
+  window.location.href = "/login?session=expired";
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const requestUrl = error.config?.url || "";
-    if (error.response?.status === 401 && !requestUrl.includes("/auth/sso")) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+    const requestUrl: string = error.config?.url || "";
+    const isAuthRoute =
+      requestUrl.includes("/auth/login") ||
+      requestUrl.includes("/auth/sso") ||
+      requestUrl.includes("/auth/refresh");
+
+    if (error.response?.status === 401 && !isAuthRoute) {
+      const original = error.config;
+      // Try a silent token refresh once per request, then replay it.
+      if (!original._retry) {
+        original._retry = true;
+        refreshPromise = refreshPromise ?? refreshAccessToken();
+        const newToken = await refreshPromise;
+        refreshPromise = null;
+        if (newToken) {
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return api.request(original);
+        }
+      }
+      redirectToLogin();
     }
     return Promise.reject(error);
   }

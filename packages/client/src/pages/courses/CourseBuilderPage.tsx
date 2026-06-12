@@ -371,7 +371,9 @@ function ModuleSection({
   // Reorder lessons
   const reorderLessons = useMutation({
     mutationFn: (lessonIds: string[]) =>
-      apiPut(`/courses/${courseId}/modules/${module.id}/lessons/reorder`, { lessonIds }),
+      apiPost(`/courses/${courseId}/modules/${module.id}/lessons/reorder`, {
+        ordered_ids: lessonIds,
+      }),
     onSuccess: () => invalidate(),
     onError: (err: any) =>
       toast.error(err?.response?.data?.error?.message || "Failed to reorder lessons"),
@@ -714,7 +716,7 @@ export default function CourseBuilderPage() {
 
   const reorderModules = useMutation({
     mutationFn: (moduleIds: string[]) =>
-      apiPut(`/courses/${courseId}/modules/reorder`, { moduleIds }),
+      apiPost(`/courses/${courseId}/modules/reorder`, { ordered_ids: moduleIds }),
     onSuccess: () => invalidate(),
     onError: () => toast.error("Failed to reorder modules"),
   });

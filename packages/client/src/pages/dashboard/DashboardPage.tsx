@@ -157,11 +157,9 @@ export default function DashboardPage() {
     stats.completionByMonth.length > 0
       ? stats.completionByMonth
       : myEnrollmentList.slice(0, 8).map((e: any) => ({
-          name:
-            (e.course_title ?? e.courseTitle ?? e.course?.title ?? "Course")
-              .split(" ")
-              .slice(0, 3)
-              .join(" "),
+          // Keep the full title in the data — the X axis truncates via
+          // tickFormatter and the tooltip shows the complete name.
+          name: e.course_title ?? e.courseTitle ?? e.course?.title ?? "Course",
           completion: Number(e.progress_percentage ?? e.progressPercentage ?? e.progress ?? 0),
         }));
 
@@ -243,6 +241,9 @@ export default function DashboardPage() {
                   dataKey="name"
                   tick={{ fontSize: 12 }}
                   stroke="#9ca3af"
+                  tickFormatter={(name: string) =>
+                    name.length > 16 ? `${name.slice(0, 15)}…` : name
+                  }
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}

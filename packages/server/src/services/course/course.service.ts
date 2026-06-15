@@ -75,6 +75,11 @@ export async function listCourses(
   if (filters.status) {
     whereClause += " AND c.status = ?";
     params.push(filters.status);
+  } else {
+    // Deleting a course soft-deletes it (status = 'archived'). Hide archived
+    // courses from the catalog by default so a deleted course disappears;
+    // they're only shown when a caller explicitly filters by status.
+    whereClause += " AND c.status <> 'archived'";
   }
 
   if (filters.category_id) {

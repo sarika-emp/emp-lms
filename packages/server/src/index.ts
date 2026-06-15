@@ -76,6 +76,14 @@ app.use(
 app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+// Express 5's express.json() leaves req.body undefined when a request has no
+// body at all (unlike Express 4, which defaulted to {}). Many handlers read
+// req.body.<field> directly, so normalize to an empty object to avoid
+// "Cannot read properties of undefined" crashes on bodyless POSTs.
+app.use((req, _res, next) => {
+  if (req.body == null) req.body = {};
+  next();
+});
 app.use(cookieParser());
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(defaultLimiter);

@@ -220,8 +220,10 @@ router.post(
       const role = req.user!.role;
       let userId = req.user!.empcloudUserId;
 
+      // Body is optional — self-register sends none, so req.body may be
+      // undefined. Only admins may register someone else by passing user_id.
       if (
-        req.body.user_id &&
+        req.body?.user_id &&
         ["super_admin", "org_admin", "hr_admin"].includes(role)
       ) {
         userId = req.body.user_id;
@@ -248,8 +250,9 @@ router.post(
       const role = req.user!.role;
       let userId = req.user!.empcloudUserId;
 
+      // Body optional — self-unregister sends none.
       if (
-        req.body.user_id &&
+        req.body?.user_id &&
         ["super_admin", "org_admin", "hr_admin"].includes(role)
       ) {
         userId = req.body.user_id;

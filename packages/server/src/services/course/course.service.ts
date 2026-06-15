@@ -5,6 +5,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { getDB } from "../../db/adapters/index";
+import { getEmpCloudDB } from "../../db/empcloud";
 import { lmsEvents } from "../../events/index";
 import { logger } from "../../utils/logger";
 import {
@@ -139,6 +140,35 @@ export async function listCourses(
   ]);
 
   const total = countResult[0]?.total || 0;
+
+  // Enrich with the instructor's display name from the empcloud users table —
+  // the catalog cards otherwise show the literal placeholder "Instructor"
+  // (the courses table only stores instructor_id).
+  const instructorIds = [
+    ...new Set(
+      (data ?? [])
+        .map((c) => c.instructor_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  ];
+  if (instructorIds.length > 0) {
+    try {
+      const empDb = getEmpCloudDB();
+      const users = await empDb("users")
+        .whereIn("id", instructorIds)
+        .select("id", "first_name", "last_name");
+      const nameById = new Map<number, string>();
+      for (const u of users) {
+        nameById.set(u.id, `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim());
+      }
+      for (const c of data) {
+        const name = nameById.get(c.instructor_id);
+        if (name) c.instructor = name;
+      }
+    } catch (err) {
+      logger.warn(`Failed to enrich course instructor names: ${(err as Error).message}`);
+    }
+  }
 
   return { data, total, page, perPage };
 }

@@ -373,6 +373,16 @@ router.get(
         fullHtml = renderCertificateDocument(certData, { autoPrint });
       }
 
+      // The global helmet CSP sets script-src 'self' and script-src-attr
+      // 'none', which blocks this self-contained document's inline print
+      // script and the toolbar button's handler. Relax CSP for THIS response
+      // only — it's server-generated HTML with all dynamic values escaped,
+      // served same-origin, so allowing its own inline script is safe.
+      res.setHeader(
+        "Content-Security-Policy",
+        "default-src 'self'; img-src 'self' data:; style-src 'self' https: 'unsafe-inline'; " +
+          "font-src 'self' https: data:; script-src 'unsafe-inline'; script-src-attr 'unsafe-inline'",
+      );
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.send(fullHtml);
     } catch (err) {

@@ -221,25 +221,25 @@ export default function DashboardPage() {
           to="/courses"
         />
         <StatCard
-          label="My Enrollments"
+          label={isAdmin ? "Enrollments" : "My Enrollments"}
           value={stats?.myEnrollments ?? 0}
           icon={<Users className="h-5 w-5 text-sky-600" />}
           color="bg-sky-50"
-          to="/my-learning"
+          to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
           label="Completed"
           value={stats?.completed ?? 0}
           icon={<Award className="h-5 w-5 text-emerald-600" />}
           color="bg-emerald-50"
-          to="/my-learning"
+          to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
-          label="Certificates Earned"
+          label={isAdmin ? "Certificates Issued" : "Certificates Earned"}
           value={stats?.certificatesEarned ?? 0}
           icon={<Award className="h-5 w-5 text-amber-600" />}
           color="bg-amber-50"
-          to="/certifications?view=my"
+          to={isAdmin ? "/certifications" : "/certifications?view=my"}
         />
         <StatCard
           label="Current Streak"

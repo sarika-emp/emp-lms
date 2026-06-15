@@ -349,12 +349,29 @@ router.get(
           const org = await ecDb("organizations").where({ id: certificate.org_id || certificate.orgId || req.user!.empcloudOrgId }).first();
           const orgName = org?.name || "Organization";
 
-          html = rawHtml
-            .replace(/\{\{learner_name\}\}/g, learnerName)
-            .replace(/\{\{course_title\}\}/g, courseTitle)
-            .replace(/\{\{issued_date\}\}/g, issuedDate)
-            .replace(/\{\{certificate_number\}\}/g, certNumber)
-            .replace(/\{\{org_name\}\}/g, orgName);
+          // Different templates in this codebase use different placeholder
+          // names for the same value, so substitute every known alias.
+          const vars: Record<string, string> = {
+            learner_name: learnerName,
+            user_name: learnerName,
+            recipient_name: learnerName,
+            name: learnerName,
+            course_title: courseTitle,
+            course_name: courseTitle,
+            issued_date: issuedDate,
+            issued_at: issuedDate,
+            date: issuedDate,
+            certificate_number: certNumber,
+            cert_number: certNumber,
+            org_name: orgName,
+            organization_name: orgName,
+          };
+          // Replace any {{ token }} (with optional inner spaces) by its alias,
+          // falling back to an empty string for unknown tokens so no raw
+          // {{...}} leaks into the rendered certificate.
+          html = rawHtml.replace(/\{\{\s*([\w]+)\s*\}\}/g, (_m: string, key: string) =>
+            key in vars ? vars[key] : ""
+          );
         }
       }
 

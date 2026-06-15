@@ -316,78 +316,56 @@ router.get(
         }
       }
 
-      // Fallback: render the HTML certificate template inline so the user
-      // can print-to-PDF from the browser. This covers local dev where
-      // Puppeteer isn't configured for server-side PDF generation.
+      // Render an HTML certificate inline so the user can print-to-PDF from
+      // the browser (covers local dev where Puppeteer isn't configured).
       const certNumber = certificate.certificate_number || certificate.certificateNumber || "N/A";
       const issuedAt = certificate.issued_at || certificate.issuedAt;
       const issuedDate = issuedAt ? new Date(issuedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : "N/A";
 
-      // Load template if available
+      // Resolve all dynamic values (independent of any template).
+      const { getDB } = await import("../../db/adapters/index.js");
+      const db = getDB();
+      const { findUserById, getEmpCloudDB } = await import("../../db/empcloud.js");
+
+      const userId = Number(certificate.user_id || certificate.userId);
+      const learner = userId ? await findUserById(userId) : null;
+      const learnerName = learner ? `${learner.first_name} ${learner.last_name}` : "Learner";
+
+      const courseId = certificate.course_id || certificate.courseId;
+      const course = courseId ? await db.findById<any>("courses", courseId) : null;
+      const courseTitle = course?.title || "Course";
+
+      const ecDb = getEmpCloudDB();
+      const org = await ecDb("organizations")
+        .where({ id: certificate.org_id || certificate.orgId || req.user!.empcloudOrgId })
+        .first();
+      const orgName = org?.name || "Organization";
+
+      const {
+        renderCertificateDocument,
+        applyTemplate,
+        isRichTemplate,
+      } = await import("../../services/certification/certificate-template.js");
+
+      const certData = { learnerName, courseTitle, issuedDate, orgName, certNumber };
+
+      // Use the org's custom template only when it carries its own real layout;
+      // otherwise render the polished default certificate document.
       const templateId = certificate.template_id || certificate.templateId;
-      let html = "";
-      if (templateId) {
-        const { getDB } = await import("../../db/adapters/index.js");
-        const db = getDB();
-        const tmpl = await db.findById<any>("certificate_templates", templateId);
-        if (tmpl) {
-          const rawHtml = tmpl.htmlTemplate || tmpl.html_template || "";
-          // Look up learner name from EmpCloud users
-          const userId = Number(certificate.user_id || certificate.userId);
-          const { findUserById } = await import("../../db/empcloud.js");
-          const learner = await findUserById(userId);
-          const learnerName = learner ? `${learner.first_name} ${learner.last_name}` : "Learner";
+      const tmpl = templateId ? await db.findById<any>("certificate_templates", templateId) : null;
+      const rawHtml: string = tmpl?.htmlTemplate || tmpl?.html_template || "";
 
-          // Look up course title
-          const courseId = certificate.course_id || certificate.courseId;
-          const course = courseId ? await db.findById<any>("courses", courseId) : null;
-          const courseTitle = course?.title || "Course";
-
-          // Look up org name
-          const { getEmpCloudDB } = await import("../../db/empcloud.js");
-          const ecDb = getEmpCloudDB();
-          const org = await ecDb("organizations").where({ id: certificate.org_id || certificate.orgId || req.user!.empcloudOrgId }).first();
-          const orgName = org?.name || "Organization";
-
-          // Different templates in this codebase use different placeholder
-          // names for the same value, so substitute every known alias.
-          const vars: Record<string, string> = {
-            learner_name: learnerName,
-            user_name: learnerName,
-            recipient_name: learnerName,
-            name: learnerName,
-            course_title: courseTitle,
-            course_name: courseTitle,
-            issued_date: issuedDate,
-            issued_at: issuedDate,
-            date: issuedDate,
-            certificate_number: certNumber,
-            cert_number: certNumber,
-            org_name: orgName,
-            organization_name: orgName,
-          };
-          // Replace any {{ token }} (with optional inner spaces) by its alias,
-          // falling back to an empty string for unknown tokens so no raw
-          // {{...}} leaks into the rendered certificate.
-          html = rawHtml.replace(/\{\{\s*([\w]+)\s*\}\}/g, (_m: string, key: string) =>
-            key in vars ? vars[key] : ""
-          );
-        }
+      let fullHtml: string;
+      if (rawHtml && isRichTemplate(rawHtml)) {
+        const inner = applyTemplate(rawHtml, certData);
+        fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate ${certNumber}</title>
+          <style>@media print { body { margin: 0; } @page { size: landscape; margin: 0; } }</style>
+        </head><body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;">
+          ${inner}
+        </body></html>`;
+      } else {
+        fullHtml = renderCertificateDocument(certData);
       }
-
-      if (!html) {
-        html = `<div style="text-align:center;padding:60px;font-family:Georgia,serif;">
-          <h1>Certificate of Completion</h1>
-          <p>Certificate #${certNumber}</p>
-          <p>Issued: ${issuedDate}</p>
-        </div>`;
-      }
-
-      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate ${certNumber}</title>
-        <style>@media print { body { margin: 0; } @page { size: landscape; margin: 0; } }</style>
-      </head><body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;">
-        ${html}
-      </body></html>`;
 
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.send(fullHtml);

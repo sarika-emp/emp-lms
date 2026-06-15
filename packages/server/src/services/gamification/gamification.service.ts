@@ -417,7 +417,10 @@ export async function updateLearningStreak(
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      // Already recorded activity today, no change
+      // Already recorded activity today — keep the streak, but ensure any
+      // activity counts for at least 1 day (handles profiles whose streak
+      // was never initialized).
+      if (currentStreak < 1) currentStreak = 1;
     } else if (diffDays === 1) {
       // Consecutive day
       currentStreak += 1;

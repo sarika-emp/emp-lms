@@ -190,6 +190,14 @@ function registerEventListeners(): void {
       logger.error(`Failed to update user learning profile:`, err);
     }
 
+    // Update the learning streak (drives the dashboard "Current Streak").
+    try {
+      const { updateLearningStreak } = await import("./services/gamification/gamification.service");
+      await updateLearningStreak(data.orgId, data.userId);
+    } catch (err) {
+      logger.error(`Failed to update learning streak:`, err);
+    }
+
     // Award course-completion points (drives the leaderboard).
     try {
       const { getDB } = await import("./db/adapters");

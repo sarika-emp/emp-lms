@@ -19,7 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useOverviewAnalytics, useMyEnrollments, useMyCertificates } from "@/api/hooks";
+import { useOverviewAnalytics, useMyEnrollments, useMyCertificates, useMyPoints } from "@/api/hooks";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 
@@ -131,6 +131,10 @@ export default function DashboardPage() {
   const { data: allEnrollments, isLoading: enrollmentsLoading } =
     useMyEnrollments({ limit: 100 });
   const { data: certs } = useMyCertificates();
+  // Streak is always a personal metric (the logged-in user's own streak),
+  // regardless of admin vs employee.
+  const { data: myPoints } = useMyPoints();
+  const myStreak = (myPoints?.data as any)?.streak ?? 0;
 
   const isLoading = (isAdmin ? analyticsLoading : false) || enrollmentsLoading;
 
@@ -158,7 +162,7 @@ export default function DashboardPage() {
         completed: raw.completed_enrollments ?? raw.completed ?? 0,
         certificatesEarned:
           raw.total_certificates_issued ?? raw.certificatesEarned ?? 0,
-        currentStreak: raw.current_streak ?? raw.currentStreak ?? 0,
+        currentStreak: myStreak,
         completionByMonth: raw.completion_by_month ?? raw.completionByMonth ?? [],
       }
     : {
@@ -166,7 +170,7 @@ export default function DashboardPage() {
         myEnrollments: myEnrollmentList.length,
         completed: completedEnrollments.length,
         certificatesEarned: myCertsList.length,
-        currentStreak: 0,
+        currentStreak: myStreak,
         completionByMonth: [] as any[],
       };
 

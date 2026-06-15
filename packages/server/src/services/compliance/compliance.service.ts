@@ -331,12 +331,19 @@ export async function getComplianceRecords(
         uid ? findUserById(uid).catch(() => null) : null,
         cid ? db.findById<any>("courses", cid).catch(() => null) : null,
       ]);
+      // Derive a progress percentage from status for the frontend bar
+      // (mirrors getUserComplianceRecords).
+      const progress =
+        record.status === "completed" ? 100
+        : record.status === "in_progress" ? 50
+        : 0;
       return {
         ...record,
         user_id: uid,
         course_id: cid,
         assignment_id: aid,
         due_date: record.dueDate ?? record.due_date,
+        progress,
         user_name: user
           ? `${user.first_name} ${user.last_name}`
           : "Unknown User",

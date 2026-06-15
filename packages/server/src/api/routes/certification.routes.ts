@@ -349,6 +349,9 @@ router.get(
 
       const certData = { learnerName, courseTitle, issuedDate, orgName, certNumber };
 
+      // ?print=1 → open the browser print dialog automatically on load.
+      const autoPrint = req.query.print === "1" || req.query.print === "true";
+
       // Use the org's custom template only when it carries its own real layout;
       // otherwise render the polished default certificate document.
       const templateId = certificate.template_id || certificate.templateId;
@@ -358,13 +361,16 @@ router.get(
       let fullHtml: string;
       if (rawHtml && isRichTemplate(rawHtml)) {
         const inner = applyTemplate(rawHtml, certData);
+        const printScript = autoPrint
+          ? `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script>`
+          : "";
         fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate ${certNumber}</title>
           <style>@media print { body { margin: 0; } @page { size: landscape; margin: 0; } }</style>
         </head><body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;">
-          ${inner}
+          ${inner}${printScript}
         </body></html>`;
       } else {
-        fullHtml = renderCertificateDocument(certData);
+        fullHtml = renderCertificateDocument(certData, { autoPrint });
       }
 
       res.setHeader("Content-Type", "text/html; charset=utf-8");

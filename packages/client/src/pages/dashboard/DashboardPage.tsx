@@ -66,14 +66,33 @@ interface StatCardProps {
   value: number | string;
   icon: React.ReactNode;
   color: string;
+  /** When set, the card becomes a clickable link to this route. */
+  to?: string;
 }
 
-function StatCard({ label, value, icon, color }: StatCardProps) {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md">
+function StatCard({ label, value, icon, color, to }: StatCardProps) {
+  const body = (
+    <>
       <div className={`mb-3 inline-flex rounded-lg p-2.5 ${color}`}>{icon}</div>
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="block rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md">
+      {body}
     </div>
   );
 }
@@ -199,30 +218,35 @@ export default function DashboardPage() {
           value={stats?.totalCourses ?? 0}
           icon={<BookOpen className="h-5 w-5 text-indigo-600" />}
           color="bg-indigo-50"
+          to="/courses"
         />
         <StatCard
           label="My Enrollments"
           value={stats?.myEnrollments ?? 0}
           icon={<Users className="h-5 w-5 text-sky-600" />}
           color="bg-sky-50"
+          to="/my-learning"
         />
         <StatCard
           label="Completed"
           value={stats?.completed ?? 0}
           icon={<Award className="h-5 w-5 text-emerald-600" />}
           color="bg-emerald-50"
+          to="/my-learning"
         />
         <StatCard
           label="Certificates Earned"
           value={stats?.certificatesEarned ?? 0}
           icon={<Award className="h-5 w-5 text-amber-600" />}
           color="bg-amber-50"
+          to="/certifications?view=my"
         />
         <StatCard
           label="Current Streak"
           value={`${stats?.currentStreak ?? 0} days`}
           icon={<Flame className="h-5 w-5 text-rose-600" />}
           color="bg-rose-50"
+          to="/leaderboard"
         />
       </div>
 

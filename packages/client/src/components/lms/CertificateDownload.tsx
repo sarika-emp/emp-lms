@@ -88,17 +88,18 @@ export default function CertificateDownload({ certificateId, className = "", sho
           Download
         </button>
 
-        {/* Print button — opens the certificate and triggers browser print */}
+        {/* Print button — opens the certificate with ?print=1 so the server
+            page auto-triggers the print dialog once fully rendered (reliable
+            across browsers; avoids the cross-tab win.print() load race). */}
         <button
           onClick={() => {
             const token = localStorage.getItem("access_token");
-            const url = `/api/v1/certificates/${certificateId}/download${token ? `?token=${token}` : ""}`;
-            const win = window.open(url, "_blank", "width=900,height=700");
-            if (win) {
-              win.addEventListener("load", () => {
-                setTimeout(() => win.print(), 300);
-              });
-            }
+            const params = new URLSearchParams({ print: "1" });
+            if (token) params.set("token", token);
+            window.open(
+              `/api/v1/certificates/${certificateId}/download?${params.toString()}`,
+              "_blank",
+            );
           }}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
         >

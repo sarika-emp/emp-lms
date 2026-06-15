@@ -21,13 +21,14 @@ const LearnerRuntimePage = lazy(() => import("@/pages/courses/LearnerRuntimePage
 const MyLearningPage = lazy(() => import("@/pages/courses/MyLearningPage"));
 const LearningPathsPage = lazy(() => import("@/pages/learning-paths/LearningPathsPage"));
 const LearningPathDetailPage = lazy(() => import("@/pages/learning-paths/LearningPathDetailPage"));
-const QuizPage = lazy(() => import("@/pages/quizzes/QuizPage"));
 const QuizManagePage = lazy(() => import("@/pages/quizzes/QuizManagePage"));
 const QuizAttemptPage = lazy(() => import("@/pages/quizzes/QuizAttemptPage"));
 const ScormPlayerPage = lazy(() => import("@/pages/scorm/ScormPlayerPage"));
 const CertificationsPage = lazy(() => import("@/pages/certifications/CertificationsPage"));
 const CompliancePage = lazy(() => import("@/pages/compliance/CompliancePage"));
 const ILTPage = lazy(() => import("@/pages/ilt/ILTPage"));
+const ILTSessionDetailPage = lazy(() => import("@/pages/ilt/ILTSessionDetailPage"));
+const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const AnalyticsPage = lazy(() => import("@/pages/analytics/AnalyticsPage"));
 const MarketplacePage = lazy(() => import("@/pages/marketplace/MarketplacePage"));
 const DiscussionsPage = lazy(() => import("@/pages/courses/DiscussionsPage"));
@@ -162,17 +163,21 @@ export default function App() {
             <Route path="/learning-paths" element={<LearningPathsPage />} />
             <Route path="/learning-paths/:id" element={<LearningPathDetailPage />} />
             <Route path="/quizzes/manage" element={<QuizManagePage />} />
-            <Route path="/quizzes/:id" element={<QuizPage />} />
+            {/* /quizzes/:id routes to the runner — the old QuizPage was an
+                unimplemented "Coming soon" stub, so Start/View went nowhere. */}
+            <Route path="/quizzes/:id" element={<QuizAttemptPage />} />
             <Route path="/quizzes/:id/attempt" element={<QuizAttemptPage />} />
             <Route path="/scorm/:packageId" element={<ScormPlayerPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/ilt" element={<ILTPage />} />
+            <Route path="/ilt/:id" element={<ILTSessionDetailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/marketplace" element={<MarketplacePage />} />
             <Route path="/discussions" element={<DiscussionsPage />} />
             <Route path="/bulk-enroll" element={<BulkEnrollPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Route>
 

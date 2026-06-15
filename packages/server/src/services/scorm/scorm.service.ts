@@ -13,6 +13,7 @@ import { logger } from "../../utils/logger";
 import {
   NotFoundError,
   BadRequestError,
+  ForbiddenError,
 } from "../../utils/errors";
 
 // ---------------------------------------------------------------------------
@@ -48,6 +49,39 @@ interface ScormTracking {
   success_status: string | null;
   created_at: Date;
   updated_at: Date;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// Format a Date as `YYYY-MM-DD HH:MM:SS`; MySQL DATETIME columns reject the
+// fractional-second `.sssZ` produced by Date.toISOString() under strict mode.
+function mysqlDateTime(d: Date = new Date()): string {
+  return d.toISOString().slice(0, 19).replace("T", " ");
+}
+
+// ---------------------------------------------------------------------------
+// Ownership helper
+// ---------------------------------------------------------------------------
+
+// Loads an enrollment by id and rejects unless it belongs to the caller.
+// adapter camelCases row keys; fall back to snake.
+async function assertEnrollmentOwnership(
+  enrollmentId: string,
+  userId: number,
+  orgId: number
+): Promise<void> {
+  const db = getDB();
+  const enrollment = await db.findById<any>("enrollments", enrollmentId);
+  if (!enrollment) {
+    throw new NotFoundError("Enrollment", enrollmentId);
+  }
+  const enrollUserId = enrollment.userId ?? enrollment.user_id;
+  const enrollOrgId = enrollment.orgId ?? enrollment.org_id;
+  if (enrollUserId !== userId || enrollOrgId !== orgId) {
+    throw new ForbiddenError("You do not have access to this enrollment.");
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -280,16 +314,24 @@ export async function deletePackage(
 // ---------------------------------------------------------------------------
 
 export async function getLaunchUrl(
-  packageId: string
+  packageId: string,
+  orgId: number
 ): Promise<{ launchUrl: string; version: string; title: string }> {
   const db = getDB();
 
-  const pkg = await db.findById<ScormPackage>("scorm_packages", packageId);
+  // Org-scope the lookup so callers can't launch other orgs' packages.
+  const pkg = await db.findOne<any>("scorm_packages", {
+    id: packageId,
+    org_id: orgId,
+  });
   if (!pkg) {
     throw new NotFoundError("SCORM Package", packageId);
   }
 
-  const launchUrl = `${pkg.package_url}/${pkg.entry_point}`;
+  // adapter camelCases row keys; fall back to snake for raw/JSON sources.
+  const packageUrl = pkg.packageUrl ?? pkg.package_url;
+  const entryPoint = pkg.entryPoint ?? pkg.entry_point;
+  const launchUrl = `${packageUrl}/${entryPoint}`;
 
   return {
     launchUrl,
@@ -305,7 +347,8 @@ export async function getLaunchUrl(
 export async function initTracking(
   packageId: string,
   userId: number,
-  enrollmentId: string
+  enrollmentId: string,
+  orgId: number
 ): Promise<ScormTracking> {
   const db = getDB();
 
@@ -313,6 +356,9 @@ export async function initTracking(
   if (!pkg) {
     throw new NotFoundError("SCORM Package", packageId);
   }
+
+  // Reject unless the enrollment belongs to the caller.
+  await assertEnrollmentOwnership(enrollmentId, userId, orgId);
 
   // Check if tracking already exists
   const existing = await db.findOne<ScormTracking>("scorm_tracking", {
@@ -351,6 +397,7 @@ export async function initTracking(
 export async function updateTracking(
   packageId: string,
   userId: number,
+  orgId: number,
   data: {
     status?: string;
     score?: number;
@@ -372,6 +419,11 @@ export async function updateTracking(
   if (!tracking) {
     throw new NotFoundError("SCORM Tracking", `package=${packageId}, user=${userId}`);
   }
+
+  // Reject unless the tracked enrollment belongs to the caller.
+  const trackEnrollmentId =
+    (tracking as any).enrollmentId ?? tracking.enrollment_id;
+  await assertEnrollmentOwnership(trackEnrollmentId, userId, orgId);
 
   const updateFields: Record<string, any> = {};
 
@@ -395,7 +447,8 @@ export async function updateTracking(
 
 export async function getTracking(
   packageId: string,
-  userId: number
+  userId: number,
+  orgId: number
 ): Promise<ScormTracking | null> {
   const db = getDB();
 
@@ -403,6 +456,13 @@ export async function getTracking(
     package_id: packageId,
     user_id: userId,
   });
+
+  if (tracking) {
+    // Reject unless the tracked enrollment belongs to the caller.
+    const trackEnrollmentId =
+      (tracking as any).enrollmentId ?? tracking.enrollment_id;
+    await assertEnrollmentOwnership(trackEnrollmentId, userId, orgId);
+  }
 
   return tracking;
 }
@@ -414,6 +474,7 @@ export async function getTracking(
 export async function commitTracking(
   packageId: string,
   userId: number,
+  orgId: number,
   data: {
     status?: string;
     score?: number;
@@ -427,8 +488,8 @@ export async function commitTracking(
 ): Promise<ScormTracking> {
   const db = getDB();
 
-  // Update tracking data first
-  const tracking = await updateTracking(packageId, userId, data);
+  // Update tracking data first (also enforces enrollment ownership)
+  const tracking = await updateTracking(packageId, userId, orgId, data);
 
   // Check if the SCORM content is completed or passed
   const isCompleted =
@@ -447,21 +508,27 @@ export async function commitTracking(
         user_id: userId,
       });
 
-      if (fullTracking && fullTracking.enrollment_id) {
+      // adapter camelCases row keys; fall back to snake.
+      const enrollmentId =
+        (fullTracking as any)?.enrollmentId ?? fullTracking?.enrollment_id;
+
+      if (fullTracking && enrollmentId) {
         // Update enrollment progress
         const enrollment = await db.findById<any>(
           "enrollments",
-          fullTracking.enrollment_id
+          enrollmentId
         );
 
         if (enrollment) {
           const updateData: Record<string, any> = {
-            last_accessed_at: new Date().toISOString(),
+            last_accessed_at: mysqlDateTime(),
           };
 
           if (data.time_spent !== undefined) {
+            const currentMinutes =
+              enrollment.timeSpentMinutes ?? enrollment.time_spent_minutes ?? 0;
             updateData.time_spent_minutes = Math.round(
-              (enrollment.time_spent_minutes || 0) + data.time_spent / 60
+              currentMinutes + data.time_spent / 60
             );
           }
 
@@ -483,14 +550,14 @@ export async function commitTracking(
 
             if (isPassed || data.completion_status === "completed") {
               updateData.status = "completed";
-              updateData.completed_at = new Date().toISOString();
+              updateData.completed_at = mysqlDateTime();
               updateData.progress_percentage = 100;
 
               lmsEvents.emit("enrollment.completed", {
-                enrollmentId: fullTracking.enrollment_id,
-                courseId: pkg.course_id,
+                enrollmentId,
+                courseId: (pkg as any).courseId ?? pkg.course_id,
                 userId,
-                orgId: pkg.org_id,
+                orgId: (pkg as any).orgId ?? pkg.org_id,
                 completedAt: new Date(),
                 score: data.score,
               });
@@ -501,7 +568,7 @@ export async function commitTracking(
             }
           }
 
-          await db.update("enrollments", fullTracking.enrollment_id, updateData);
+          await db.update("enrollments", enrollmentId, updateData);
         }
       }
     }

@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   BarChart3,
   Settings,
+  Users,
   LogOut,
   Menu,
   X,
@@ -70,6 +71,7 @@ const navSections: NavSection[] = [
       { label: "Manage Certifications", to: "/certifications", icon: Award, adminOnly: true },
       { label: "Manage Compliance", to: "/compliance", icon: ShieldCheck, adminOnly: true },
       { label: "Manage Quizzes", to: "/quizzes/manage", icon: ClipboardCheck, adminOnly: true },
+      { label: "Users", to: "/users", icon: Users, adminOnly: true },
     ],
   },
   {

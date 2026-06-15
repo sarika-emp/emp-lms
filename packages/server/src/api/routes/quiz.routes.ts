@@ -44,7 +44,10 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const quizzes = await quizService.listQuizzes(req.params.courseId);
+      const quizzes = await quizService.listQuizzes(
+        req.user!.empcloudOrgId,
+        req.params.courseId
+      );
       sendSuccess(res, quizzes);
     } catch (err) {
       next(err);
@@ -58,7 +61,7 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const quiz = await quizService.getQuiz(req.params.id);
+      const quiz = await quizService.getQuiz(req.user!.empcloudOrgId, req.params.id);
 
       // Strip correct answer info for non-admin users
       const isAdmin = ADMIN_ROLES.includes(req.user!.role as any);
@@ -91,6 +94,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const quiz = await quizService.getQuizForAttempt(
+        req.user!.empcloudOrgId,
         req.params.id,
         req.user!.empcloudUserId
       );
@@ -278,6 +282,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const attempts = await quizService.getAttempts(
+        req.user!.empcloudOrgId,
         req.params.id,
         req.user!.empcloudUserId
       );
@@ -294,7 +299,12 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const attempt = await quizService.getAttempt(req.params.id);
+      const attempt = await quizService.getAttempt(
+        req.params.id,
+        req.user!.empcloudOrgId,
+        req.user!.empcloudUserId,
+        ADMIN_ROLES.includes(req.user!.role as any)
+      );
       sendSuccess(res, attempt);
     } catch (err) {
       next(err);
@@ -313,7 +323,7 @@ router.get(
   authorize(...ADMIN_ROLES),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const stats = await quizService.getQuizStats(req.params.id);
+      const stats = await quizService.getQuizStats(req.user!.empcloudOrgId, req.params.id);
       sendSuccess(res, stats);
     } catch (err) {
       next(err);

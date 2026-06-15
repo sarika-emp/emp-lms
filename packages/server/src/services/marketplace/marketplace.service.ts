@@ -7,6 +7,10 @@ import { v4 as uuidv4 } from "uuid";
 import { getDB } from "../../db/adapters/index";
 import { logger } from "../../utils/logger";
 import { NotFoundError, BadRequestError } from "../../utils/errors";
+import { safeSortColumn, safeSortOrder } from "../../utils/sql-sort";
+
+// Columns the marketplace allows sorting by (interpolated into ORDER BY).
+const SORTABLE = ["created_at", "updated_at", "title", "category", "content_type"];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,10 +59,12 @@ export async function listItems(
   const page = filters.page || 1;
   const perPage = filters.perPage || 20;
   const offset = (page - 1) * perPage;
-  const sortField = filters.sort || "created_at";
-  const sortOrder = filters.order || "desc";
+  const sortField = safeSortColumn(filters.sort, SORTABLE, "created_at");
+  const sortOrder = safeSortOrder(filters.order);
 
-  let whereClause = "cl.org_id = ?";
+  // Own content plus public cross-org content — the same visibility rule
+  // importToCourse already applies, so everything listed is importable.
+  let whereClause = "(cl.org_id = ? OR cl.is_public = 1)";
   const params: any[] = [orgId];
 
   if (filters.content_type) {
@@ -122,12 +128,11 @@ export async function getItem(
 ): Promise<ContentLibraryItem> {
   const db = getDB();
 
-  const item = await db.findOne<ContentLibraryItem>("content_library", {
-    id,
-    org_id: orgId,
-  });
+  // Same visibility rule as listItems/importToCourse: own content or
+  // public cross-org content. findOne camelCases row keys.
+  const item = await db.findOne<ContentLibraryItem>("content_library", { id });
 
-  if (!item) {
+  if (!item || ((item as any).orgId !== orgId && !(item as any).isPublic)) {
     throw new NotFoundError("Content Library Item", id);
   }
 
@@ -352,8 +357,8 @@ export async function getPublicItems(
   const page = filters.page || 1;
   const perPage = filters.perPage || 20;
   const offset = (page - 1) * perPage;
-  const sortField = filters.sort || "created_at";
-  const sortOrder = filters.order || "desc";
+  const sortField = safeSortColumn(filters.sort, SORTABLE, "created_at");
+  const sortOrder = safeSortOrder(filters.order);
 
   let whereClause = "cl.is_public = 1";
   const params: any[] = [];

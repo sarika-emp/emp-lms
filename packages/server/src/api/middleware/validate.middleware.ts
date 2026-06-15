@@ -16,9 +16,16 @@ export function validateQuery(schema: ZodSchema) {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
       const parsed = schema.parse(req.query);
-      // In Express 5, req.query is read-only. Merge parsed values onto the existing object.
-      Object.keys(parsed).forEach((key) => {
-        (req.query as Record<string, any>)[key] = parsed[key];
+      // Express 5 recomputes req.query from the URL on every access, so
+      // mutating the returned object silently discards zod's coercions
+      // (e.g. perPage stayed a string and reached SQL as LIMIT '5').
+      // Shadow the prototype getter with an own property that holds the
+      // validated, typed values — unknown keys are preserved.
+      Object.defineProperty(req, "query", {
+        value: { ...req.query, ...parsed },
+        writable: true,
+        enumerable: true,
+        configurable: true,
       });
       next();
     } catch (err) {

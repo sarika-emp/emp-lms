@@ -87,9 +87,10 @@ router.get(
   "/:id/launch",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const orgId = req.user!.empcloudOrgId;
       const { id } = req.params;
 
-      const result = await scormService.getLaunchUrl(id);
+      const result = await scormService.getLaunchUrl(id, orgId);
       sendSuccess(res, result);
     } catch (err) {
       next(err);
@@ -120,6 +121,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.empcloudUserId;
+      const orgId = req.user!.empcloudOrgId;
       const { id } = req.params;
       const { enrollmentId } = req.body;
 
@@ -127,7 +129,7 @@ router.post(
         throw new BadRequestError("enrollmentId is required.");
       }
 
-      const tracking = await scormService.initTracking(id, userId, enrollmentId);
+      const tracking = await scormService.initTracking(id, userId, enrollmentId, orgId);
       sendSuccess(res, tracking, 201);
     } catch (err) {
       next(err);
@@ -141,9 +143,10 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.empcloudUserId;
+      const orgId = req.user!.empcloudOrgId;
       const { id } = req.params;
 
-      const tracking = await scormService.updateTracking(id, userId, req.body);
+      const tracking = await scormService.updateTracking(id, userId, orgId, req.body);
       sendSuccess(res, tracking);
     } catch (err) {
       next(err);
@@ -157,9 +160,10 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.empcloudUserId;
+      const orgId = req.user!.empcloudOrgId;
       const { id } = req.params;
 
-      const tracking = await scormService.commitTracking(id, userId, req.body);
+      const tracking = await scormService.commitTracking(id, userId, orgId, req.body);
       sendSuccess(res, tracking);
     } catch (err) {
       next(err);
@@ -173,9 +177,10 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.empcloudUserId;
+      const orgId = req.user!.empcloudOrgId;
       const { id } = req.params;
 
-      const tracking = await scormService.getTracking(id, userId);
+      const tracking = await scormService.getTracking(id, userId, orgId);
       sendSuccess(res, tracking);
     } catch (err) {
       next(err);

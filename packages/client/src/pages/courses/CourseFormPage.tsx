@@ -33,7 +33,10 @@ const courseSchema = z.object({
   difficulty: z.enum(["beginner", "intermediate", "advanced"], {
     required_error: "Difficulty is required",
   }),
-  duration: z.coerce.number().min(1, "Duration must be at least 1 minute"),
+  duration: z.coerce
+    .number()
+    .int("Duration must be a whole number of minutes")
+    .min(1, "Duration must be at least 1 minute"),
   is_mandatory: z.boolean().default(false),
   is_featured: z.boolean().default(false),
   is_compliance: z.boolean().default(false),
@@ -42,6 +45,7 @@ const courseSchema = z.object({
   tags: z.string().optional().or(z.literal("")),
   passing_score: z.coerce
     .number()
+    .int("Passing score must be a whole number")
     .min(0)
     .max(100)
     .optional()
@@ -116,7 +120,7 @@ export default function CourseFormPage() {
       short_description: "",
       category_id: "",
       difficulty: undefined,
-      duration: 0,
+      duration: 1,
       is_mandatory: false,
       is_featured: false,
       is_compliance: false,
@@ -138,7 +142,7 @@ export default function CourseFormPage() {
         short_description: c.shortDescription ?? c.short_description ?? "",
         category_id: c.categoryId ?? c.category_id ?? "",
         difficulty: c.difficulty ?? "beginner",
-        duration: c.duration ?? 0,
+        duration: c.durationMinutes ?? c.duration_minutes ?? c.duration ?? 0,
         is_mandatory: Boolean(c.isMandatory ?? c.is_mandatory ?? false),
         is_featured: Boolean(c.isFeatured ?? c.is_featured ?? false),
         is_compliance: Boolean(c.isCompliance ?? c.is_compliance ?? false),
@@ -152,8 +156,15 @@ export default function CourseFormPage() {
   }, [isEdit, courseRes, reset]);
 
   async function onSubmit(data: CourseFormData) {
+    // The server schema names the field duration_minutes and silently strips
+    // unknown keys — sending `duration` would persist the default of 0.
+    // thumbnail_url is validated as a URL, so an empty string must become
+    // an omission (create) or an explicit null (edit, to clear the saved one).
+    const { duration, thumbnail_url, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
+      duration_minutes: duration,
+      ...(thumbnail_url ? { thumbnail_url } : isEdit ? { thumbnail_url: null } : {}),
       tags: data.tags
         ? data.tags
             .split(",")
@@ -236,6 +247,7 @@ export default function CourseFormPage() {
 
       {/* ── Form ──────────────────────────────────────────────────────── */}
       <form
+        noValidate
         onSubmit={handleSubmit(onSubmit, (invalid) => {
           console.warn("[CourseFormPage] validation blocked submit", invalid);
         })}
@@ -295,6 +307,12 @@ export default function CourseFormPage() {
                       </option>
                     ))}
                 </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  {categories.length === 0 ? "No categories yet — " : ""}
+                  <Link to="/settings" className="font-medium text-indigo-600 hover:text-indigo-700">
+                    Manage categories in Settings
+                  </Link>
+                </p>
               </Field>
 
               <Field label="Difficulty" error={errors.difficulty?.message} required>

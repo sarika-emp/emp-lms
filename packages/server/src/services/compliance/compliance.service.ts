@@ -129,7 +129,7 @@ async function resolveAffectedUsers(
       }
       const deptIds = assignedToIds.map(Number);
       const users = await empDb("users")
-        .where({ org_id: orgId, status: 1 })
+        .where({ organization_id: orgId, status: 1 })
         .whereIn("department_id", deptIds)
         .select("id");
       return users.map((u: any) => u.id);
@@ -142,7 +142,7 @@ async function resolveAffectedUsers(
       }
       const roles = assignedToIds.map(String);
       const users = await empDb("users")
-        .where({ org_id: orgId, status: 1 })
+        .where({ organization_id: orgId, status: 1 })
         .whereIn("role", roles)
         .select("id");
       return users.map((u: any) => u.id);
@@ -331,12 +331,19 @@ export async function getComplianceRecords(
         uid ? findUserById(uid).catch(() => null) : null,
         cid ? db.findById<any>("courses", cid).catch(() => null) : null,
       ]);
+      // Derive a progress percentage from status for the frontend bar
+      // (mirrors getUserComplianceRecords).
+      const progress =
+        record.status === "completed" ? 100
+        : record.status === "in_progress" ? 50
+        : 0;
       return {
         ...record,
         user_id: uid,
         course_id: cid,
         assignment_id: aid,
         due_date: record.dueDate ?? record.due_date,
+        progress,
         user_name: user
           ? `${user.first_name} ${user.last_name}`
           : "Unknown User",
@@ -465,16 +472,22 @@ export async function markCompleted(orgId: number, recordId: string) {
     throw new NotFoundError("Compliance record", recordId);
   }
 
+  // Idempotent: already completed → return as-is, don't re-emit the event.
+  if (record.status === "completed") {
+    return record;
+  }
+
   const now = new Date();
   const updated = await db.update<any>("compliance_records", recordId, {
     status: "completed",
     completed_at: now,
   });
 
+  // findOne camelCases course_id → courseId, user_id → userId.
   lmsEvents.emit("compliance.completed", {
     complianceId: recordId,
-    courseId: record.course_id,
-    userId: record.user_id,
+    courseId: record.courseId ?? record.course_id,
+    userId: record.userId ?? record.user_id,
     orgId,
     completedAt: now,
   });

@@ -128,7 +128,8 @@ export default function LearningPathDetailPage() {
           {/* Left: info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {path.is_mandatory && (
+              {/* detail endpoint returns camelCase isMandatory (snake fallback) */}
+              {(path.isMandatory ?? path.is_mandatory) && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
                   <Star className="h-3 w-3" /> Required
                 </span>

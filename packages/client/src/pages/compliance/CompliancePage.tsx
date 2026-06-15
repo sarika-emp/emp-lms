@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ClipboardCheck,
   AlertTriangle,
@@ -37,6 +37,16 @@ import {
   useCourses,
 } from "@/api/hooks";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { apiGet } from "@/api/client";
+
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
+  org_admin: "Org Admin",
+  hr_admin: "HR Admin",
+  hr_manager: "HR Manager",
+  manager: "Manager",
+  employee: "Employee",
+};
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -169,12 +179,48 @@ function AssignmentModal({
     description: assignment?.description ?? "",
   });
 
+  // For "By Department" / "By Role", the user must pick which ids/roles.
+  const [facets, setFacets] = useState<{
+    departments: { id: number; count: number }[];
+    roles: { role: string; count: number }[];
+  }>({ departments: [], roles: [] });
+  const [selectedIds, setSelectedIds] = useState<(number | string)[]>([]);
+
+  useEffect(() => {
+    if (isEdit) return; // assignment target is immutable once created
+    apiGet<typeof facets>("/users/facets")
+      .then((res) => {
+        if (res.success && res.data) setFacets(res.data);
+      })
+      .catch(() => {});
+  }, [isEdit]);
+
+  // Reset the picked ids whenever the assignment-type changes.
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [form.assigned_to_type]);
+
+  const toggleId = (id: number | string) =>
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
   const pending = createAssignment.isPending || updateAssignment.isPending;
+
+  const needsIds = form.assigned_to_type === "department" || form.assigned_to_type === "role";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.course_id || !form.due_date) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+    if (!isEdit && needsIds && selectedIds.length === 0) {
+      toast.error(
+        form.assigned_to_type === "department"
+          ? "Please select at least one department"
+          : "Please select at least one role",
+      );
       return;
     }
     try {
@@ -191,6 +237,7 @@ function AssignmentModal({
           name: form.name,
           course_id: form.course_id,
           assigned_to_type: form.assigned_to_type,
+          assigned_to_ids: needsIds ? selectedIds : [],
           due_date: form.due_date,
           description: form.description || undefined,
         });
@@ -300,6 +347,65 @@ function AssignmentModal({
               />
             </div>
           </div>
+
+          {/* Department / Role picker — required for those assignment types */}
+          {!isEdit && needsIds && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {form.assigned_to_type === "department" ? "Departments" : "Roles"}{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                {form.assigned_to_type === "department"
+                  ? (facets.departments.length === 0 ? (
+                      <span className="text-xs text-gray-400">No departments found.</span>
+                    ) : (
+                      facets.departments.map((d) => {
+                        const active = selectedIds.includes(d.id);
+                        return (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => toggleId(d.id)}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              active
+                                ? "border-indigo-500 bg-indigo-500 text-white"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Department {d.id} ({d.count})
+                          </button>
+                        );
+                      })
+                    ))
+                  : facets.roles.length === 0 ? (
+                      <span className="text-xs text-gray-400">No roles found.</span>
+                    ) : (
+                      facets.roles.map((r) => {
+                        const active = selectedIds.includes(r.role);
+                        return (
+                          <button
+                            key={r.role}
+                            type="button"
+                            onClick={() => toggleId(r.role)}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              active
+                                ? "border-indigo-500 bg-indigo-500 text-white"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {ROLE_LABELS[r.role] ?? r.role} ({r.count})
+                          </button>
+                        );
+                      })
+                    )}
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                Records will be created for everyone in the selected{" "}
+                {form.assigned_to_type === "department" ? "departments" : "roles"}.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>

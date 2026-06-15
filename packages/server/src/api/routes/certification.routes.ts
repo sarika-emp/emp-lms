@@ -316,62 +316,73 @@ router.get(
         }
       }
 
-      // Fallback: render the HTML certificate template inline so the user
-      // can print-to-PDF from the browser. This covers local dev where
-      // Puppeteer isn't configured for server-side PDF generation.
+      // Render an HTML certificate inline so the user can print-to-PDF from
+      // the browser (covers local dev where Puppeteer isn't configured).
       const certNumber = certificate.certificate_number || certificate.certificateNumber || "N/A";
       const issuedAt = certificate.issued_at || certificate.issuedAt;
       const issuedDate = issuedAt ? new Date(issuedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : "N/A";
 
-      // Load template if available
+      // Resolve all dynamic values (independent of any template).
+      const { getDB } = await import("../../db/adapters/index.js");
+      const db = getDB();
+      const { findUserById, getEmpCloudDB } = await import("../../db/empcloud.js");
+
+      const userId = Number(certificate.user_id || certificate.userId);
+      const learner = userId ? await findUserById(userId) : null;
+      const learnerName = learner ? `${learner.first_name} ${learner.last_name}` : "Learner";
+
+      const courseId = certificate.course_id || certificate.courseId;
+      const course = courseId ? await db.findById<any>("courses", courseId) : null;
+      const courseTitle = course?.title || "Course";
+
+      const ecDb = getEmpCloudDB();
+      const org = await ecDb("organizations")
+        .where({ id: certificate.org_id || certificate.orgId || req.user!.empcloudOrgId })
+        .first();
+      const orgName = org?.name || "Organization";
+
+      const {
+        renderCertificateDocument,
+        applyTemplate,
+        isRichTemplate,
+      } = await import("../../services/certification/certificate-template.js");
+
+      const certData = { learnerName, courseTitle, issuedDate, orgName, certNumber };
+
+      // ?print=1 → open the browser print dialog automatically on load.
+      const autoPrint = req.query.print === "1" || req.query.print === "true";
+
+      // Use the org's custom template only when it carries its own real layout;
+      // otherwise render the polished default certificate document.
       const templateId = certificate.template_id || certificate.templateId;
-      let html = "";
-      if (templateId) {
-        const { getDB } = await import("../../db/adapters/index.js");
-        const db = getDB();
-        const tmpl = await db.findById<any>("certificate_templates", templateId);
-        if (tmpl) {
-          const rawHtml = tmpl.htmlTemplate || tmpl.html_template || "";
-          // Look up learner name from EmpCloud users
-          const userId = Number(certificate.user_id || certificate.userId);
-          const { findUserById } = await import("../../db/empcloud.js");
-          const learner = await findUserById(userId);
-          const learnerName = learner ? `${learner.first_name} ${learner.last_name}` : "Learner";
+      const tmpl = templateId ? await db.findById<any>("certificate_templates", templateId) : null;
+      const rawHtml: string = tmpl?.htmlTemplate || tmpl?.html_template || "";
 
-          // Look up course title
-          const courseId = certificate.course_id || certificate.courseId;
-          const course = courseId ? await db.findById<any>("courses", courseId) : null;
-          const courseTitle = course?.title || "Course";
-
-          // Look up org name
-          const { getEmpCloudDB } = await import("../../db/empcloud.js");
-          const ecDb = getEmpCloudDB();
-          const org = await ecDb("organizations").where({ id: certificate.org_id || certificate.orgId || req.user!.empcloudOrgId }).first();
-          const orgName = org?.name || "Organization";
-
-          html = rawHtml
-            .replace(/\{\{learner_name\}\}/g, learnerName)
-            .replace(/\{\{course_title\}\}/g, courseTitle)
-            .replace(/\{\{issued_date\}\}/g, issuedDate)
-            .replace(/\{\{certificate_number\}\}/g, certNumber)
-            .replace(/\{\{org_name\}\}/g, orgName);
-        }
+      let fullHtml: string;
+      if (rawHtml && isRichTemplate(rawHtml)) {
+        const inner = applyTemplate(rawHtml, certData);
+        const printScript = autoPrint
+          ? `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script>`
+          : "";
+        fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate ${certNumber}</title>
+          <style>@media print { body { margin: 0; } @page { size: landscape; margin: 0; } }</style>
+        </head><body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;">
+          ${inner}${printScript}
+        </body></html>`;
+      } else {
+        fullHtml = renderCertificateDocument(certData, { autoPrint });
       }
 
-      if (!html) {
-        html = `<div style="text-align:center;padding:60px;font-family:Georgia,serif;">
-          <h1>Certificate of Completion</h1>
-          <p>Certificate #${certNumber}</p>
-          <p>Issued: ${issuedDate}</p>
-        </div>`;
-      }
-
-      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate ${certNumber}</title>
-        <style>@media print { body { margin: 0; } @page { size: landscape; margin: 0; } }</style>
-      </head><body style="display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;">
-        ${html}
-      </body></html>`;
-
+      // The global helmet CSP sets script-src 'self' and script-src-attr
+      // 'none', which blocks this self-contained document's inline print
+      // script and the toolbar button's handler. Relax CSP for THIS response
+      // only — it's server-generated HTML with all dynamic values escaped,
+      // served same-origin, so allowing its own inline script is safe.
+      res.setHeader(
+        "Content-Security-Policy",
+        "default-src 'self'; img-src 'self' data:; style-src 'self' https: 'unsafe-inline'; " +
+          "font-src 'self' https: data:; script-src 'unsafe-inline'; script-src-attr 'unsafe-inline'",
+      );
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.send(fullHtml);
     } catch (err) {

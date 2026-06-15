@@ -41,7 +41,10 @@ export async function issueCertificate(
   if (enrollment.status !== "completed") {
     throw new BadRequestError("Certificate can only be issued for completed enrollments");
   }
-  if (enrollment.user_id !== userId || enrollment.course_id !== courseId) {
+  // Adapter camelizes: user_id → userId, course_id → courseId
+  const enrollmentUserId = enrollment.userId ?? enrollment.user_id;
+  const enrollmentCourseId = enrollment.courseId ?? enrollment.course_id;
+  if (enrollmentUserId !== userId || enrollmentCourseId !== courseId) {
     throw new BadRequestError("Enrollment does not match the provided user and course");
   }
 
@@ -61,7 +64,8 @@ export async function issueCertificate(
   }
 
   // Resolve template: explicit > course default > org default
-  let resolvedTemplateId = templateId || course.certificate_template_id;
+  let resolvedTemplateId =
+    templateId || (course.certificateTemplateId ?? course.certificate_template_id);
   let template: any = null;
 
   if (resolvedTemplateId) {
@@ -144,7 +148,7 @@ export async function issueCertificate(
 
   return {
     ...certificate,
-    pdf_url: pdfUrl || certificate.pdf_url,
+    pdf_url: pdfUrl || certificate.pdfUrl || certificate.pdf_url,
   };
 }
 
@@ -335,7 +339,8 @@ export async function revokeCertificate(orgId: number, certificateId: string, re
   if (!certificate) {
     throw new NotFoundError("Certificate", certificateId);
   }
-  if (certificate.org_id !== orgId) {
+  // Adapter camelizes: org_id → orgId
+  if (Number(certificate.orgId ?? certificate.org_id) !== orgId) {
     throw new ForbiddenError("Certificate does not belong to your organization");
   }
   if (certificate.status === "revoked") {
@@ -355,7 +360,7 @@ export async function revokeCertificate(orgId: number, certificateId: string, re
     }),
   });
 
-  logger.info(`Certificate revoked: ${certificate.certificate_number} (reason: ${reason || "none"})`);
+  logger.info(`Certificate revoked: ${certificate.certificateNumber ?? certificate.certificate_number} (reason: ${reason || "none"})`);
 
   return {
     ...updated,
@@ -370,12 +375,22 @@ export async function renewCertificate(orgId: number, certificateId: string) {
   if (!oldCertificate) {
     throw new NotFoundError("Certificate", certificateId);
   }
-  if (oldCertificate.org_id !== orgId) {
+  // Adapter camelizes: org_id → orgId
+  if (Number(oldCertificate.orgId ?? oldCertificate.org_id) !== orgId) {
     throw new ForbiddenError("Certificate does not belong to your organization");
   }
   if (oldCertificate.status === "active") {
     throw new BadRequestError("Certificate is still active and does not need renewal");
   }
+
+  // Adapter camelizes the old-cert row; read camelCase with snake fallback.
+  const oldUserId = oldCertificate.userId ?? oldCertificate.user_id;
+  const oldCourseId = oldCertificate.courseId ?? oldCertificate.course_id;
+  const oldEnrollmentId = oldCertificate.enrollmentId ?? oldCertificate.enrollment_id;
+  const oldTemplateId = oldCertificate.templateId ?? oldCertificate.template_id;
+  const oldCertificateNumber =
+    oldCertificate.certificateNumber ?? oldCertificate.certificate_number;
+  const oldIssuedAt = oldCertificate.issuedAt ?? oldCertificate.issued_at;
 
   // Mark old certificate as expired if it was active
   if (oldCertificate.status !== "revoked") {
@@ -392,31 +407,31 @@ export async function renewCertificate(orgId: number, certificateId: string) {
   const newCertificate = await db.create<any>("certificates", {
     id: newCertificateId,
     org_id: orgId,
-    user_id: oldCertificate.user_id,
-    course_id: oldCertificate.course_id,
-    enrollment_id: oldCertificate.enrollment_id,
+    user_id: oldUserId,
+    course_id: oldCourseId,
+    enrollment_id: oldEnrollmentId,
     certificate_number: certificateNumber,
     issued_at: now,
     expires_at: null,
     status: "active",
-    template_id: oldCertificate.template_id,
+    template_id: oldTemplateId,
     metadata: JSON.stringify({
-      renewed_from: oldCertificate.certificate_number,
-      original_issued_at: oldCertificate.issued_at,
+      renewed_from: oldCertificateNumber,
+      original_issued_at: oldIssuedAt,
     }),
     pdf_url: null,
   });
 
   // Generate PDF if template exists
-  if (oldCertificate.template_id) {
-    const template = await db.findById<any>("certificate_templates", oldCertificate.template_id);
+  if (oldTemplateId) {
+    const template = await db.findById<any>("certificate_templates", oldTemplateId);
     if (template) {
-      const course = await db.findById<any>("courses", oldCertificate.course_id);
+      const course = await db.findById<any>("courses", oldCourseId);
       try {
         const pdfUrl = await generateCertificatePdf(
           newCertificate,
           template,
-          { first_name: "User", last_name: String(oldCertificate.user_id) },
+          { first_name: "User", last_name: String(oldUserId) },
           { title: course?.title || "", description: course?.description || "" }
         );
         await db.update("certificates", newCertificateId, { pdf_url: pdfUrl });
@@ -429,13 +444,13 @@ export async function renewCertificate(orgId: number, certificateId: string) {
 
   lmsEvents.emit("certificate.issued", {
     certificateId: newCertificateId,
-    courseId: oldCertificate.course_id,
-    userId: oldCertificate.user_id,
+    courseId: oldCourseId,
+    userId: oldUserId,
     orgId,
     issuedAt: now,
   });
 
-  logger.info(`Certificate renewed: ${oldCertificate.certificate_number} -> ${certificateNumber}`);
+  logger.info(`Certificate renewed: ${oldCertificateNumber} -> ${certificateNumber}`);
 
   return newCertificate;
 }
@@ -479,11 +494,18 @@ export async function generateCertificatePdf(
   userData: { first_name: string; last_name: string },
   courseData: { title: string; description?: string }
 ): Promise<string> {
-  const htmlTemplate = template.html_template || getDefaultTemplate();
+  // Adapter camelizes rows (template & certificate come from create/findById).
+  const htmlTemplate =
+    (template.htmlTemplate ?? template.html_template) || getDefaultTemplate();
+
+  const certNumber = certificate.certificateNumber ?? certificate.certificate_number;
+  const certIssuedAt = certificate.issuedAt ?? certificate.issued_at;
+  const certExpiresAt = certificate.expiresAt ?? certificate.expires_at;
+  const certOrgId = certificate.orgId ?? certificate.org_id;
 
   // Compile with Handlebars
   const compiledTemplate = Handlebars.compile(htmlTemplate);
-  const issuedDate = new Date(certificate.issued_at);
+  const issuedDate = new Date(certIssuedAt);
 
   const html = compiledTemplate({
     recipient_name: `${userData.first_name} ${userData.last_name}`,
@@ -491,15 +513,15 @@ export async function generateCertificatePdf(
     last_name: userData.last_name,
     course_title: courseData.title,
     course_description: courseData.description || "",
-    certificate_number: certificate.certificate_number,
+    certificate_number: certNumber,
     issued_date: issuedDate.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
-    issued_at: certificate.issued_at,
-    expires_at: certificate.expires_at || "",
-    org_id: certificate.org_id,
+    issued_at: certIssuedAt,
+    expires_at: certExpiresAt || "",
+    org_id: certOrgId,
   });
 
   // Ensure output directory exists
@@ -508,7 +530,7 @@ export async function generateCertificatePdf(
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const fileName = `${certificate.certificate_number}.pdf`;
+  const fileName = `${certNumber}.pdf`;
   const filePath = path.join(outputDir, fileName);
 
   // Render PDF with Puppeteer
@@ -636,7 +658,8 @@ export async function getTemplate(orgId: number, templateId: string) {
   if (!template) {
     throw new NotFoundError("Certificate Template", templateId);
   }
-  if (template.org_id !== orgId) {
+  // Adapter camelizes: org_id → orgId
+  if (Number(template.orgId ?? template.org_id) !== orgId) {
     throw new ForbiddenError("Template does not belong to your organization");
   }
 
@@ -695,7 +718,8 @@ export async function updateTemplate(
   if (!template) {
     throw new NotFoundError("Certificate Template", templateId);
   }
-  if (template.org_id !== orgId) {
+  // Adapter camelizes: org_id → orgId
+  if (Number(template.orgId ?? template.org_id) !== orgId) {
     throw new ForbiddenError("Template does not belong to your organization");
   }
 
@@ -729,7 +753,8 @@ export async function deleteTemplate(orgId: number, templateId: string) {
   if (!template) {
     throw new NotFoundError("Certificate Template", templateId);
   }
-  if (template.org_id !== orgId) {
+  // Adapter camelizes: org_id → orgId
+  if (Number(template.orgId ?? template.org_id) !== orgId) {
     throw new ForbiddenError("Template does not belong to your organization");
   }
 

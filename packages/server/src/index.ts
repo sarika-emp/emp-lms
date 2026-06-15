@@ -33,6 +33,7 @@ import { notificationRoutes } from "./api/routes/notification.routes";
 import { discussionRoutes } from "./api/routes/discussion.routes";
 import { ratingRoutes } from "./api/routes/rating.routes";
 import { settingsRoutes } from "./api/routes/settings.routes";
+import { usersRoutes } from "./api/routes/users.routes";
 
 // Middleware imports
 import { errorHandler } from "./api/middleware/error.middleware";
@@ -75,6 +76,14 @@ app.use(
 app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+// Express 5's express.json() leaves req.body undefined when a request has no
+// body at all (unlike Express 4, which defaulted to {}). Many handlers read
+// req.body.<field> directly, so normalize to an empty object to avoid
+// "Cannot read properties of undefined" crashes on bodyless POSTs.
+app.use((req, _res, next) => {
+  if (req.body == null) req.body = {};
+  next();
+});
 app.use(cookieParser());
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(defaultLimiter);
@@ -111,6 +120,7 @@ v1.use("/notifications", notificationRoutes);
 v1.use("/discussions", discussionRoutes);
 v1.use("/ratings", ratingRoutes);
 v1.use("/users/me/preferences", settingsRoutes);
+v1.use("/users", usersRoutes);
 
 app.use("/api/v1", v1);
 
@@ -133,7 +143,7 @@ function registerEventListeners(): void {
       const { getDB } = await import("./db/adapters");
       const db = getDB();
       const templates = await db.raw<any[]>(
-        `SELECT id FROM certificate_templates WHERE organization_id = ? AND is_default = true LIMIT 1`,
+        `SELECT id FROM certificate_templates WHERE org_id = ? AND is_default = 1 LIMIT 1`,
         [data.orgId]
       );
       if (templates.length > 0) {
@@ -178,6 +188,46 @@ function registerEventListeners(): void {
       await updateUserLearningProfile(data.orgId, data.userId, { type: "course_completed" });
     } catch (err) {
       logger.error(`Failed to update user learning profile:`, err);
+    }
+
+    // Update the learning streak (drives the dashboard "Current Streak").
+    try {
+      const { updateLearningStreak } = await import("./services/gamification/gamification.service");
+      await updateLearningStreak(data.orgId, data.userId);
+    } catch (err) {
+      logger.error(`Failed to update learning streak:`, err);
+    }
+
+    // Award course-completion points (drives the leaderboard).
+    try {
+      const { getDB } = await import("./db/adapters");
+      const db = getDB();
+      const course = await db.findById<any>("courses", data.courseId);
+      const courseName = course?.title || "Course";
+      const { awardCourseCompletionPoints } = await import("./services/gamification/gamification.service");
+      await awardCourseCompletionPoints(data.orgId, data.userId, data.courseId, courseName);
+    } catch (err) {
+      logger.error(`Failed to award course completion points:`, err);
+    }
+
+    // Mark any compliance record for this user+course as completed, so the
+    // Compliance Training page reflects the finished course.
+    try {
+      const { getDB } = await import("./db/adapters");
+      const db = getDB();
+      const records = await db.raw<any[]>(
+        `SELECT id FROM compliance_records
+         WHERE org_id = ? AND user_id = ? AND course_id = ? AND status != 'completed'`,
+        [data.orgId, data.userId, data.courseId],
+      );
+      if (records.length > 0) {
+        const { markCompleted } = await import("./services/compliance/compliance.service");
+        for (const r of records) {
+          await markCompleted(data.orgId, r.id);
+        }
+      }
+    } catch (err) {
+      logger.error(`Failed to mark compliance complete on course completion:`, err);
     }
 
     // Queue completion email

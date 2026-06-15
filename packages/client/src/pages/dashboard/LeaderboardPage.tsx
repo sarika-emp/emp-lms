@@ -55,7 +55,10 @@ export default function LeaderboardPage() {
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-brand-600" />
             <span className="text-sm font-medium text-brand-900">
-              Rank: <span className="text-lg font-bold">#{myPoints.rank ?? "\u2014"}</span>
+              Rank:{" "}
+              <span className="text-lg font-bold">
+                {myPoints.rank != null ? `#${myPoints.rank}` : "Unranked"}
+              </span>
             </span>
           </div>
           <div className="flex items-center gap-2">

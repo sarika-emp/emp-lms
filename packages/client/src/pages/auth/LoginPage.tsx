@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Loader2, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiPost } from "@/api/client";
@@ -37,6 +37,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get("session") === "expired";
   const login = useAuthStore((s) => s.login);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
@@ -129,6 +131,17 @@ export default function LoginPage() {
               Sign in to your learning platform
             </p>
           </div>
+
+          {/* Session-expired notice (401 redirect from the api client) */}
+          {sessionExpired && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="font-medium">Your session has expired</p>
+                <p className="mt-0.5 text-amber-700">Please sign in again to continue.</p>
+              </div>
+            </div>
+          )}
 
           {/* Login card */}
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

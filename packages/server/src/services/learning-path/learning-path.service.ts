@@ -533,10 +533,10 @@ export async function listPathEnrollments(
     sort: { field: "enrolled_at", order: "desc" },
   });
 
-  // Enrich with user names
+  // Enrich with user names. findMany camelCases user_id → userId.
   const enriched = await Promise.all(
     result.data.map(async (enrollment: any) => {
-      const user = await findUserById(enrollment.user_id);
+      const user = await findUserById(enrollment.userId ?? enrollment.user_id);
       return {
         ...enrollment,
         user_name: user
@@ -570,12 +570,12 @@ export async function listUserPathEnrollments(
     sort: { field: "enrolled_at", order: "desc" },
   });
 
-  // Enrich with path details
+  // Enrich with path details. findMany camelCases learning_path_id → learningPathId.
   const enriched = await Promise.all(
     result.data.map(async (enrollment: any) => {
       const path = await db.findById<any>(
         "learning_paths",
-        enrollment.learning_path_id
+        enrollment.learningPathId ?? enrollment.learning_path_id
       );
       return {
         ...enrollment,

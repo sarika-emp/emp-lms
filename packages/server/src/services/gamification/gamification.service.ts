@@ -9,6 +9,7 @@ import { getEmpCloudDB } from "../../db/empcloud";
 import { config } from "../../config/index";
 import { logger } from "../../utils/logger";
 import { NotFoundError } from "../../utils/errors";
+import { mysqlDateTime } from "../../utils/datetime";
 
 // ---------------------------------------------------------------------------
 // Rewards API config
@@ -380,7 +381,7 @@ export async function updateLearningStreak(
       total_points_earned: 0,
       current_streak_days: 1,
       longest_streak_days: 1,
-      last_activity_at: new Date().toISOString(),
+      last_activity_at: mysqlDateTime(),
     });
 
     return {
@@ -392,13 +393,18 @@ export async function updateLearningStreak(
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+  // findOne camelCases row keys; read camelCase with snake fallback so the
+  // streak accumulates across consecutive days instead of resetting to 1.
+  const lastActivityAt = profile.lastActivityAt ?? profile.last_activity_at;
   let lastActivity: Date | null = null;
-  if (profile.last_activity_at) {
-    lastActivity = new Date(profile.last_activity_at);
+  if (lastActivityAt) {
+    lastActivity = new Date(lastActivityAt);
   }
 
-  let currentStreak = profile.current_streak_days || 0;
-  let longestStreak = profile.longest_streak_days || 0;
+  let currentStreak =
+    profile.currentStreakDays ?? profile.current_streak_days ?? 0;
+  let longestStreak =
+    profile.longestStreakDays ?? profile.longest_streak_days ?? 0;
 
   if (lastActivity) {
     const lastActivityDate = new Date(
@@ -411,7 +417,10 @@ export async function updateLearningStreak(
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      // Already recorded activity today, no change
+      // Already recorded activity today — keep the streak, but ensure any
+      // activity counts for at least 1 day (handles profiles whose streak
+      // was never initialized).
+      if (currentStreak < 1) currentStreak = 1;
     } else if (diffDays === 1) {
       // Consecutive day
       currentStreak += 1;
@@ -430,7 +439,7 @@ export async function updateLearningStreak(
   await db.update("user_learning_profiles", profile.id, {
     current_streak_days: currentStreak,
     longest_streak_days: longestStreak,
-    last_activity_at: now.toISOString(),
+    last_activity_at: mysqlDateTime(now),
   });
 
   // Check if streak deserves points
@@ -478,26 +487,30 @@ export async function updateUserLearningProfile(
       total_points_earned: 0,
       current_streak_days: 0,
       longest_streak_days: 0,
-      last_activity_at: new Date().toISOString(),
+      last_activity_at: mysqlDateTime(),
     });
   }
 
   const updateData: Record<string, any> = {
-    last_activity_at: new Date().toISOString(),
+    last_activity_at: mysqlDateTime(),
   };
 
+  // findOne camelCases row keys; read camelCase with snake fallback so the
+  // running totals accumulate instead of being clobbered to the latest delta.
   switch (event.type) {
     case "course_completed":
       updateData.total_courses_completed =
-        (profile.total_courses_completed || 0) + 1;
+        (profile.totalCoursesCompleted ?? profile.total_courses_completed ?? 0) + 1;
       break;
     case "time_spent":
       updateData.total_time_spent_minutes =
-        (profile.total_time_spent_minutes || 0) + (event.value || 0);
+        (profile.totalTimeSpentMinutes ?? profile.total_time_spent_minutes ?? 0) +
+        (event.value || 0);
       break;
     case "points_earned":
       updateData.total_points_earned =
-        (profile.total_points_earned || 0) + (event.value || 0);
+        (profile.totalPointsEarned ?? profile.total_points_earned ?? 0) +
+        (event.value || 0);
       break;
   }
 

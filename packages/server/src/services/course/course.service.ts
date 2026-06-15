@@ -12,6 +12,19 @@ import {
   BadRequestError,
   ConflictError,
 } from "../../utils/errors";
+import { safeSortColumn, safeSortOrder } from "../../utils/sql-sort";
+
+// Columns courses can be sorted by (interpolated into ORDER BY c.<col>).
+// These must be real `courses` columns — an invalid name would 500.
+const COURSE_SORTABLE = [
+  "created_at",
+  "updated_at",
+  "title",
+  "difficulty",
+  "duration_minutes",
+  "avg_rating",
+  "enrollment_count",
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,8 +65,8 @@ export async function listCourses(
   const page = filters.page || 1;
   const perPage = filters.perPage || 20;
   const offset = (page - 1) * perPage;
-  const sortField = filters.sort || "created_at";
-  const sortOrder = filters.order || "desc";
+  const sortField = safeSortColumn(filters.sort, COURSE_SORTABLE, "created_at");
+  const sortOrder = safeSortOrder(filters.order);
 
   let whereClause = "c.org_id = ?";
   const params: any[] = [orgId];

@@ -68,8 +68,26 @@ interface GradedAnswer extends SubmittedAnswer {
 // Quiz CRUD
 // ---------------------------------------------------------------------------
 
-export async function listQuizzes(courseId: string) {
+// Quizzes carry no org_id — tenancy flows through the parent course. Load a
+// quiz and confirm its course belongs to the caller's org, or throw NotFound
+// (not Forbidden, so a cross-org id is indistinguishable from a missing one).
+async function loadQuizForOrg(
+  db: ReturnType<typeof getDB>,
+  quizId: string,
+  orgId: number,
+) {
+  const quiz = await db.findById<any>("quizzes", quizId);
+  if (!quiz) throw new NotFoundError("Quiz", quizId);
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) throw new NotFoundError("Quiz", quizId);
+  return quiz;
+}
+
+export async function listQuizzes(orgId: number, courseId: string) {
   const db = getDB();
+  // Only list quizzes for a course this org owns.
+  const course = await db.findOne<any>("courses", { id: courseId, org_id: orgId });
+  if (!course) return [];
   const result = await db.findMany<any>("quizzes", {
     filters: { course_id: courseId },
     sort: { field: "sort_order", order: "asc" },
@@ -119,16 +137,14 @@ export async function listAllQuizzes(
     limit,
     page,
   });
-  const total = await db.count("quizzes", filters);
-  return { data: result.data, total, page, limit };
+  // findMany already computed the total — db.count can't take the array
+  // course_id filter the org-wide branch builds.
+  return { data: result.data, total: result.total, page, limit };
 }
 
-export async function getQuiz(quizId: string) {
+export async function getQuiz(orgId: number, quizId: string) {
   const db = getDB();
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
 
   const questionsResult = await db.findMany<any>("questions", {
     filters: { quiz_id: quizId },
@@ -144,12 +160,10 @@ export async function getQuiz(quizId: string) {
   return { ...quiz, questions };
 }
 
-export async function getQuizForAttempt(quizId: string, userId: number) {
+export async function getQuizForAttempt(orgId: number, quizId: string, userId: number) {
   const db = getDB();
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
+  void userId;
 
   const questionsResult = await db.findMany<any>("questions", {
     filters: { quiz_id: quizId },
@@ -175,29 +189,29 @@ export async function getQuizForAttempt(quizId: string, userId: number) {
 
     return {
       id: q.id,
-      quiz_id: q.quiz_id,
+      quiz_id: q.quizId,
       type: q.type,
       text: q.text,
       points: q.points,
-      sort_order: q.sort_order,
+      sort_order: q.sortOrder,
       options: sanitizedOptions,
     };
   });
 
   // Shuffle questions if configured
-  if (quiz.shuffle_questions) {
+  if (quiz.shuffleQuestions) {
     questions = shuffleArray(questions);
   }
 
   return {
     id: quiz.id,
-    course_id: quiz.course_id,
+    course_id: quiz.courseId,
     title: quiz.title,
     description: quiz.description,
     type: quiz.type,
-    time_limit_minutes: quiz.time_limit_minutes,
-    passing_score: quiz.passing_score,
-    max_attempts: quiz.max_attempts,
+    time_limit_minutes: quiz.timeLimitMinutes,
+    passing_score: quiz.passingScore,
+    max_attempts: quiz.maxAttempts,
     questions,
   };
 }
@@ -210,7 +224,7 @@ export async function createQuiz(orgId: number, courseId: string, data: QuizData
   if (!course) {
     throw new NotFoundError("Course", courseId);
   }
-  if (course.org_id !== orgId) {
+  if (course.orgId !== orgId) {
     throw new ForbiddenError("Course does not belong to your organization");
   }
 
@@ -243,8 +257,8 @@ export async function updateQuiz(orgId: number, quizId: string, data: Partial<Qu
   }
 
   // Verify org ownership through course
-  const course = await db.findById<any>("courses", quiz.course_id);
-  if (!course || course.org_id !== orgId) {
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) {
     throw new ForbiddenError("Quiz does not belong to your organization");
   }
 
@@ -273,8 +287,8 @@ export async function deleteQuiz(orgId: number, quizId: string) {
     throw new NotFoundError("Quiz", quizId);
   }
 
-  const course = await db.findById<any>("courses", quiz.course_id);
-  if (!course || course.org_id !== orgId) {
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) {
     throw new ForbiddenError("Quiz does not belong to your organization");
   }
 
@@ -295,8 +309,8 @@ export async function addQuestion(orgId: number, quizId: string, data: QuestionD
     throw new NotFoundError("Quiz", quizId);
   }
 
-  const course = await db.findById<any>("courses", quiz.course_id);
-  if (!course || course.org_id !== orgId) {
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) {
     throw new ForbiddenError("Quiz does not belong to your organization");
   }
 
@@ -336,13 +350,13 @@ export async function updateQuestion(orgId: number, questionId: string, data: Pa
     throw new NotFoundError("Question", questionId);
   }
 
-  const quiz = await db.findById<any>("quizzes", question.quiz_id);
+  const quiz = await db.findById<any>("quizzes", question.quizId);
   if (!quiz) {
-    throw new NotFoundError("Quiz", question.quiz_id);
+    throw new NotFoundError("Quiz", question.quizId);
   }
 
-  const course = await db.findById<any>("courses", quiz.course_id);
-  if (!course || course.org_id !== orgId) {
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) {
     throw new ForbiddenError("Question does not belong to your organization");
   }
 
@@ -380,13 +394,13 @@ export async function deleteQuestion(orgId: number, questionId: string) {
     throw new NotFoundError("Question", questionId);
   }
 
-  const quiz = await db.findById<any>("quizzes", question.quiz_id);
+  const quiz = await db.findById<any>("quizzes", question.quizId);
   if (!quiz) {
-    throw new NotFoundError("Quiz", question.quiz_id);
+    throw new NotFoundError("Quiz", question.quizId);
   }
 
-  const course = await db.findById<any>("courses", quiz.course_id);
-  if (!course || course.org_id !== orgId) {
+  const course = await db.findById<any>("courses", quiz.courseId);
+  if (!course || course.orgId !== orgId) {
     throw new ForbiddenError("Question does not belong to your organization");
   }
 
@@ -424,19 +438,22 @@ export async function submitQuizAttempt(
 ) {
   const db = getDB();
 
-  // Load quiz
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  // Load quiz (org-scoped via its parent course)
+  const quiz = await loadQuizForOrg(db, quizId, orgId);
 
-  // Verify enrollment
+  // Verify enrollment belongs to this user AND is for this quiz's course —
+  // otherwise a learner could complete an unrelated course by passing a
+  // trivial quiz (the completion side-effect keys off enrollmentId).
   const enrollment = await db.findById<any>("enrollments", enrollmentId);
   if (!enrollment) {
     throw new NotFoundError("Enrollment", enrollmentId);
   }
-  if (enrollment.user_id !== userId || enrollment.org_id !== orgId) {
+  if (enrollment.userId !== userId || enrollment.orgId !== orgId) {
     throw new ForbiddenError("Enrollment does not belong to this user");
+  }
+  const enrollmentCourseId = enrollment.courseId ?? enrollment.course_id;
+  if (enrollmentCourseId !== quiz.courseId) {
+    throw new BadRequestError("Enrollment is not for this quiz's course");
   }
 
   // Check max attempts
@@ -444,9 +461,9 @@ export async function submitQuizAttempt(
     quiz_id: quizId,
     user_id: userId,
   });
-  if (quiz.max_attempts && existingAttempts >= quiz.max_attempts) {
+  if (quiz.maxAttempts && existingAttempts >= quiz.maxAttempts) {
     throw new BadRequestError(
-      `Maximum attempts (${quiz.max_attempts}) reached for this quiz`
+      `Maximum attempts (${quiz.maxAttempts}) reached for this quiz`
     );
   }
 
@@ -513,7 +530,7 @@ export async function submitQuizAttempt(
       ? Math.round((totalPointsEarned / totalPointsPossible) * 10000) / 100
       : 0;
 
-  const passed = scorePercentage >= (quiz.passing_score || 70);
+  const passed = scorePercentage >= (quiz.passingScore || 70);
 
   // Save attempt
   const attemptId = uuidv4();
@@ -531,8 +548,8 @@ export async function submitQuizAttempt(
   });
 
   // Load course for events
-  const course = await db.findById<any>("courses", quiz.course_id);
-  const courseId = course ? course.id : quiz.course_id;
+  const course = await db.findById<any>("courses", quiz.courseId);
+  const courseId = course ? course.id : quiz.courseId;
 
   // Emit events
   lmsEvents.emit("quiz.submitted", {
@@ -553,11 +570,11 @@ export async function submitQuizAttempt(
       userId,
       orgId,
       score: scorePercentage,
-      passingScore: quiz.passing_score || 70,
+      passingScore: quiz.passingScore || 70,
     });
 
     // If course completion criteria is quiz_pass, check enrollment completion
-    if (course && course.completion_criteria === "quiz_pass") {
+    if (course && course.completionCriteria === "quiz_pass") {
       await db.update("enrollments", enrollmentId, {
         status: "completed",
         completed_at: new Date(),
@@ -581,7 +598,7 @@ export async function submitQuizAttempt(
       userId,
       orgId,
       score: scorePercentage,
-      passingScore: quiz.passing_score || 70,
+      passingScore: quiz.passingScore || 70,
     });
   }
 
@@ -595,11 +612,11 @@ export async function submitQuizAttempt(
     total_points_possible: totalPointsPossible,
     passed,
     has_essay_questions: hasEssay,
-    completed_at: attempt.completed_at,
+    completed_at: attempt.completedAt,
   };
 
   // Include correct answers if show_answers is enabled
-  if (quiz.show_answers) {
+  if (quiz.showAnswers) {
     response.answers = gradedAnswers;
   }
 
@@ -610,13 +627,10 @@ export async function submitQuizAttempt(
 // Attempts
 // ---------------------------------------------------------------------------
 
-export async function getAttempts(quizId: string, userId: number) {
+export async function getAttempts(orgId: number, quizId: string, userId: number) {
   const db = getDB();
 
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  await loadQuizForOrg(db, quizId, orgId);
 
   const result = await db.findMany<any>("quiz_attempts", {
     filters: { quiz_id: quizId, user_id: userId },
@@ -630,11 +644,22 @@ export async function getAttempts(quizId: string, userId: number) {
   }));
 }
 
-export async function getAttempt(attemptId: string) {
+export async function getAttempt(
+  attemptId: string,
+  orgId: number,
+  userId: number,
+  isAdmin: boolean,
+) {
   const db = getDB();
 
   const attempt = await db.findById<any>("quiz_attempts", attemptId);
   if (!attempt) {
+    throw new NotFoundError("Quiz Attempt", attemptId);
+  }
+
+  // Tenancy via the attempt's quiz → course; non-admins may only read their own.
+  await loadQuizForOrg(db, attempt.quizId, orgId);
+  if (!isAdmin && attempt.userId !== userId) {
     throw new NotFoundError("Quiz Attempt", attemptId);
   }
 
@@ -648,13 +673,10 @@ export async function getAttempt(attemptId: string) {
 // Quiz Stats
 // ---------------------------------------------------------------------------
 
-export async function getQuizStats(quizId: string) {
+export async function getQuizStats(orgId: number, quizId: string) {
   const db = getDB();
 
-  const quiz = await db.findById<any>("quizzes", quizId);
-  if (!quiz) {
-    throw new NotFoundError("Quiz", quizId);
-  }
+  await loadQuizForOrg(db, quizId, orgId);
 
   const attemptsResult = await db.findMany<any>("quiz_attempts", {
     filters: { quiz_id: quizId },
@@ -677,7 +699,7 @@ export async function getQuizStats(quizId: string) {
 
   const scores = attempts.map((a: any) => Number(a.score) || 0);
   const passedCount = attempts.filter((a: any) => a.passed).length;
-  const uniqueUsers = new Set(attempts.map((a: any) => a.user_id)).size;
+  const uniqueUsers = new Set(attempts.map((a: any) => a.userId)).size;
 
   const averageScore =
     Math.round((scores.reduce((sum: number, s: number) => sum + s, 0) / scores.length) * 100) / 100;

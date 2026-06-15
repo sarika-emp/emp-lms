@@ -19,7 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useOverviewAnalytics, useMyEnrollments, useMyCertificates } from "@/api/hooks";
+import { useOverviewAnalytics, useMyEnrollments, useMyCertificates, useMyPoints } from "@/api/hooks";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 
@@ -66,14 +66,33 @@ interface StatCardProps {
   value: number | string;
   icon: React.ReactNode;
   color: string;
+  /** When set, the card becomes a clickable link to this route. */
+  to?: string;
 }
 
-function StatCard({ label, value, icon, color }: StatCardProps) {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md">
+function StatCard({ label, value, icon, color, to }: StatCardProps) {
+  const body = (
+    <>
       <div className={`mb-3 inline-flex rounded-lg p-2.5 ${color}`}>{icon}</div>
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="block rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md">
+      {body}
     </div>
   );
 }
@@ -112,6 +131,10 @@ export default function DashboardPage() {
   const { data: allEnrollments, isLoading: enrollmentsLoading } =
     useMyEnrollments({ limit: 100 });
   const { data: certs } = useMyCertificates();
+  // Streak is always a personal metric (the logged-in user's own streak),
+  // regardless of admin vs employee.
+  const { data: myPoints } = useMyPoints();
+  const myStreak = (myPoints?.data as any)?.streak ?? 0;
 
   const isLoading = (isAdmin ? analyticsLoading : false) || enrollmentsLoading;
 
@@ -139,7 +162,7 @@ export default function DashboardPage() {
         completed: raw.completed_enrollments ?? raw.completed ?? 0,
         certificatesEarned:
           raw.total_certificates_issued ?? raw.certificatesEarned ?? 0,
-        currentStreak: raw.current_streak ?? raw.currentStreak ?? 0,
+        currentStreak: myStreak,
         completionByMonth: raw.completion_by_month ?? raw.completionByMonth ?? [],
       }
     : {
@@ -147,7 +170,7 @@ export default function DashboardPage() {
         myEnrollments: myEnrollmentList.length,
         completed: completedEnrollments.length,
         certificatesEarned: myCertsList.length,
-        currentStreak: 0,
+        currentStreak: myStreak,
         completionByMonth: [] as any[],
       };
 
@@ -157,11 +180,9 @@ export default function DashboardPage() {
     stats.completionByMonth.length > 0
       ? stats.completionByMonth
       : myEnrollmentList.slice(0, 8).map((e: any) => ({
-          name:
-            (e.course_title ?? e.courseTitle ?? e.course?.title ?? "Course")
-              .split(" ")
-              .slice(0, 3)
-              .join(" "),
+          // Keep the full title in the data — the X axis truncates via
+          // tickFormatter and the tooltip shows the complete name.
+          name: e.course_title ?? e.courseTitle ?? e.course?.title ?? "Course",
           completion: Number(e.progress_percentage ?? e.progressPercentage ?? e.progress ?? 0),
         }));
 
@@ -201,30 +222,35 @@ export default function DashboardPage() {
           value={stats?.totalCourses ?? 0}
           icon={<BookOpen className="h-5 w-5 text-indigo-600" />}
           color="bg-indigo-50"
+          to="/courses"
         />
         <StatCard
-          label="My Enrollments"
+          label={isAdmin ? "Enrollments" : "My Enrollments"}
           value={stats?.myEnrollments ?? 0}
           icon={<Users className="h-5 w-5 text-sky-600" />}
           color="bg-sky-50"
+          to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
           label="Completed"
           value={stats?.completed ?? 0}
           icon={<Award className="h-5 w-5 text-emerald-600" />}
           color="bg-emerald-50"
+          to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
-          label="Certificates Earned"
+          label={isAdmin ? "Certificates Issued" : "Certificates Earned"}
           value={stats?.certificatesEarned ?? 0}
           icon={<Award className="h-5 w-5 text-amber-600" />}
           color="bg-amber-50"
+          to={isAdmin ? "/certifications" : "/certifications?view=my"}
         />
         <StatCard
           label="Current Streak"
           value={`${stats?.currentStreak ?? 0} days`}
           icon={<Flame className="h-5 w-5 text-rose-600" />}
           color="bg-rose-50"
+          to="/leaderboard"
         />
       </div>
 
@@ -236,13 +262,19 @@ export default function DashboardPage() {
             Completion Rates
           </h2>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData}>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ bottom: 48 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   stroke="#9ca3af"
+                  interval={0}
+                  angle={-30}
+                  textAnchor="end"
+                  tickFormatter={(name: string) =>
+                    name.length > 28 ? `${name.slice(0, 27)}…` : name
+                  }
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}

@@ -82,8 +82,9 @@ export default function LearningPathsPage() {
     return items;
   }, [allPaths, search, difficulty, isAdmin]);
 
-  const mandatory = paths.filter((p) => p.is_mandatory);
-  const regular = paths.filter((p) => !p.is_mandatory);
+  // /learning-paths list + detail are adapter endpoints → camelCase (snake fallback)
+  const mandatory = paths.filter((p) => p.isMandatory ?? p.is_mandatory);
+  const regular = paths.filter((p) => !(p.isMandatory ?? p.is_mandatory));
 
   const handleEnroll = async (pathId: string) => {
     try {
@@ -368,7 +369,8 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
   const [title, setTitle] = useState(path?.title || "");
   const [description, setDescription] = useState(path?.description || "");
   const [difficulty, setDifficulty] = useState(path?.difficulty || "beginner");
-  const [isMandatory, setIsMandatory] = useState(path?.is_mandatory || false);
+  // detail/list endpoint returns camelCase isMandatory (snake fallback)
+  const [isMandatory, setIsMandatory] = useState(path?.isMandatory ?? path?.is_mandatory ?? false);
   const [step, setStep] = useState<"details" | "courses">(isNew ? "details" : "courses");
   const [createdId, setCreatedId] = useState<string | null>(path?.id || null);
   const [showCoursePicker, setShowCoursePicker] = useState(false);

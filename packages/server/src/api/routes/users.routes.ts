@@ -53,4 +53,44 @@ router.get(
   }
 );
 
+// GET /users/facets — distinct departments + roles in the org, for the
+// compliance "Assign To: By Department / By Role" pickers. There is no
+// departments name table, so departments are returned as {id, count}.
+router.get(
+  "/facets",
+  authorize("super_admin", "org_admin", "hr_admin"),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.empcloudOrgId;
+      const db = getEmpCloudDB();
+
+      const deptRows = await db("users")
+        .where({ organization_id: orgId, status: 1 })
+        .whereNotNull("department_id")
+        .select("department_id")
+        .count<{ department_id: number; count: number }[]>("id as count")
+        .groupBy("department_id")
+        .orderBy("department_id", "asc");
+
+      const roleRows = await db("users")
+        .where({ organization_id: orgId, status: 1 })
+        .whereNotNull("role")
+        .select("role")
+        .count<{ role: string; count: number }[]>("id as count")
+        .groupBy("role")
+        .orderBy("role", "asc");
+
+      sendSuccess(res, {
+        departments: deptRows.map((d) => ({
+          id: Number(d.department_id),
+          count: Number(d.count),
+        })),
+        roles: roleRows.map((r) => ({ role: r.role, count: Number(r.count) })),
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export { router as usersRoutes };

@@ -129,7 +129,7 @@ async function resolveAffectedUsers(
       }
       const deptIds = assignedToIds.map(Number);
       const users = await empDb("users")
-        .where({ org_id: orgId, status: 1 })
+        .where({ organization_id: orgId, status: 1 })
         .whereIn("department_id", deptIds)
         .select("id");
       return users.map((u: any) => u.id);
@@ -142,7 +142,7 @@ async function resolveAffectedUsers(
       }
       const roles = assignedToIds.map(String);
       const users = await empDb("users")
-        .where({ org_id: orgId, status: 1 })
+        .where({ organization_id: orgId, status: 1 })
         .whereIn("role", roles)
         .select("id");
       return users.map((u: any) => u.id);

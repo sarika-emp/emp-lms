@@ -202,6 +202,26 @@ function registerEventListeners(): void {
       logger.error(`Failed to award course completion points:`, err);
     }
 
+    // Mark any compliance record for this user+course as completed, so the
+    // Compliance Training page reflects the finished course.
+    try {
+      const { getDB } = await import("./db/adapters");
+      const db = getDB();
+      const records = await db.raw<any[]>(
+        `SELECT id FROM compliance_records
+         WHERE org_id = ? AND user_id = ? AND course_id = ? AND status != 'completed'`,
+        [data.orgId, data.userId, data.courseId],
+      );
+      if (records.length > 0) {
+        const { markCompleted } = await import("./services/compliance/compliance.service");
+        for (const r of records) {
+          await markCompleted(data.orgId, r.id);
+        }
+      }
+    } catch (err) {
+      logger.error(`Failed to mark compliance complete on course completion:`, err);
+    }
+
     // Queue completion email
     if (isQueueSystemAvailable()) {
       const emailQueue = getQueue(QUEUE_NAMES.EMAIL);

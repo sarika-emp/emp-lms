@@ -190,6 +190,18 @@ function registerEventListeners(): void {
       logger.error(`Failed to update user learning profile:`, err);
     }
 
+    // Award course-completion points (drives the leaderboard).
+    try {
+      const { getDB } = await import("./db/adapters");
+      const db = getDB();
+      const course = await db.findById<any>("courses", data.courseId);
+      const courseName = course?.title || "Course";
+      const { awardCourseCompletionPoints } = await import("./services/gamification/gamification.service");
+      await awardCourseCompletionPoints(data.orgId, data.userId, data.courseId, courseName);
+    } catch (err) {
+      logger.error(`Failed to award course completion points:`, err);
+    }
+
     // Queue completion email
     if (isQueueSystemAvailable()) {
       const emailQueue = getQueue(QUEUE_NAMES.EMAIL);

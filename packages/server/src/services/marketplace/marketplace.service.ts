@@ -90,24 +90,41 @@ export async function listItems(
 
   const countParams = [...params];
 
+  // BUG-04: the public catalog is seeded as a physical copy into EVERY org, so
+  // "(org_id = ? OR is_public = 1)" surfaces each catalog item once per org —
+  // every marketplace item showed up N times (twice with 2 orgs). Collapse
+  // identical items (same title + content_url) to a single row, preferring the
+  // current org's own copy, so each logical item appears exactly once.
+  const dedupePick = `
+    SELECT MIN(pick.id) AS id
+    FROM (
+      SELECT cl.id, cl.title, cl.content_url
+      FROM content_library cl
+      WHERE ${whereClause}
+      ORDER BY (cl.org_id = ?) DESC, cl.id ASC
+    ) pick
+    GROUP BY pick.title, pick.content_url
+  `;
+
   const dataQuery = `
     SELECT cl.*
     FROM content_library cl
-    WHERE ${whereClause}
+    JOIN ( ${dedupePick} ) d ON d.id = cl.id
     ORDER BY cl.${sortField} ${sortOrder}
     LIMIT ? OFFSET ?
   `;
-  params.push(perPage, offset);
+  // dedupePick adds one extra ? (the org_id preference) after the WHERE params.
+  const dataParams = [...params, orgId, perPage, offset];
 
   const countQuery = `
     SELECT COUNT(*) AS total
-    FROM content_library cl
-    WHERE ${whereClause}
+    FROM ( ${dedupePick} ) d
   `;
+  const countParams2 = [...countParams, orgId];
 
   const [rawData, rawCount] = await Promise.all([
-    db.raw<any>(dataQuery, params),
-    db.raw<any>(countQuery, countParams),
+    db.raw<any>(dataQuery, dataParams),
+    db.raw<any>(countQuery, countParams2),
   ]);
 
   // MySQL raw returns [rows, fields] — extract just the rows
@@ -381,23 +398,35 @@ export async function getPublicItems(
 
   const countParams = [...params];
 
+  // BUG-04: the public catalog is seeded once per org, so listing all public
+  // items returns each catalog title once per org. Collapse identical items
+  // (same title + content_url) to a single row so each appears exactly once.
+  const dedupePick = `
+    SELECT MIN(pick.id) AS id
+    FROM (
+      SELECT cl.id, cl.title, cl.content_url
+      FROM content_library cl
+      WHERE ${whereClause}
+    ) pick
+    GROUP BY pick.title, pick.content_url
+  `;
+
   const dataQuery = `
     SELECT cl.*
     FROM content_library cl
-    WHERE ${whereClause}
+    JOIN ( ${dedupePick} ) d ON d.id = cl.id
     ORDER BY cl.${sortField} ${sortOrder}
     LIMIT ? OFFSET ?
   `;
-  params.push(perPage, offset);
+  const dataParams = [...params, perPage, offset];
 
   const countQuery = `
     SELECT COUNT(*) AS total
-    FROM content_library cl
-    WHERE ${whereClause}
+    FROM ( ${dedupePick} ) d
   `;
 
   const [rawData, rawCount] = await Promise.all([
-    db.raw<any>(dataQuery, params),
+    db.raw<any>(dataQuery, dataParams),
     db.raw<any>(countQuery, countParams),
   ]);
 

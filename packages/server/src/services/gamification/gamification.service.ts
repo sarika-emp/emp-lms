@@ -286,19 +286,33 @@ export async function getLeaderboard(
     logger.warn(`Leaderboard: EmpCloud user lookup failed: ${err.message}`);
   }
 
+  // BUG-08: assign standard competition ranking (1, 2, 2, 4) so users tied on
+  // the sort key (points, then courses completed) share a rank instead of
+  // getting sequential ranks. The list is already sorted by that key.
+  let lastRank = 0;
+  let lastPoints: number | null = null;
+  let lastCourses: number | null = null;
+
   return leaders.map((l, idx) => {
     const u = userMap.get(l.user_id);
     const name = u
       ? `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email || `User #${l.user_id}`
       : `User #${l.user_id}`;
+    const points = l.total_points_earned || 0;
+    const courses = l.total_courses_completed || 0;
+    const tiedWithPrev = points === lastPoints && courses === lastCourses;
+    const rank = tiedWithPrev ? lastRank : idx + 1;
+    lastRank = rank;
+    lastPoints = points;
+    lastCourses = courses;
     return {
-      rank: idx + 1,
+      rank,
       userId: l.user_id,
       name,
       email: u?.email ?? null,
       photoPath: u?.photo_path ?? null,
-      points: l.total_points_earned || 0,
-      coursesCompleted: l.total_courses_completed || 0,
+      points,
+      coursesCompleted: courses,
       timeSpentMinutes: l.total_time_spent_minutes || 0,
       streak: l.current_streak_days || 0,
       longestStreak: l.longest_streak_days || 0,

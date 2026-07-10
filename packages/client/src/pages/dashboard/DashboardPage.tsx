@@ -178,7 +178,13 @@ export default function DashboardPage() {
   // since we don't have monthly aggregation without the analytics endpoint.
   const chartData: { name: string; completion: number }[] =
     stats.completionByMonth.length > 0
-      ? stats.completionByMonth
+      ? // BUG-05: the admin /analytics/overview payload uses { month, completions },
+        // but the chart reads dataKey="name"/"completion" — passing it through
+        // verbatim rendered empty axes. Map it to the chart's expected shape.
+        stats.completionByMonth.map((r: any) => ({
+          name: r.name ?? r.month ?? "",
+          completion: Number(r.completion ?? r.completions ?? 0),
+        }))
       : myEnrollmentList.slice(0, 8).map((e: any) => ({
           // Keep the full title in the data — the X axis truncates via
           // tickFormatter and the tooltip shows the complete name.

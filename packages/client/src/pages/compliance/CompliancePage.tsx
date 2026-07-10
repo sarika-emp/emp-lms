@@ -185,6 +185,9 @@ function AssignmentModal({
     roles: { role: string; count: number }[];
   }>({ departments: [], roles: [] });
   const [selectedIds, setSelectedIds] = useState<(number | string)[]>([]);
+  // BUG-11: per-field inline validation errors (previously a blank submit gave
+  // no visible feedback beyond an easily-missed toast).
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isEdit) return; // assignment target is immutable once created
@@ -211,18 +214,20 @@ function AssignmentModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.course_id || !form.due_date) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+    // BUG-11: collect per-field errors and show them inline so a blank submit
+    // gives clear feedback instead of appearing to do nothing.
+    const nextErrors: Record<string, string> = {};
+    if (!form.name.trim()) nextErrors.name = "Assignment name is required";
+    if (!form.course_id) nextErrors.course_id = "Please select a compliance course";
+    if (!form.due_date) nextErrors.due_date = "Due date is required";
     if (!isEdit && needsIds && selectedIds.length === 0) {
-      toast.error(
+      nextErrors.selectedIds =
         form.assigned_to_type === "department"
           ? "Please select at least one department"
-          : "Please select at least one role",
-      );
-      return;
+          : "Please select at least one role";
     }
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
     try {
       if (isEdit) {
         await updateAssignment.mutateAsync({
@@ -288,6 +293,7 @@ function AssignmentModal({
               className={inputCls}
               placeholder="e.g. Q2 2026 GDPR Refresher"
             />
+            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
           </div>
 
           <div>
@@ -307,6 +313,7 @@ function AssignmentModal({
                 </option>
               ))}
             </select>
+            {errors.course_id && <p className="mt-1 text-xs text-red-600">{errors.course_id}</p>}
             {isEdit ? (
               <p className="mt-1 text-xs text-gray-500">
                 Course cannot be changed once the assignment exists.
@@ -345,6 +352,7 @@ function AssignmentModal({
                 className={inputCls}
                 min={dayjs().format("YYYY-MM-DD")}
               />
+              {errors.due_date && <p className="mt-1 text-xs text-red-600">{errors.due_date}</p>}
             </div>
           </div>
 
@@ -400,6 +408,7 @@ function AssignmentModal({
                       })
                     )}
               </div>
+              {errors.selectedIds && <p className="mt-1 text-xs text-red-600">{errors.selectedIds}</p>}
               <p className="mt-1 text-xs text-gray-400">
                 Records will be created for everyone in the selected{" "}
                 {form.assigned_to_type === "department" ? "departments" : "roles"}.

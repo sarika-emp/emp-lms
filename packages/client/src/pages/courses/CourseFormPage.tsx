@@ -30,9 +30,15 @@ const courseSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   short_description: z.string().max(300).optional().or(z.literal("")),
   category_id: z.string().min(1, "Category is required"),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"], {
-    required_error: "Difficulty is required",
-  }),
+  // BUG-10: the blank select submits "" (not undefined), which made Zod emit
+  // the raw "Invalid enum value. Expected 'beginner' | ..." message. Map "" to
+  // undefined so the friendly required_error is shown instead.
+  difficulty: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["beginner", "intermediate", "advanced"], {
+      required_error: "Difficulty is required",
+    }),
+  ),
   duration: z.coerce
     .number()
     .int("Duration must be a whole number of minutes")

@@ -38,7 +38,17 @@ export function useEnrollment(id: string) {
 }
 export function useEnroll() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: (d: any) => apiPost<any>("/enrollments", d), onSuccess: () => qc.invalidateQueries({ queryKey: ["enrollments"] }) });
+  // BUG-12: after enrolling, also refresh the course queries so the detail
+  // page's Enroll button / enrolled-count update immediately (previously only
+  // ["enrollments"] was invalidated, so the course view was stale until reload).
+  return useMutation({
+    mutationFn: (d: any) => apiPost<any>("/enrollments", d),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+      qc.invalidateQueries({ queryKey: ["courses"] });
+      qc.invalidateQueries({ queryKey: ["course"] });
+    },
+  });
 }
 export function useMarkLessonComplete(enrollmentId: string) {
   const qc = useQueryClient();

@@ -64,6 +64,20 @@ export default function ILTPage() {
     },
   });
 
+  // BUG-13: the Upcoming list has no per-session "registered" flag, so the
+  // Register button showed even after registering. Fetch the user's registered
+  // session ids and hide/disable Register for those. Invalidated by the same
+  // ["ilt"] key that handleRegister invalidates, so it refreshes on register.
+  const { data: myData } = useQuery({
+    queryKey: ["ilt", "my-ids"],
+    queryFn: () => apiGet<any[]>("/ilt/my/sessions", { limit: 200 }),
+    enabled: !isAdmin,
+  });
+  const registeredIds = useMemo(
+    () => new Set((myData?.data ?? []).map((s: any) => s.id ?? s.session_id ?? s.sessionId)),
+    [myData],
+  );
+
   const sessions: IltSession[] = (data?.data ?? []).map(normalizeSession);
 
   const handleRegister = async (e: React.MouseEvent, sessionId: string) => {
@@ -150,7 +164,10 @@ export default function ILTPage() {
           {sessions.map((session) => {
             const full = isSessionFull(session);
             const canRegister =
-              activeTab === "upcoming" && session.status === "scheduled" && !full;
+              activeTab === "upcoming" &&
+              session.status === "scheduled" &&
+              !full &&
+              !registeredIds.has(session.id); // BUG-13: hide once registered
             return (
               <Link
                 key={session.id}
@@ -207,7 +224,7 @@ export default function ILTPage() {
                   </div>
                 </dl>
 
-                {canRegister && (
+                {canRegister ? (
                   <button
                     onClick={(e) => handleRegister(e, session.id)}
                     disabled={registeringId === session.id}
@@ -218,7 +235,12 @@ export default function ILTPage() {
                     )}
                     Register
                   </button>
-                )}
+                ) : activeTab === "upcoming" && registeredIds.has(session.id) ? (
+                  // BUG-13: positive confirmation once registered.
+                  <span className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                    <UserCheck className="h-4 w-4" /> Registered
+                  </span>
+                ) : null}
               </Link>
             );
           })}

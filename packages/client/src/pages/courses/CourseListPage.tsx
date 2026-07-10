@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -86,7 +86,9 @@ export default function CourseListPage() {
   const queryParams = useMemo(() => {
     const p: Record<string, any> = { page, limit };
     if (search) p.search = search;
-    if (category) p.category = category;
+    // BUG-06: the server filter (courseFilterSchema / course.service) reads
+    // `category_id`, not `category` — sending the wrong key silently did nothing.
+    if (category) p.category_id = category;
     if (difficulty !== "All") p.difficulty = difficulty.toLowerCase();
     if (tab === "Published") p.status = "published";
     else if (tab === "Draft") p.status = "draft";
@@ -117,6 +119,16 @@ export default function CourseListPage() {
     e.preventDefault();
     setParam("search", searchInput);
   }
+
+  // BUG-06: search previously only applied on Enter, so typing "did not
+  // filter". Debounce the input into the query param so results filter as
+  // the user types (Enter still works via handleSearch).
+  useEffect(() => {
+    if (searchInput === search) return;
+    const t = setTimeout(() => setParam("search", searchInput), 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   /* ── render ────────────────────────────────────────────────────────── */
   return (

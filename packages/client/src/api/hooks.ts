@@ -68,9 +68,19 @@ export function useQuizzes(courseId: string) {
 export function useQuiz(id: string) {
   return useQuery({ queryKey: ["quizzes", "detail", id], queryFn: () => apiGet<any>(`/quizzes/${id}`), enabled: !!id });
 }
+// Submit a quiz attempt. The server route is POST /quizzes/:id/submit and
+// requires { enrollment_id, answers } — the previous "/quizzes/attempt" URL
+// (with no id) 404'd, which made quizzes impossible to complete.
 export function useSubmitQuiz() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: (d: any) => apiPost<any>("/quizzes/attempt", d), onSuccess: () => qc.invalidateQueries({ queryKey: ["quizzes"] }) });
+  return useMutation({
+    mutationFn: ({ quizId, enrollment_id, answers }: { quizId: string; enrollment_id: string; answers: any[] }) =>
+      apiPost<any>(`/quizzes/${quizId}/submit`, { enrollment_id, answers }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quizzes"] });
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
 }
 
 // ── Learning Paths ────────────────────────────────────────────────────────

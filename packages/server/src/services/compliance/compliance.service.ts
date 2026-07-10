@@ -543,10 +543,19 @@ export async function getComplianceDashboard(orgId: number) {
     org_id: orgId,
     status: "completed",
   });
-  const overdueRecords = await db.count("compliance_records", {
-    org_id: orgId,
-    status: "overdue",
-  });
+  // BUG-03: count overdue by the actual condition (past due date AND not yet
+  // completed) rather than by the stored `status = 'overdue'`. The status flip
+  // only happens in the markOverdue background job, so relying on it made the
+  // dashboard card show 0 while the record rows (which compute overdue live
+  // from due_date) clearly showed overdue items. Use the same predicate as the
+  // markOverdue job so the aggregate always matches the detail rows.
+  const overdueRow = await db.raw<any[]>(
+    `SELECT COUNT(*) AS c
+     FROM compliance_records
+     WHERE org_id = ? AND due_date < ? AND status NOT IN ('completed')`,
+    [orgId, new Date()]
+  );
+  const overdueRecords = Number(overdueRow?.[0]?.c ?? 0);
   const inProgressRecords = await db.count("compliance_records", {
     org_id: orgId,
     status: "in_progress",

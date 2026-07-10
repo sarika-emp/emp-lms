@@ -38,15 +38,33 @@ export default function CertificateDownload({ certificateId, className = "", sho
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
   const [showVerifyResult, setShowVerifyResult] = useState(false);
 
-  // Opens the certificate in a new tab. The server renders the HTML template
-  // with learner/course data filled in. The user can then Ctrl+P → Save as PDF
-  // or print directly. When server-side PDF generation is configured (Phase 2),
-  // this will download a real PDF instead.
-  const handleDownload = () => {
-    const token = localStorage.getItem("access_token");
-    const url = `/api/v1/certificates/${certificateId}/download${token ? `?token=${token}` : ""}`;
-    window.open(url, "_blank");
+  // Fetch the certificate through the authenticated axios client (token in the
+  // Authorization HEADER, never the URL) and open it from a blob URL. This
+  // avoids embedding the JWT in the query string, which previously leaked it
+  // into browser history, server access logs, and referrer headers (BUG-02).
+  // `print` opens with the server's ?print=1 auto-print page.
+  const openCertificate = async (print: boolean) => {
+    setDownloading(true);
+    try {
+      const res = await api.get(
+        `/certificates/${certificateId}/download${print ? "?print=1" : ""}`,
+        { responseType: "blob" },
+      );
+      const blobUrl = URL.createObjectURL(res.data as Blob);
+      const win = window.open(blobUrl, "_blank");
+      // Revoke after the new tab has had time to load the blob.
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      if (!win) toast.error("Please allow pop-ups to open the certificate.");
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.error?.message || "Failed to open certificate. Please try again.",
+      );
+    } finally {
+      setDownloading(false);
+    }
   };
+
+  const handleDownload = () => openCertificate(false);
 
   const handleVerify = async () => {
     setVerifying(true);
@@ -92,16 +110,9 @@ export default function CertificateDownload({ certificateId, className = "", sho
             page auto-triggers the print dialog once fully rendered (reliable
             across browsers; avoids the cross-tab win.print() load race). */}
         <button
-          onClick={() => {
-            const token = localStorage.getItem("access_token");
-            const params = new URLSearchParams({ print: "1" });
-            if (token) params.set("token", token);
-            window.open(
-              `/api/v1/certificates/${certificateId}/download?${params.toString()}`,
-              "_blank",
-            );
-          }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+          onClick={() => openCertificate(true)}
+          disabled={downloading}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
         >
           <Printer className="h-3.5 w-3.5" />
           Print

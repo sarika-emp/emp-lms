@@ -11,7 +11,9 @@ import {
   Trophy,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import { useQuiz, useSubmitQuiz } from "@/api/hooks";
+import { apiGet } from "@/api/client";
 
 // Server QuestionType values are snake_case
 type QuestionType =
@@ -51,6 +53,21 @@ export default function QuizAttemptPage() {
   const submitMutation = useSubmitQuiz();
 
   const quiz: QuizData | null = (data?.data as QuizData) ?? null;
+  const courseId: string | undefined =
+    (quiz as any)?.courseId ?? (quiz as any)?.course_id;
+
+  // Submitting a quiz attempt requires the learner's enrollment for this
+  // quiz's course (the server verifies it and uses it to record completion).
+  // Look it up once the quiz — and therefore its courseId — has loaded.
+  const { data: progressData } = useQuery({
+    queryKey: ["enrollments", "my", courseId],
+    queryFn: () => apiGet<any>(`/enrollments/my/${courseId}`),
+    enabled: !!courseId,
+  });
+  const enrollmentId: string | undefined =
+    progressData?.data?.enrollment?.id ??
+    progressData?.data?.enrollment?.enrollment_id ??
+    progressData?.data?.enrollmentId;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -110,9 +127,16 @@ export default function QuizAttemptPage() {
 
   const handleSubmit = useCallback(async () => {
     setShowConfirm(false);
+    // Without an enrollment we can't submit — surface a clear message instead
+    // of failing silently (part of BUG-01 was that no error was ever shown).
+    if (!enrollmentId) {
+      toast.error("You must be enrolled in this course to submit the quiz.");
+      return;
+    }
     try {
       const res = await submitMutation.mutateAsync({
-        quiz_id: id,
+        quizId: id!,
+        enrollment_id: enrollmentId,
         answers: Object.entries(answers).map(([question_id, answer]) => ({
           question_id,
           answer,
@@ -121,10 +145,14 @@ export default function QuizAttemptPage() {
       setResult(res.data);
       setSubmitted(true);
       toast.success("Quiz submitted!");
-    } catch {
-      toast.error("Failed to submit quiz. Please try again.");
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.error?.message ||
+          err?.message ||
+          "Failed to submit quiz. Please try again.",
+      );
     }
-  }, [submitMutation, id, answers]);
+  }, [submitMutation, id, enrollmentId, answers]);
 
   if (isLoading) {
     return (

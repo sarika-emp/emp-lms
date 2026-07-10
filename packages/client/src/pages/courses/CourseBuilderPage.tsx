@@ -501,7 +501,11 @@ function ModuleSection({
               className="text-left"
             >
               <h3 className="text-sm font-semibold text-gray-900">
-                Module {index + 1}: {module.title}
+                {/* BUG-09: don't double-prepend "Module N:" when the stored
+                    title already starts with a "Module <n>:" prefix. */}
+                {/^\s*module\s+\d+\s*:/i.test(module.title)
+                  ? module.title
+                  : `Module ${index + 1}: ${module.title}`}
               </h3>
               {module.description && (
                 <p className="text-xs text-gray-500">{module.description}</p>

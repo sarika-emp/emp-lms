@@ -76,13 +76,16 @@ export default function LeaderboardPage() {
           {podiumOrder.map((idx) => {
             const entry = top3[idx];
             if (!entry) return <div key={idx} className="w-28" />;
-            const rank = idx + 1;
-            const style = PODIUM_STYLES[rank];
+            // Podium slot (gold/silver/bronze) is by position; the displayed
+            // number uses the entry's real rank so ties show the same #.
+            const podiumPos = idx + 1;
+            const rank = entry.rank ?? podiumPos; // BUG-08: server-computed rank
+            const style = PODIUM_STYLES[podiumPos];
             const isMe = entry.userId === user?.empcloudUserId;
             return (
               <div
                 key={entry.userId ?? idx}
-                className={`flex flex-col items-center ${rank === 1 ? "mb-4" : ""}`}
+                className={`flex flex-col items-center ${podiumPos === 1 ? "mb-4" : ""}`}
               >
                 <div
                   className={`flex h-16 w-16 items-center justify-center rounded-full ring-4 ${style.ring} ${
@@ -135,7 +138,7 @@ export default function LeaderboardPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {leaders.map((entry: any, idx: number) => {
-                const rank = idx + 1;
+                const rank = entry.rank ?? idx + 1; // BUG-08: real rank (ties share)
                 const isMe = entry.userId === user?.empcloudUserId;
                 return (
                   <tr

@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import App from "./App";
 import { useAuthStore } from "@/lib/auth-store";
+import "@/lib/i18n";
 import "./styles/globals.css";
 
 // Hydrate auth state from localStorage before first render

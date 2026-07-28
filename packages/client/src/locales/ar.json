@@ -110,5 +110,22 @@
     "continueLearning": "متابعة التعلم",
     "browseCatalog": "تصفح الكتالوج",
     "upcomingIlt": "جلسات ILT القادمة"
+  },
+  "myLearning": {
+    "title": "تعلّمي",
+    "loadError": "تعذّر تحميل تسجيلاتك. يرجى المحاولة لاحقًا.",
+    "tabInProgress": "قيد التقدم",
+    "tabCompleted": "مكتمل",
+    "emptyNone": "لم تسجّل في أي دورة بعد.",
+    "emptyInProgress": "لا توجد دورات قيد التقدم.",
+    "emptyCompleted": "لم تكمل أي دورة بعد.",
+    "emptyAll": "لا توجد دورات لعرضها.",
+    "browseCatalog": "تصفح الكتالوج",
+    "untitledCourse": "دورة بلا عنوان",
+    "progress": "التقدم",
+    "minSpent": "تم قضاء {{count}} دقيقة",
+    "lastAccessed": "آخر وصول {{date}}",
+    "completed": "مكتمل",
+    "continue": "متابعة"
   }
 }

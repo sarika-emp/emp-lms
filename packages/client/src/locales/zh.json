@@ -110,5 +110,22 @@
     "continueLearning": "继续学习",
     "browseCatalog": "浏览目录",
     "upcomingIlt": "即将开始的 ILT 课程"
+  },
+  "myLearning": {
+    "title": "我的学习",
+    "loadError": "无法加载您的报名信息。请稍后重试。",
+    "tabInProgress": "进行中",
+    "tabCompleted": "已完成",
+    "emptyNone": "您还没有报名任何课程。",
+    "emptyInProgress": "没有进行中的课程。",
+    "emptyCompleted": "您还没有完成任何课程。",
+    "emptyAll": "没有可显示的课程。",
+    "browseCatalog": "浏览目录",
+    "untitledCourse": "未命名课程",
+    "progress": "进度",
+    "minSpent": "已花费 {{count}} 分钟",
+    "lastAccessed": "上次访问 {{date}}",
+    "completed": "已完成",
+    "continue": "继续"
   }
 }

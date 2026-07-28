@@ -110,5 +110,22 @@
     "continueLearning": "Continuar aprendiendo",
     "browseCatalog": "Explorar catálogo",
     "upcomingIlt": "Próximas sesiones ILT"
+  },
+  "myLearning": {
+    "title": "Mi aprendizaje",
+    "loadError": "No se pudieron cargar tus inscripciones. Inténtalo más tarde.",
+    "tabInProgress": "En curso",
+    "tabCompleted": "Completados",
+    "emptyNone": "Aún no te has inscrito en ningún curso.",
+    "emptyInProgress": "No hay cursos en curso.",
+    "emptyCompleted": "Aún no has completado ningún curso.",
+    "emptyAll": "No hay cursos para mostrar.",
+    "browseCatalog": "Explorar catálogo",
+    "untitledCourse": "Curso sin título",
+    "progress": "Progreso",
+    "minSpent": "{{count}} min dedicados",
+    "lastAccessed": "Último acceso {{date}}",
+    "completed": "Completado",
+    "continue": "Continuar"
   }
 }

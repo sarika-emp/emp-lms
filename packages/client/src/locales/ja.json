@@ -110,5 +110,22 @@
     "continueLearning": "学習を続ける",
     "browseCatalog": "カタログを閲覧",
     "upcomingIlt": "今後のILTセッション"
+  },
+  "myLearning": {
+    "title": "マイラーニング",
+    "loadError": "登録情報を読み込めませんでした。後でもう一度お試しください。",
+    "tabInProgress": "進行中",
+    "tabCompleted": "完了",
+    "emptyNone": "まだコースに登録していません。",
+    "emptyInProgress": "進行中のコースはありません。",
+    "emptyCompleted": "まだ完了したコースはありません。",
+    "emptyAll": "表示するコースがありません。",
+    "browseCatalog": "カタログを閲覧",
+    "untitledCourse": "無題のコース",
+    "progress": "進捗",
+    "minSpent": "{{count}} 分費やしました",
+    "lastAccessed": "最終アクセス {{date}}",
+    "completed": "完了",
+    "continue": "続ける"
   }
 }

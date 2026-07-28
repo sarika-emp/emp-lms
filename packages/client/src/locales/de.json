@@ -110,5 +110,22 @@
     "continueLearning": "Weiterlernen",
     "browseCatalog": "Katalog durchsuchen",
     "upcomingIlt": "Kommende ILT-Sitzungen"
+  },
+  "myLearning": {
+    "title": "Mein Lernen",
+    "loadError": "Ihre Anmeldungen konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+    "tabInProgress": "In Bearbeitung",
+    "tabCompleted": "Abgeschlossen",
+    "emptyNone": "Sie haben sich noch für keinen Kurs angemeldet.",
+    "emptyInProgress": "Keine Kurse in Bearbeitung.",
+    "emptyCompleted": "Sie haben noch keinen Kurs abgeschlossen.",
+    "emptyAll": "Keine Kurse anzuzeigen.",
+    "browseCatalog": "Katalog durchsuchen",
+    "untitledCourse": "Kurs ohne Titel",
+    "progress": "Fortschritt",
+    "minSpent": "{{count}} Min. verbracht",
+    "lastAccessed": "Zuletzt aufgerufen {{date}}",
+    "completed": "Abgeschlossen",
+    "continue": "Fortsetzen"
   }
 }

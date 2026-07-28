@@ -110,5 +110,22 @@
     "continueLearning": "Continue Learning",
     "browseCatalog": "Browse Catalog",
     "upcomingIlt": "Upcoming ILT Sessions"
+  },
+  "myLearning": {
+    "title": "My Learning",
+    "loadError": "Failed to load your enrollments. Please try again later.",
+    "tabInProgress": "In Progress",
+    "tabCompleted": "Completed",
+    "emptyNone": "You haven't enrolled in any courses yet.",
+    "emptyInProgress": "No courses in progress.",
+    "emptyCompleted": "You haven't completed any courses yet.",
+    "emptyAll": "No courses to show.",
+    "browseCatalog": "Browse Catalog",
+    "untitledCourse": "Untitled Course",
+    "progress": "Progress",
+    "minSpent": "{{count}} min spent",
+    "lastAccessed": "Last accessed {{date}}",
+    "completed": "Completed",
+    "continue": "Continue"
   }
 }

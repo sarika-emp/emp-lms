@@ -110,5 +110,22 @@
     "continueLearning": "सीखना जारी रखें",
     "browseCatalog": "कैटलॉग ब्राउज़ करें",
     "upcomingIlt": "आगामी ILT सत्र"
+  },
+  "myLearning": {
+    "title": "मेरी शिक्षा",
+    "loadError": "आपके नामांकन लोड करने में विफल। कृपया बाद में पुनः प्रयास करें।",
+    "tabInProgress": "प्रगति में",
+    "tabCompleted": "पूर्ण",
+    "emptyNone": "आपने अभी तक किसी कोर्स में नामांकन नहीं किया है।",
+    "emptyInProgress": "कोई कोर्स प्रगति में नहीं।",
+    "emptyCompleted": "आपने अभी तक कोई कोर्स पूरा नहीं किया है।",
+    "emptyAll": "दिखाने के लिए कोई कोर्स नहीं।",
+    "browseCatalog": "कैटलॉग ब्राउज़ करें",
+    "untitledCourse": "बिना शीर्षक कोर्स",
+    "progress": "प्रगति",
+    "minSpent": "{{count}} मिनट व्यतीत",
+    "lastAccessed": "अंतिम बार देखा {{date}}",
+    "completed": "पूर्ण",
+    "continue": "जारी रखें"
   }
 }

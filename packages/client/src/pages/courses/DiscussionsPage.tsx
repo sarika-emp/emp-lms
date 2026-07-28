@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   MessageSquare,
@@ -21,6 +22,7 @@ import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 const ITEMS_PER_PAGE = 10;
 
 export default function DiscussionsPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
   const queryClient = useQueryClient();
@@ -71,14 +73,14 @@ export default function DiscussionsPage() {
       };
       if (newLessonId) body.lesson_id = newLessonId;
       await apiPost("/discussions", body);
-      toast.success("Discussion created");
+      toast.success(t("discussions.discussionCreated"));
       setNewTitle("");
       setNewContent("");
       setNewLessonId("");
       setShowNewForm(false);
       invalidate();
     } catch {
-      toast.error("Failed to create discussion");
+      toast.error(t("discussions.createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -92,11 +94,11 @@ export default function DiscussionsPage() {
       await apiPost(`/discussions/${discussionId}/replies`, {
         content: replyContent.trim(),
       });
-      toast.success("Reply posted");
+      toast.success(t("discussions.replyPosted"));
       setReplyContent("");
       invalidate();
     } catch {
-      toast.error("Failed to post reply");
+      toast.error(t("discussions.replyFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -106,44 +108,44 @@ export default function DiscussionsPage() {
   async function handleTogglePin(id: string, currentPinned: boolean) {
     try {
       await apiPatch(`/discussions/${id}`, { pinned: !currentPinned });
-      toast.success(currentPinned ? "Unpinned" : "Pinned");
+      toast.success(currentPinned ? t("discussions.unpinnedToast") : t("discussions.pinnedToast"));
       invalidate();
     } catch {
-      toast.error("Failed to update discussion");
+      toast.error(t("discussions.updateFailed"));
     }
   }
 
   async function handleToggleResolved(id: string, currentResolved: boolean) {
     try {
       await apiPatch(`/discussions/${id}`, { resolved: !currentResolved });
-      toast.success(currentResolved ? "Marked unresolved" : "Marked resolved");
+      toast.success(currentResolved ? t("discussions.markedUnresolved") : t("discussions.markedResolved"));
       invalidate();
     } catch {
-      toast.error("Failed to update discussion");
+      toast.error(t("discussions.updateFailed"));
     }
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────
   async function handleDelete(id: string) {
-    if (!confirm("Delete this discussion?")) return;
+    if (!confirm(t("discussions.confirmDelete"))) return;
     try {
       await apiDelete(`/discussions/${id}`);
-      toast.success("Discussion deleted");
+      toast.success(t("discussions.discussionDeleted"));
       if (expandedThread === id) setExpandedThread(null);
       invalidate();
     } catch {
-      toast.error("Failed to delete discussion");
+      toast.error(t("discussions.deleteFailed"));
     }
   }
 
   async function handleDeleteReply(discussionId: string, replyId: string) {
-    if (!confirm("Delete this reply?")) return;
+    if (!confirm(t("discussions.confirmDeleteReply"))) return;
     try {
       await apiDelete(`/discussions/${discussionId}/replies/${replyId}`);
-      toast.success("Reply deleted");
+      toast.success(t("discussions.replyDeleted"));
       invalidate();
     } catch {
-      toast.error("Failed to delete reply");
+      toast.error(t("discussions.deleteReplyFailed"));
     }
   }
 
@@ -170,10 +172,10 @@ export default function DiscussionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <MessageSquare className="h-7 w-7 text-brand-600" />
-            Discussions
+            {t("discussions.title")}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Ask questions and share ideas with your peers
+            {t("discussions.subtitle")}
           </p>
         </div>
 
@@ -183,7 +185,7 @@ export default function DiscussionsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
           >
             {showNewForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showNewForm ? "Cancel" : "New Discussion"}
+            {showNewForm ? t("common.cancel") : t("discussions.newDiscussion")}
           </button>
         )}
       </div>
@@ -194,7 +196,7 @@ export default function DiscussionsPage() {
           htmlFor="course-select"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Select Course
+          {t("discussions.selectCourse")}
         </label>
         <select
           id="course-select"
@@ -207,8 +209,8 @@ export default function DiscussionsPage() {
           }}
           className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         >
-          <option value="">-- Choose a course --</option>
-          {coursesLoading && <option disabled>Loading courses...</option>}
+          <option value="">{t("discussions.chooseCourse")}</option>
+          {coursesLoading && <option disabled>{t("discussions.loadingCourses")}</option>}
           {(Array.isArray(courses) ? courses : []).map((c: any) => (
             <option key={c.id ?? c._id} value={c.id ?? c._id}>
               {c.title ?? c.name}
@@ -223,26 +225,26 @@ export default function DiscussionsPage() {
           onSubmit={handleCreateDiscussion}
           className="rounded-lg border border-brand-200 bg-brand-50 p-5 shadow-sm space-y-4"
         >
-          <h2 className="text-lg font-semibold text-gray-800">Start a New Discussion</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{t("discussions.startNewDiscussion")}</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("discussions.titleLabel")}</label>
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Discussion title"
+              placeholder={t("discussions.titlePlaceholder")}
               required
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("discussions.contentLabel")}</label>
             <textarea
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder="What would you like to discuss?"
+              placeholder={t("discussions.contentPlaceholder")}
               required
               rows={4}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -251,13 +253,13 @@ export default function DiscussionsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lesson (optional)
+              {t("discussions.lessonLabel")}
             </label>
             <input
               type="text"
               value={newLessonId}
               onChange={(e) => setNewLessonId(e.target.value)}
-              placeholder="Lesson ID (optional)"
+              placeholder={t("discussions.lessonPlaceholder")}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
@@ -273,7 +275,7 @@ export default function DiscussionsPage() {
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Post Discussion
+              {t("discussions.postDiscussion")}
             </button>
           </div>
         </form>
@@ -283,7 +285,7 @@ export default function DiscussionsPage() {
       {!selectedCourseId ? (
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
           <MessageCircle className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-3 text-gray-500">Select a course to view discussions</p>
+          <p className="mt-3 text-gray-500">{t("discussions.selectCoursePrompt")}</p>
         </div>
       ) : discussionsLoading ? (
         <div className="flex items-center justify-center py-16">
@@ -292,8 +294,8 @@ export default function DiscussionsPage() {
       ) : discussions.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
           <MessageCircle className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-3 text-gray-500">No discussions yet</p>
-          <p className="text-sm text-gray-400">Be the first to start a conversation!</p>
+          <p className="mt-3 text-gray-500">{t("discussions.noDiscussions")}</p>
+          <p className="text-sm text-gray-400">{t("discussions.beFirst")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -321,12 +323,12 @@ export default function DiscussionsPage() {
                         </h3>
                         {thread.pinned && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                            <Pin className="h-3 w-3" /> Pinned
+                            <Pin className="h-3 w-3" /> {t("discussions.pinned")}
                           </span>
                         )}
                         {thread.resolved && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                            <CheckCircle2 className="h-3 w-3" /> Resolved
+                            <CheckCircle2 className="h-3 w-3" /> {t("discussions.resolved")}
                           </span>
                         )}
                       </div>
@@ -338,12 +340,12 @@ export default function DiscussionsPage() {
                           {thread.author_name ??
                             thread.authorName ??
                             thread.author?.name ??
-                            "Unknown"}
+                            t("discussions.unknownAuthor")}
                         </span>
                         <span>{formatDate(thread.created_at ?? thread.createdAt)}</span>
                         <span className="inline-flex items-center gap-1">
                           <MessageCircle className="h-3 w-3" />
-                          {replies.length} {replies.length === 1 ? "reply" : "replies"}
+                          {t("discussions.replyCount", { count: replies.length })}
                         </span>
                       </div>
                     </div>
@@ -367,7 +369,7 @@ export default function DiscussionsPage() {
                             className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             <Pin className="h-3.5 w-3.5" />
-                            {thread.pinned ? "Unpin" : "Pin"}
+                            {thread.pinned ? t("discussions.unpin") : t("discussions.pin")}
                           </button>
                           <button
                             onClick={() =>
@@ -376,7 +378,7 @@ export default function DiscussionsPage() {
                             className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            {thread.resolved ? "Unresolve" : "Resolve"}
+                            {thread.resolved ? t("discussions.unresolve") : t("discussions.resolve")}
                           </button>
                         </>
                       )}
@@ -386,7 +388,7 @@ export default function DiscussionsPage() {
                           className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete
+                          {t("common.delete")}
                         </button>
                       )}
                     </div>
@@ -394,7 +396,7 @@ export default function DiscussionsPage() {
                     {/* Replies */}
                     {replies.length > 0 && (
                       <div className="space-y-3">
-                        <h4 className="text-sm font-medium text-gray-700">Replies</h4>
+                        <h4 className="text-sm font-medium text-gray-700">{t("discussions.replies")}</h4>
                         {replies.map((reply: any) => {
                           const replyId = reply.id ?? reply._id;
                           return (
@@ -410,7 +412,7 @@ export default function DiscussionsPage() {
                                       {reply.author_name ??
                                         reply.authorName ??
                                         reply.author?.name ??
-                                        "Unknown"}
+                                        t("discussions.unknownAuthor")}
                                     </span>
                                     <span>
                                       {formatDate(reply.created_at ?? reply.createdAt)}
@@ -423,7 +425,7 @@ export default function DiscussionsPage() {
                                   <button
                                     onClick={() => handleDeleteReply(id, replyId)}
                                     className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
-                                    title="Delete reply"
+                                    title={t("discussions.deleteReply")}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -440,7 +442,7 @@ export default function DiscussionsPage() {
                       <textarea
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
-                        placeholder="Write a reply..."
+                        placeholder={t("discussions.replyPlaceholder")}
                         rows={2}
                         className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
@@ -454,7 +456,7 @@ export default function DiscussionsPage() {
                         ) : (
                           <Send className="h-4 w-4" />
                         )}
-                        Reply
+                        {t("discussions.reply")}
                       </button>
                     </div>
                   </div>
@@ -471,17 +473,17 @@ export default function DiscussionsPage() {
                 disabled={page === 1}
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
-                Previous
+                {t("common.previous")}
               </button>
               <span className="text-sm text-gray-600">
-                Page {page} of {totalPages}
+                {t("discussions.pageInfo", { page, total: totalPages })}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
-                Next
+                {t("common.next")}
               </button>
             </div>
           )}

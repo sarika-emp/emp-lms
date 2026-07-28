@@ -1,4 +1,5 @@
 import { BarChart3, Loader2, Users, GraduationCap, TrendingUp, Target } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -44,6 +45,7 @@ function StatCard({
 }
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { data, isLoading } = useOverviewAnalytics();
   const analytics = data?.data as any;
@@ -52,8 +54,8 @@ export default function AnalyticsPage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <BarChart3 className="h-12 w-12 text-gray-400" />
-        <h2 className="mt-4 text-lg font-medium text-gray-900">Access Restricted</h2>
-        <p className="mt-1 text-sm text-gray-500">Analytics are available to administrators only.</p>
+        <h2 className="mt-4 text-lg font-medium text-gray-900">{t("analytics.accessRestricted")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{t("analytics.accessRestrictedBody")}</p>
       </div>
     );
   }
@@ -69,25 +71,25 @@ export default function AnalyticsPage() {
   const stats = [
     {
       icon: GraduationCap,
-      label: "Total Enrollments",
+      label: t("analytics.totalEnrollments"),
       value: analytics?.totalEnrollments?.toLocaleString() ?? 0,
       color: "bg-indigo-500",
     },
     {
       icon: Target,
-      label: "Completion Rate",
+      label: t("analytics.completionRate"),
       value: `${analytics?.completionRate ?? 0}%`,
       color: "bg-green-500",
     },
     {
       icon: TrendingUp,
-      label: "Average Score",
+      label: t("analytics.averageScore"),
       value: `${analytics?.avgScore ?? 0}%`,
       color: "bg-amber-500",
     },
     {
       icon: Users,
-      label: "Active Learners",
+      label: t("analytics.activeLearners"),
       value: analytics?.activeLearners?.toLocaleString() ?? 0,
       color: "bg-cyan-500",
     },
@@ -101,7 +103,7 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <BarChart3 className="h-7 w-7 text-brand-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("analytics.title")}</h1>
       </div>
 
       {/* Stats Row */}
@@ -115,7 +117,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Completion Trend */}
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">Completion Trend</h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">{t("analytics.completionTrend")}</h2>
           <div className="h-72">
             {completionTrend.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -136,7 +138,7 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                No completion data in the last 6 months.
+                {t("analytics.noCompletionData")}
               </div>
             )}
           </div>
@@ -144,7 +146,7 @@ export default function AnalyticsPage() {
 
         {/* Top Courses */}
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">Top Courses</h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">{t("analytics.topCourses")}</h2>
           <div className="h-72">
             {topCourses.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -160,12 +162,12 @@ export default function AnalyticsPage() {
                     interval={0}
                   />
                   <Tooltip contentStyle={{ borderRadius: "0.5rem", fontSize: "0.875rem" }} />
-                  <Bar dataKey="enrollments" fill="#6366f1" radius={[0, 4, 4, 0]} name="Enrollments" />
+                  <Bar dataKey="enrollments" fill="#6366f1" radius={[0, 4, 4, 0]} name={t("analytics.enrollments")} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                No course enrollments yet.
+                {t("analytics.noCourseEnrollments")}
               </div>
             )}
           </div>
@@ -173,7 +175,7 @@ export default function AnalyticsPage() {
 
         {/* Enrollment by Department */}
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">Enrollment by Department</h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">{t("analytics.enrollmentByDepartment")}</h2>
           <div className="h-72">
             {departmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -199,7 +201,7 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                No department data available. Enrollments may not be linked to departments.
+                {t("analytics.noDepartmentData")}
               </div>
             )}
           </div>

@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { apiPost, apiPut, apiDelete } from "@/api/client";
 import { useCategories } from "@/api/hooks";
 
@@ -45,6 +46,7 @@ function DeleteCategoryModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   const count = Number(category.course_count) || 0;
   return (
     <div
@@ -63,20 +65,17 @@ function DeleteCategoryModal({
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-gray-900">
-              Delete &ldquo;{category.name}&rdquo;?
+              {t("settings.categories.deleteTitle", { name: category.name })}
             </h3>
             <p className="mt-1.5 text-sm text-gray-500">
-              {count > 0 ? (
-                <>
-                  {count} course{count === 1 ? "" : "s"} currently use{count === 1 ? "s" : ""} this
-                  category. {category.parent_id
-                    ? "They will be moved to the parent category."
-                    : "They will be left uncategorized."}{" "}
-                  This action cannot be undone.
-                </>
-              ) : (
-                <>This category has no courses. This action cannot be undone.</>
-              )}
+              {count > 0
+                ? t("settings.categories.deleteBodyWithCourses", {
+                    count,
+                    consequence: category.parent_id
+                      ? t("settings.categories.movedToParent")
+                      : t("settings.categories.leftUncategorized"),
+                  })
+                : t("settings.categories.deleteBodyNoCourses")}
             </p>
           </div>
         </div>
@@ -87,7 +86,7 @@ function DeleteCategoryModal({
             disabled={deleting}
             className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -100,7 +99,7 @@ function DeleteCategoryModal({
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </div>
@@ -110,6 +109,7 @@ function DeleteCategoryModal({
 
 // ── Main section ────────────────────────────────────────────────────────────
 export default function CourseCategoriesSection() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { data: catData, isLoading } = useCategories();
   const categories: Category[] = (catData?.data ?? []).filter(
@@ -135,13 +135,13 @@ export default function CourseCategoriesSection() {
     mutationFn: (body: { name: string; description?: string }) =>
       apiPost<any>("/courses/categories", body),
     onSuccess: () => {
-      toast.success("Category created");
+      toast.success(t("settings.categories.created"));
       setShowAdd(false);
       setAddName("");
       setAddDesc("");
       invalidate();
     },
-    onError: (err: any) => toast.error(errMsg(err, "Failed to create category")),
+    onError: (err: any) => toast.error(errMsg(err, t("settings.categories.createFailed"))),
   });
 
   const updateMut = useMutation({
@@ -151,27 +151,27 @@ export default function CourseCategoriesSection() {
         description: args.description,
       }),
     onSuccess: () => {
-      toast.success("Category updated");
+      toast.success(t("settings.categories.updated"));
       setEditingId(null);
       invalidate();
     },
-    onError: (err: any) => toast.error(errMsg(err, "Failed to update category")),
+    onError: (err: any) => toast.error(errMsg(err, t("settings.categories.updateFailed"))),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => apiDelete<any>(`/courses/categories/${id}`),
     onSuccess: () => {
-      toast.success("Category deleted");
+      toast.success(t("settings.categories.deleted"));
       setDeleteTarget(null);
       invalidate();
     },
-    onError: (err: any) => toast.error(errMsg(err, "Failed to delete category")),
+    onError: (err: any) => toast.error(errMsg(err, t("settings.categories.deleteFailed"))),
   });
 
   const submitAdd = () => {
     const name = addName.trim();
     if (!name) {
-      toast.error("Category name is required");
+      toast.error(t("settings.categories.nameRequired"));
       return;
     }
     createMut.mutate({ name, description: addDesc.trim() || undefined });
@@ -186,7 +186,7 @@ export default function CourseCategoriesSection() {
   const submitEdit = () => {
     const name = editName.trim();
     if (!name) {
-      toast.error("Category name is required");
+      toast.error(t("settings.categories.nameRequired"));
       return;
     }
     if (!editingId) return;
@@ -201,10 +201,9 @@ export default function CourseCategoriesSection() {
           <FolderTree className="h-4 w-4 text-sky-600" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-gray-900">Course Categories</h2>
+          <h2 className="text-sm font-semibold text-gray-900">{t("settings.categories.title")}</h2>
           <p className="mt-0.5 text-xs text-gray-500">
-            Organize your organization&apos;s courses — these power the Category dropdown on the
-            course form
+            {t("settings.categories.subtitle")}
           </p>
         </div>
         {!showAdd && (
@@ -214,7 +213,7 @@ export default function CourseCategoriesSection() {
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
-            Add Category
+            {t("settings.categories.addCategory")}
           </button>
         )}
       </div>
@@ -226,7 +225,7 @@ export default function CourseCategoriesSection() {
             <div className="space-y-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Name <span className="text-red-500">*</span>
+                  {t("common.name")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -234,13 +233,13 @@ export default function CourseCategoriesSection() {
                   onChange={(e) => setAddName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitAdd()}
                   className={inputCls}
-                  placeholder="e.g. Leadership"
+                  placeholder={t("settings.categories.namePlaceholder")}
                   autoFocus
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Description <span className="font-normal text-gray-400">(optional)</span>
+                  {t("settings.categories.description")} <span className="font-normal text-gray-400">{t("settings.categories.optional")}</span>
                 </label>
                 <input
                   type="text"
@@ -248,7 +247,7 @@ export default function CourseCategoriesSection() {
                   onChange={(e) => setAddDesc(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitAdd()}
                   className={inputCls}
-                  placeholder="What kinds of courses belong here?"
+                  placeholder={t("settings.categories.descPlaceholder")}
                 />
               </div>
               <div className="flex justify-end gap-2">
@@ -262,7 +261,7 @@ export default function CourseCategoriesSection() {
                   disabled={createMut.isPending}
                   className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -275,7 +274,7 @@ export default function CourseCategoriesSection() {
                   ) : (
                     <Plus className="h-4 w-4" />
                   )}
-                  Create Category
+                  {t("settings.categories.createCategory")}
                 </button>
               </div>
             </div>
@@ -291,10 +290,10 @@ export default function CourseCategoriesSection() {
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-10 text-center">
             <FolderTree className="h-8 w-8 text-gray-300" />
             <p className="mt-3 text-sm font-medium text-gray-900">
-              No categories yet — add your first one
+              {t("settings.categories.emptyTitle")}
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Categories make courses easier to browse and filter.
+              {t("settings.categories.emptyBody")}
             </p>
             {!showAdd && (
               <button
@@ -303,7 +302,7 @@ export default function CourseCategoriesSection() {
                 className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
               >
                 <Plus className="h-4 w-4" />
-                Add Category
+                {t("settings.categories.addCategory")}
               </button>
             )}
           </div>
@@ -318,7 +317,7 @@ export default function CourseCategoriesSection() {
                     <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
                       <div>
                         <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                          Name <span className="text-red-500">*</span>
+                          {t("common.name")} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -331,8 +330,8 @@ export default function CourseCategoriesSection() {
                       </div>
                       <div>
                         <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                          Description{" "}
-                          <span className="font-normal text-gray-400">(optional)</span>
+                          {t("settings.categories.description")}{" "}
+                          <span className="font-normal text-gray-400">{t("settings.categories.optional")}</span>
                         </label>
                         <input
                           type="text"
@@ -350,7 +349,7 @@ export default function CourseCategoriesSection() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
                         >
                           <X className="h-3.5 w-3.5" />
-                          Cancel
+                          {t("common.cancel")}
                         </button>
                         <button
                           type="button"
@@ -363,7 +362,7 @@ export default function CourseCategoriesSection() {
                           ) : (
                             <Check className="h-3.5 w-3.5" />
                           )}
-                          Save
+                          {t("common.save")}
                         </button>
                       </div>
                     </div>
@@ -374,7 +373,7 @@ export default function CourseCategoriesSection() {
                           <p className="text-sm font-medium text-gray-900">{cat.name}</p>
                           <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
                             <BookOpen className="h-3 w-3" />
-                            {count} course{count === 1 ? "" : "s"}
+                            {t("settings.categories.courseCount", { count })}
                           </span>
                         </div>
                         {cat.description && (
@@ -387,7 +386,7 @@ export default function CourseCategoriesSection() {
                         <button
                           type="button"
                           onClick={() => startEdit(cat)}
-                          title="Edit category"
+                          title={t("settings.categories.editCategory")}
                           className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-50 hover:text-indigo-600"
                         >
                           <Pencil className="h-4 w-4" />
@@ -395,7 +394,7 @@ export default function CourseCategoriesSection() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(cat)}
-                          title="Delete category"
+                          title={t("settings.categories.deleteCategory")}
                           className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />

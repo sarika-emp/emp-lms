@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Users,
   Upload,
@@ -25,6 +26,7 @@ interface BulkEnrollResult {
 }
 
 export default function BulkEnrollPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
 
@@ -49,7 +51,9 @@ export default function BulkEnrollPage() {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const enrollCount = enrollAll ? "all users" : `${parsedUserIds.length} user(s)`;
+  const enrollCount = enrollAll
+    ? t("bulkEnroll.allUsers")
+    : t("bulkEnroll.userCount", { count: parsedUserIds.length });
   const canSubmit =
     selectedCourseId && (enrollAll || parsedUserIds.length > 0) && !submitting;
 
@@ -78,13 +82,13 @@ export default function BulkEnrollPage() {
       if (res.success && res.data) {
         setResult(res.data);
         const successCount = res.data.success_count ?? res.data.successCount ?? 0;
-        toast.success(`Successfully enrolled ${successCount} user(s)`);
+        toast.success(t("bulkEnroll.enrollSuccess", { count: successCount }));
       } else {
-        toast.error(res.error?.message ?? "Bulk enrollment failed");
+        toast.error(res.error?.message ?? t("bulkEnroll.enrollFailed"));
       }
     } catch (err: any) {
       const msg =
-        err?.response?.data?.error?.message ?? "Bulk enrollment request failed";
+        err?.response?.data?.error?.message ?? t("bulkEnroll.enrollRequestFailed");
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -107,10 +111,10 @@ export default function BulkEnrollPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Users className="h-7 w-7 text-brand-600" />
-          Bulk Enrollment
+          {t("bulkEnroll.title")}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Enroll multiple users into a course at once
+          {t("bulkEnroll.subtitle")}
         </p>
       </div>
 
@@ -122,7 +126,7 @@ export default function BulkEnrollPage() {
               htmlFor="bulk-course-select"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Course
+              {t("bulkEnroll.courseLabel")}
             </label>
             <select
               id="bulk-course-select"
@@ -134,8 +138,8 @@ export default function BulkEnrollPage() {
               required
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
-              <option value="">-- Select a course --</option>
-              {coursesLoading && <option disabled>Loading courses...</option>}
+              <option value="">{t("bulkEnroll.selectCoursePlaceholder")}</option>
+              {coursesLoading && <option disabled>{t("bulkEnroll.loadingCourses")}</option>}
               {(Array.isArray(courses) ? courses : []).map((c: any) => (
                 <option key={c.id ?? c._id} value={c.id ?? c._id}>
                   {c.title ?? c.name}
@@ -157,7 +161,7 @@ export default function BulkEnrollPage() {
               className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
             />
             <label htmlFor="enroll-all" className="text-sm font-medium text-gray-700">
-              Enroll all users in the organization
+              {t("bulkEnroll.enrollAllLabel")}
             </label>
           </div>
 
@@ -165,17 +169,17 @@ export default function BulkEnrollPage() {
           {!enrollAll && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                User IDs
+                {t("bulkEnroll.userIdsLabel")}
               </label>
               <textarea
                 value={userIdsText}
                 onChange={(e) => setUserIdsText(e.target.value)}
-                placeholder={"Enter user IDs separated by commas or new lines:\n101\n102\n103"}
+                placeholder={t("bulkEnroll.userIdsPlaceholder")}
                 rows={5}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
               <p className="mt-1 text-xs text-gray-400">
-                Separate IDs with commas or line breaks
+                {t("bulkEnroll.userIdsHint")}
               </p>
             </div>
           )}
@@ -184,7 +188,7 @@ export default function BulkEnrollPage() {
           <div>
             <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
               <CalendarDays className="h-4 w-4" />
-              Due Date (optional)
+              {t("bulkEnroll.dueDateLabel")}
             </label>
             <input
               type="date"
@@ -199,17 +203,17 @@ export default function BulkEnrollPage() {
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex items-start gap-3">
           <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-800">
-            <p className="font-medium">Enrollment Preview</p>
+            <p className="font-medium">{t("bulkEnroll.previewTitle")}</p>
             <p className="mt-1">
               {selectedCourseId
-                ? `Ready to enroll ${enrollCount} into the selected course.`
-                : "Select a course and specify users to preview enrollment."}
+                ? t("bulkEnroll.readyToEnroll", { target: enrollCount })
+                : t("bulkEnroll.selectToPreview")}
             </p>
             {!enrollAll && parsedUserIds.length > 0 && (
               <p className="mt-1 text-xs text-blue-600">
-                IDs: {parsedUserIds.slice(0, 10).join(", ")}
+                {t("bulkEnroll.idsLabel")} {parsedUserIds.slice(0, 10).join(", ")}
                 {parsedUserIds.length > 10 &&
-                  ` ... and ${parsedUserIds.length - 10} more`}
+                  ` ${t("bulkEnroll.andMore", { count: parsedUserIds.length - 10 })}`}
               </p>
             )}
           </div>
@@ -227,7 +231,7 @@ export default function BulkEnrollPage() {
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            {submitting ? "Enrolling..." : "Enroll"}
+            {submitting ? t("bulkEnroll.enrolling") : t("bulkEnroll.enroll")}
           </button>
         </div>
       </form>
@@ -235,32 +239,32 @@ export default function BulkEnrollPage() {
       {/* Results */}
       {result && (
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800">Enrollment Results</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{t("bulkEnroll.resultsTitle")}</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <CheckCircle2 className="mx-auto h-6 w-6 text-green-600" />
               <p className="mt-1 text-2xl font-bold text-green-700">{successCount}</p>
-              <p className="text-xs text-green-600 font-medium">Successfully Enrolled</p>
+              <p className="text-xs text-green-600 font-medium">{t("bulkEnroll.successfullyEnrolled")}</p>
             </div>
 
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center">
               <Info className="mx-auto h-6 w-6 text-amber-600" />
               <p className="mt-1 text-2xl font-bold text-amber-700">{alreadyCount}</p>
-              <p className="text-xs text-amber-600 font-medium">Already Enrolled</p>
+              <p className="text-xs text-amber-600 font-medium">{t("bulkEnroll.alreadyEnrolled")}</p>
             </div>
 
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
               <AlertCircle className="mx-auto h-6 w-6 text-red-600" />
               <p className="mt-1 text-2xl font-bold text-red-700">{failureCount}</p>
-              <p className="text-xs text-red-600 font-medium">Failed</p>
+              <p className="text-xs text-red-600 font-medium">{t("bulkEnroll.failed")}</p>
             </div>
           </div>
 
           {/* Failure details */}
           {result.failures && result.failures.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Failure Details</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">{t("bulkEnroll.failureDetails")}</h3>
               <div className="rounded-md border border-red-200 bg-red-50 divide-y divide-red-100 max-h-48 overflow-y-auto">
                 {result.failures.map((f, i) => (
                   <div key={i} className="px-3 py-2 text-sm">

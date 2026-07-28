@@ -11,6 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { apiPut } from "@/api/client";
 import { useCategories } from "@/api/hooks";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
@@ -124,6 +125,7 @@ function SectionCard({
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
   const [hasReviewedAll, setHasReviewedAll] = useState(false);
@@ -191,9 +193,9 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await apiPut("/users/me/preferences", prefs);
-      toast.success("Preferences saved");
+      toast.success(t("settings.saved"));
     } catch {
-      toast.error("Failed to save preferences");
+      toast.error(t("settings.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -210,9 +212,9 @@ export default function SettingsPage() {
           <Settings className="h-6 w-6 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("settings.title")}</h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            Manage how you receive notifications and personalize your learning experience.
+            {t("settings.subtitle")}
           </p>
         </div>
       </div>
@@ -220,33 +222,33 @@ export default function SettingsPage() {
       {/* ── Notification Preferences ─────────────────────────────────── */}
       <SectionCard
         icon={Bell}
-        title="Notification Preferences"
-        description="Choose how you want to stay in the loop"
+        title={t("settings.notifications.title")}
+        description={t("settings.notifications.subtitle")}
         iconBg="bg-indigo-100"
         iconColor="text-indigo-600"
       >
         <div className="divide-y divide-gray-100">
           <Toggle
-            label="Email Notifications"
-            description="Receive course updates and reminders via email"
+            label={t("settings.notifications.emailLabel")}
+            description={t("settings.notifications.emailDesc")}
             checked={prefs.emailNotifications}
             onChange={(v) => update("emailNotifications", v)}
           />
           <Toggle
-            label="Push Notifications"
-            description="Browser push notifications for real-time alerts"
+            label={t("settings.notifications.pushLabel")}
+            description={t("settings.notifications.pushDesc")}
             checked={prefs.pushNotifications}
             onChange={(v) => update("pushNotifications", v)}
           />
           <Toggle
-            label="Weekly Digest"
-            description="A weekly summary of your learning progress"
+            label={t("settings.notifications.digestLabel")}
+            description={t("settings.notifications.digestDesc")}
             checked={prefs.weeklyDigest}
             onChange={(v) => update("weeklyDigest", v)}
           />
           <Toggle
-            label="Course Completion Alerts"
-            description="Notify when a course or module is completed"
+            label={t("settings.notifications.completionLabel")}
+            description={t("settings.notifications.completionDesc")}
             checked={prefs.courseCompletionAlerts}
             onChange={(v) => update("courseCompletionAlerts", v)}
           />
@@ -256,15 +258,15 @@ export default function SettingsPage() {
       {/* ── Learning Preferences ─────────────────────────────────────── */}
       <SectionCard
         icon={GraduationCap}
-        title="Learning Preferences"
-        description="Fine-tune the courses and difficulty we surface for you"
+        title={t("settings.learning.title")}
+        description={t("settings.learning.subtitle")}
         iconBg="bg-emerald-100"
         iconColor="text-emerald-600"
       >
         <div className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Preferred Difficulty
+              {t("settings.learning.preferredDifficulty")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {DIFFICULTY_OPTIONS.map((o) => {
@@ -280,7 +282,7 @@ export default function SettingsPage() {
                         : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    {o.label}
+                    {t(`settings.difficulty.${o.value}`, { defaultValue: o.label })}
                   </button>
                 );
               })}
@@ -290,10 +292,10 @@ export default function SettingsPage() {
           {categories.length > 0 && (
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Preferred Categories
+                {t("settings.learning.preferredCategories")}
               </label>
               <p className="mb-2 text-xs text-gray-500">
-                Tap the categories you&apos;re interested in — we&apos;ll highlight matching courses.
+                {t("settings.learning.categoriesHint")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {categories
@@ -325,15 +327,15 @@ export default function SettingsPage() {
       {/* ── Display Preferences ──────────────────────────────────────── */}
       <SectionCard
         icon={Monitor}
-        title="Display Preferences"
-        description="Customize language, timezone, and appearance"
+        title={t("settings.display.title")}
+        description={t("settings.display.subtitle")}
         iconBg="bg-amber-100"
         iconColor="text-amber-600"
       >
         <div className="space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Language</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("settings.display.language")}</label>
               <div className="relative">
                 <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <select
@@ -343,7 +345,7 @@ export default function SettingsPage() {
                 >
                   {LANGUAGE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label}
+                      {t(`settings.language.${o.value}`, { defaultValue: o.label })}
                     </option>
                   ))}
                 </select>
@@ -351,7 +353,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Timezone</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("settings.display.timezone")}</label>
               <div className="relative">
                 <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
@@ -359,7 +361,7 @@ export default function SettingsPage() {
                   value={prefs.timezone}
                   onChange={(e) => update("timezone", e.target.value)}
                   className={`${inputCls} pl-9`}
-                  placeholder="e.g. Asia/Kolkata"
+                  placeholder={t("settings.display.timezonePlaceholder")}
                 />
               </div>
             </div>
@@ -367,14 +369,14 @@ export default function SettingsPage() {
 
           <div className="divide-y divide-gray-100 border-t border-gray-100 pt-2">
             <Toggle
-              label="Compact View"
-              description="Use a denser layout with smaller cards"
+              label={t("settings.display.compactLabel")}
+              description={t("settings.display.compactDesc")}
               checked={prefs.compactView}
               onChange={(v) => update("compactView", v)}
             />
             <Toggle
-              label="Dark Mode"
-              description="Use a dark color scheme (coming soon)"
+              label={t("settings.display.darkLabel")}
+              description={t("settings.display.darkDesc")}
               checked={prefs.darkMode}
               onChange={(v) => update("darkMode", v)}
             />
@@ -393,13 +395,13 @@ export default function SettingsPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
             {hasReviewedAll
-              ? "Changes apply across the LMS once saved."
-              : "Scroll through all sections to review before saving."}
+              ? t("settings.reviewedHint")
+              : t("settings.scrollHint")}
           </p>
           <button
             onClick={handleSave}
             disabled={saving || !hasReviewedAll}
-            title={!hasReviewedAll ? "Scroll through all settings to enable Save" : undefined}
+            title={!hasReviewedAll ? t("settings.scrollTooltip") : undefined}
             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
           >
             {saving ? (
@@ -407,7 +409,7 @@ export default function SettingsPage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            Save Preferences
+            {t("settings.savePreferences")}
           </button>
         </div>
       </div>

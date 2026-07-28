@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
   Search,
@@ -25,6 +26,7 @@ const TABS = ["All", "Published", "Draft"] as const;
 
 /* ── Difficulty Badge ────────────────────────────────────────────────────── */
 function DifficultyBadge({ level }: { level: string }) {
+  const { t } = useTranslation();
   const color =
     level === "Advanced"
       ? "bg-red-100 text-red-700"
@@ -33,17 +35,18 @@ function DifficultyBadge({ level }: { level: string }) {
         : "bg-green-100 text-green-700";
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
-      {level}
+      {t(`courseList.difficulty.${level.toLowerCase()}`, { defaultValue: level })}
     </span>
   );
 }
 
 /* ── Star Rating ─────────────────────────────────────────────────────────── */
 function StarRating({ rating }: { rating: number }) {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 text-sm text-gray-600">
       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-      {rating?.toFixed(1) ?? "N/A"}
+      {rating?.toFixed(1) ?? t("courseList.na")}
     </span>
   );
 }
@@ -67,6 +70,7 @@ function CardSkeleton() {
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 export default function CourseListPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
@@ -136,9 +140,9 @@ export default function CourseListPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("courseList.title")}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Browse and manage learning content.
+            {t("courseList.subtitle")}
           </p>
         </div>
         {isAdmin && (
@@ -147,7 +151,7 @@ export default function CourseListPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
-            Create Course
+            {t("courseList.createCourse")}
           </Link>
         )}
       </div>
@@ -161,7 +165,7 @@ export default function CourseListPage() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search courses..."
+            placeholder={t("courseList.searchPlaceholder")}
             className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
           />
         </form>
@@ -174,7 +178,7 @@ export default function CourseListPage() {
             onChange={(e) => setParam("category", e.target.value)}
             className="appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-8 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
           >
-            <option value="">All Categories</option>
+            <option value="">{t("courseList.allCategories")}</option>
             {categories
               .filter((c: any) => c && typeof c === "object" && c.id)
               .map((c: any) => (
@@ -193,7 +197,7 @@ export default function CourseListPage() {
         >
           {DIFFICULTIES.map((d) => (
             <option key={d} value={d}>
-              {d === "All" ? "All Levels" : d}
+              {d === "All" ? t("courseList.allLevels") : t(`courseList.difficulty.${d.toLowerCase()}`, { defaultValue: d })}
             </option>
           ))}
         </select>
@@ -201,18 +205,22 @@ export default function CourseListPage() {
 
       {/* Status Tabs */}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-        {TABS.map((t) => (
+        {TABS.map((tabName) => (
           <button
-            key={t}
-            onClick={() => setParam("tab", t)}
+            key={tabName}
+            onClick={() => setParam("tab", tabName)}
             className={cn(
               "flex-1 rounded-md px-4 py-2 text-sm font-medium transition",
-              tab === t
+              tab === tabName
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-700",
             )}
           >
-            {t}
+            {tabName === "All"
+              ? t("common.all")
+              : tabName === "Published"
+                ? t("courseList.tabPublished")
+                : t("courseList.tabDraft")}
           </button>
         ))}
       </div>
@@ -270,8 +278,8 @@ export default function CourseListPage() {
                       navigate(`/courses/${course.id}/edit`);
                     }}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/95 text-gray-700 shadow-sm hover:bg-indigo-50 hover:text-indigo-600"
-                    title="Edit course"
-                    aria-label={`Edit ${course.title}`}
+                    title={t("courseList.editCourse")}
+                    aria-label={`${t("courseList.editCourse")} ${course.title}`}
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -283,8 +291,8 @@ export default function CourseListPage() {
                       setDeleteTarget({ id: course.id, title: course.title });
                     }}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/95 text-gray-700 shadow-sm hover:bg-red-50 hover:text-red-600"
-                    title="Delete course"
-                    aria-label={`Delete ${course.title}`}
+                    title={t("courseList.deleteCourse")}
+                    aria-label={`${t("courseList.deleteCourse")} ${course.title}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -302,7 +310,7 @@ export default function CourseListPage() {
                   {course.title}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500">
-                  {course.instructor ?? course.instructorName ?? course.instructor_name ?? "Instructor"}
+                  {course.instructor ?? course.instructorName ?? course.instructor_name ?? t("courseList.instructorFallback")}
                 </p>
 
                 {/* Meta row */}
@@ -332,10 +340,10 @@ export default function CourseListPage() {
         <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-20 shadow-sm">
           <FolderOpen className="h-12 w-12 text-gray-300" />
           <h3 className="mt-4 text-lg font-semibold text-gray-700">
-            No courses found
+            {t("courseList.noCoursesFound")}
           </h3>
           <p className="mt-1 text-sm text-gray-400">
-            Try adjusting your filters or search term.
+            {t("courseList.adjustFilters")}
           </p>
         </div>
       )}
@@ -349,11 +357,11 @@ export default function CourseListPage() {
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            {t("common.previous")}
           </button>
 
           <span className="px-3 text-sm text-gray-500">
-            Page {page} of {totalPages}
+            {t("courseList.pageInfo", { page, total: totalPages })}
           </span>
 
           <button
@@ -361,7 +369,7 @@ export default function CourseListPage() {
             onClick={() => setParam("page", String(page + 1))}
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            {t("common.next")}
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -383,11 +391,9 @@ export default function CourseListPage() {
                   <Trash2 className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Delete course</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t("courseList.deleteCourse")}</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Delete <span className="font-medium text-gray-700">{deleteTarget.title}</span>?
-                    Enrollments, progress, and certificates tied to this course may be affected.
-                    This action cannot be undone.
+                    {t("courseList.deleteBody", { title: deleteTarget.title })}
                   </p>
                 </div>
               </div>
@@ -399,18 +405,18 @@ export default function CourseListPage() {
                 disabled={deleteCourse.isPending}
                 className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
                 onClick={() =>
                   deleteCourse.mutate(deleteTarget.id, {
                     onSuccess: () => {
-                      toast.success("Course deleted");
+                      toast.success(t("courseList.courseDeleted"));
                       setDeleteTarget(null);
                     },
                     onError: (err: any) => {
-                      toast.error(err?.response?.data?.error?.message || "Failed to delete course");
+                      toast.error(err?.response?.data?.error?.message || t("courseList.deleteFailed"));
                     },
                   })
                 }
@@ -419,10 +425,10 @@ export default function CourseListPage() {
               >
                 {deleteCourse.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Deleting...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {t("courseList.deleting")}
                   </>
                 ) : (
-                  "Delete"
+                  t("common.delete")
                 )}
               </button>
             </div>

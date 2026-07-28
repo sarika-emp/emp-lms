@@ -127,5 +127,31 @@
     "lastAccessed": "Dernier accès {{date}}",
     "completed": "Terminé",
     "continue": "Continuer"
+  },
+  "courseList": {
+    "title": "Cours",
+    "subtitle": "Parcourez et gérez le contenu d'apprentissage.",
+    "createCourse": "Créer un cours",
+    "searchPlaceholder": "Rechercher des cours...",
+    "allCategories": "Toutes les catégories",
+    "allLevels": "Tous les niveaux",
+    "tabPublished": "Publiés",
+    "tabDraft": "Brouillon",
+    "instructorFallback": "Formateur",
+    "noCoursesFound": "Aucun cours trouvé",
+    "adjustFilters": "Essayez d'ajuster vos filtres ou votre terme de recherche.",
+    "pageInfo": "Page {{page}} sur {{total}}",
+    "na": "S/O",
+    "deleteCourse": "Supprimer le cours",
+    "editCourse": "Modifier le cours",
+    "deleteBody": "Supprimer {{title}} ? Les inscriptions, la progression et les certificats liés à ce cours peuvent être affectés. Cette action est irréversible.",
+    "deleting": "Suppression...",
+    "courseDeleted": "Cours supprimé",
+    "deleteFailed": "Échec de la suppression du cours",
+    "difficulty": {
+      "beginner": "Débutant",
+      "intermediate": "Intermédiaire",
+      "advanced": "Avancé"
+    }
   }
 }

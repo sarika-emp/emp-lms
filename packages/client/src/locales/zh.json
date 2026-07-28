@@ -127,5 +127,31 @@
     "lastAccessed": "上次访问 {{date}}",
     "completed": "已完成",
     "continue": "继续"
+  },
+  "courseList": {
+    "title": "课程",
+    "subtitle": "浏览和管理学习内容。",
+    "createCourse": "创建课程",
+    "searchPlaceholder": "搜索课程...",
+    "allCategories": "所有类别",
+    "allLevels": "所有级别",
+    "tabPublished": "已发布",
+    "tabDraft": "草稿",
+    "instructorFallback": "讲师",
+    "noCoursesFound": "未找到课程",
+    "adjustFilters": "请尝试调整筛选条件或搜索词。",
+    "pageInfo": "第 {{page}} 页，共 {{total}} 页",
+    "na": "不适用",
+    "deleteCourse": "删除课程",
+    "editCourse": "编辑课程",
+    "deleteBody": "删除 {{title}}？与本课程相关的报名、进度和证书可能会受到影响。此操作无法撤销。",
+    "deleting": "删除中...",
+    "courseDeleted": "课程已删除",
+    "deleteFailed": "删除课程失败",
+    "difficulty": {
+      "beginner": "初级",
+      "intermediate": "中级",
+      "advanced": "高级"
+    }
   }
 }

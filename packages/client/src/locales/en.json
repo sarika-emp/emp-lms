@@ -127,5 +127,31 @@
     "lastAccessed": "Last accessed {{date}}",
     "completed": "Completed",
     "continue": "Continue"
+  },
+  "courseList": {
+    "title": "Courses",
+    "subtitle": "Browse and manage learning content.",
+    "createCourse": "Create Course",
+    "searchPlaceholder": "Search courses...",
+    "allCategories": "All Categories",
+    "allLevels": "All Levels",
+    "tabPublished": "Published",
+    "tabDraft": "Draft",
+    "instructorFallback": "Instructor",
+    "noCoursesFound": "No courses found",
+    "adjustFilters": "Try adjusting your filters or search term.",
+    "pageInfo": "Page {{page}} of {{total}}",
+    "na": "N/A",
+    "deleteCourse": "Delete course",
+    "editCourse": "Edit course",
+    "deleteBody": "Delete {{title}}? Enrollments, progress, and certificates tied to this course may be affected. This action cannot be undone.",
+    "deleting": "Deleting...",
+    "courseDeleted": "Course deleted",
+    "deleteFailed": "Failed to delete course",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
   }
 }

@@ -127,5 +127,31 @@
     "lastAccessed": "最終アクセス {{date}}",
     "completed": "完了",
     "continue": "続ける"
+  },
+  "courseList": {
+    "title": "コース",
+    "subtitle": "学習コンテンツを閲覧・管理します。",
+    "createCourse": "コースを作成",
+    "searchPlaceholder": "コースを検索...",
+    "allCategories": "すべてのカテゴリ",
+    "allLevels": "すべてのレベル",
+    "tabPublished": "公開済み",
+    "tabDraft": "下書き",
+    "instructorFallback": "インストラクター",
+    "noCoursesFound": "コースが見つかりません",
+    "adjustFilters": "フィルターまたは検索語を調整してください。",
+    "pageInfo": "{{total}} ページ中 {{page}} ページ",
+    "na": "該当なし",
+    "deleteCourse": "コースを削除",
+    "editCourse": "コースを編集",
+    "deleteBody": "{{title}} を削除しますか？このコースに関連する登録、進捗、認定に影響する可能性があります。この操作は元に戻せません。",
+    "deleting": "削除中...",
+    "courseDeleted": "コースを削除しました",
+    "deleteFailed": "コースの削除に失敗しました",
+    "difficulty": {
+      "beginner": "初級",
+      "intermediate": "中級",
+      "advanced": "上級"
+    }
   }
 }

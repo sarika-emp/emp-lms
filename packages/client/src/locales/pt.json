@@ -127,5 +127,31 @@
     "lastAccessed": "Último acesso {{date}}",
     "completed": "Concluído",
     "continue": "Continuar"
+  },
+  "courseList": {
+    "title": "Cursos",
+    "subtitle": "Explore e gerencie o conteúdo de aprendizagem.",
+    "createCourse": "Criar curso",
+    "searchPlaceholder": "Buscar cursos...",
+    "allCategories": "Todas as categorias",
+    "allLevels": "Todos os níveis",
+    "tabPublished": "Publicados",
+    "tabDraft": "Rascunho",
+    "instructorFallback": "Instrutor",
+    "noCoursesFound": "Nenhum curso encontrado",
+    "adjustFilters": "Tente ajustar os filtros ou o termo de busca.",
+    "pageInfo": "Página {{page}} de {{total}}",
+    "na": "N/D",
+    "deleteCourse": "Excluir curso",
+    "editCourse": "Editar curso",
+    "deleteBody": "Excluir {{title}}? Inscrições, progresso e certificados vinculados a este curso podem ser afetados. Esta ação não pode ser desfeita.",
+    "deleting": "Excluindo...",
+    "courseDeleted": "Curso excluído",
+    "deleteFailed": "Falha ao excluir o curso",
+    "difficulty": {
+      "beginner": "Iniciante",
+      "intermediate": "Intermediário",
+      "advanced": "Avançado"
+    }
   }
 }

@@ -127,5 +127,31 @@
     "lastAccessed": "Zuletzt aufgerufen {{date}}",
     "completed": "Abgeschlossen",
     "continue": "Fortsetzen"
+  },
+  "courseList": {
+    "title": "Kurse",
+    "subtitle": "Lerninhalte durchsuchen und verwalten.",
+    "createCourse": "Kurs erstellen",
+    "searchPlaceholder": "Kurse suchen...",
+    "allCategories": "Alle Kategorien",
+    "allLevels": "Alle Stufen",
+    "tabPublished": "Veröffentlicht",
+    "tabDraft": "Entwurf",
+    "instructorFallback": "Ausbilder",
+    "noCoursesFound": "Keine Kurse gefunden",
+    "adjustFilters": "Passen Sie Ihre Filter oder Ihren Suchbegriff an.",
+    "pageInfo": "Seite {{page}} von {{total}}",
+    "na": "N/V",
+    "deleteCourse": "Kurs löschen",
+    "editCourse": "Kurs bearbeiten",
+    "deleteBody": "{{title}} löschen? Anmeldungen, Fortschritt und Zertifikate zu diesem Kurs können betroffen sein. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleting": "Wird gelöscht...",
+    "courseDeleted": "Kurs gelöscht",
+    "deleteFailed": "Kurs konnte nicht gelöscht werden",
+    "difficulty": {
+      "beginner": "Anfänger",
+      "intermediate": "Fortgeschritten",
+      "advanced": "Experte"
+    }
   }
 }

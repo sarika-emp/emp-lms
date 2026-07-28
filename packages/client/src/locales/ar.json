@@ -127,5 +127,31 @@
     "lastAccessed": "آخر وصول {{date}}",
     "completed": "مكتمل",
     "continue": "متابعة"
+  },
+  "courseList": {
+    "title": "الدورات",
+    "subtitle": "تصفّح وإدارة محتوى التعلّم.",
+    "createCourse": "إنشاء دورة",
+    "searchPlaceholder": "البحث عن الدورات...",
+    "allCategories": "جميع الفئات",
+    "allLevels": "جميع المستويات",
+    "tabPublished": "منشورة",
+    "tabDraft": "مسودة",
+    "instructorFallback": "مدرب",
+    "noCoursesFound": "لم يتم العثور على دورات",
+    "adjustFilters": "حاول تعديل عوامل التصفية أو مصطلح البحث.",
+    "pageInfo": "صفحة {{page}} من {{total}}",
+    "na": "غير متاح",
+    "deleteCourse": "حذف الدورة",
+    "editCourse": "تعديل الدورة",
+    "deleteBody": "حذف {{title}}؟ قد تتأثر التسجيلات والتقدم والشهادات المرتبطة بهذه الدورة. لا يمكن التراجع عن هذا الإجراء.",
+    "deleting": "جارٍ الحذف...",
+    "courseDeleted": "تم حذف الدورة",
+    "deleteFailed": "فشل حذف الدورة",
+    "difficulty": {
+      "beginner": "مبتدئ",
+      "intermediate": "متوسط",
+      "advanced": "متقدم"
+    }
   }
 }

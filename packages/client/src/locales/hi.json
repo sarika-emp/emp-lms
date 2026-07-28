@@ -127,5 +127,31 @@
     "lastAccessed": "अंतिम बार देखा {{date}}",
     "completed": "पूर्ण",
     "continue": "जारी रखें"
+  },
+  "courseList": {
+    "title": "कोर्स",
+    "subtitle": "शिक्षण सामग्री ब्राउज़ करें और प्रबंधित करें।",
+    "createCourse": "कोर्स बनाएँ",
+    "searchPlaceholder": "कोर्स खोजें...",
+    "allCategories": "सभी श्रेणियाँ",
+    "allLevels": "सभी स्तर",
+    "tabPublished": "प्रकाशित",
+    "tabDraft": "ड्राफ़्ट",
+    "instructorFallback": "प्रशिक्षक",
+    "noCoursesFound": "कोई कोर्स नहीं मिला",
+    "adjustFilters": "अपने फ़िल्टर या खोज शब्द समायोजित करने का प्रयास करें।",
+    "pageInfo": "पृष्ठ {{page}} / {{total}}",
+    "na": "लागू नहीं",
+    "deleteCourse": "कोर्स हटाएँ",
+    "editCourse": "कोर्स संपादित करें",
+    "deleteBody": "{{title}} हटाएँ? इस कोर्स से जुड़े नामांकन, प्रगति और प्रमाणपत्र प्रभावित हो सकते हैं। यह क्रिया पूर्ववत नहीं की जा सकती।",
+    "deleting": "हटाया जा रहा है...",
+    "courseDeleted": "कोर्स हटाया गया",
+    "deleteFailed": "कोर्स हटाने में विफल",
+    "difficulty": {
+      "beginner": "शुरुआती",
+      "intermediate": "मध्यवर्ती",
+      "advanced": "उन्नत"
+    }
   }
 }

@@ -153,5 +153,24 @@
       "intermediate": "मध्यवर्ती",
       "advanced": "उन्नत"
     }
+  },
+  "leaderboard": {
+    "title": "लीडरबोर्ड",
+    "yourPoints": "आपके अंक:",
+    "rankLabel": "रैंक:",
+    "unranked": "अरैंक",
+    "streakLabel": "स्ट्रीक:",
+    "streakDays_one": "{{count}} दिन",
+    "streakDays_other": "{{count}} दिन",
+    "colRank": "रैंक",
+    "colLearner": "शिक्षार्थी",
+    "colPoints": "अंक",
+    "colCoursesCompleted": "पूर्ण कोर्स",
+    "colStreak": "स्ट्रीक",
+    "pts": "अंक",
+    "emptyTitle": "अभी तक कोई लीडरबोर्ड डेटा नहीं",
+    "emptyBody": "लीडरबोर्ड पर आने के लिए सीखना शुरू करें!",
+    "you": "(आप)",
+    "streakShort": "{{count}}दि"
   }
 }

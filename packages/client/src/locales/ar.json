@@ -153,5 +153,24 @@
       "intermediate": "متوسط",
       "advanced": "متقدم"
     }
+  },
+  "leaderboard": {
+    "title": "لوحة المتصدرين",
+    "yourPoints": "نقاطك:",
+    "rankLabel": "الترتيب:",
+    "unranked": "غير مصنّف",
+    "streakLabel": "التتابع:",
+    "streakDays_one": "{{count}} يوم",
+    "streakDays_other": "{{count}} يوم",
+    "colRank": "الترتيب",
+    "colLearner": "المتعلم",
+    "colPoints": "النقاط",
+    "colCoursesCompleted": "الدورات المكتملة",
+    "colStreak": "التتابع",
+    "pts": "نقطة",
+    "emptyTitle": "لا توجد بيانات لوحة متصدرين بعد",
+    "emptyBody": "ابدأ التعلم لتظهر في لوحة المتصدرين!",
+    "you": "(أنت)",
+    "streakShort": "{{count}} ي"
   }
 }

@@ -153,5 +153,24 @@
       "intermediate": "中級",
       "advanced": "上級"
     }
+  },
+  "leaderboard": {
+    "title": "リーダーボード",
+    "yourPoints": "あなたのポイント:",
+    "rankLabel": "順位:",
+    "unranked": "ランク外",
+    "streakLabel": "連続記録:",
+    "streakDays_one": "{{count}} 日",
+    "streakDays_other": "{{count}} 日",
+    "colRank": "順位",
+    "colLearner": "学習者",
+    "colPoints": "ポイント",
+    "colCoursesCompleted": "完了コース",
+    "colStreak": "連続記録",
+    "pts": "pt",
+    "emptyTitle": "リーダーボードのデータはまだありません",
+    "emptyBody": "学習を始めてリーダーボードに載りましょう！",
+    "you": "(あなた)",
+    "streakShort": "{{count}}日"
   }
 }

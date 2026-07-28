@@ -153,5 +153,24 @@
       "intermediate": "Fortgeschritten",
       "advanced": "Experte"
     }
+  },
+  "leaderboard": {
+    "title": "Bestenliste",
+    "yourPoints": "Deine Punkte:",
+    "rankLabel": "Rang:",
+    "unranked": "Nicht platziert",
+    "streakLabel": "Serie:",
+    "streakDays_one": "{{count}} Tag",
+    "streakDays_other": "{{count}} Tage",
+    "colRank": "Rang",
+    "colLearner": "Lernende(r)",
+    "colPoints": "Punkte",
+    "colCoursesCompleted": "Abgeschlossene Kurse",
+    "colStreak": "Serie",
+    "pts": "Pkt.",
+    "emptyTitle": "Noch keine Bestenlisten-Daten",
+    "emptyBody": "Fange an zu lernen, um in der Bestenliste zu erscheinen!",
+    "you": "(Du)",
+    "streakShort": "{{count}} T"
   }
 }

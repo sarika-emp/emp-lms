@@ -153,5 +153,24 @@
       "intermediate": "Intermediate",
       "advanced": "Advanced"
     }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "yourPoints": "Your Points:",
+    "rankLabel": "Rank:",
+    "unranked": "Unranked",
+    "streakLabel": "Streak:",
+    "streakDays_one": "{{count}} day",
+    "streakDays_other": "{{count}} days",
+    "colRank": "Rank",
+    "colLearner": "Learner",
+    "colPoints": "Points",
+    "colCoursesCompleted": "Courses Completed",
+    "colStreak": "Streak",
+    "pts": "pts",
+    "emptyTitle": "No leaderboard data yet",
+    "emptyBody": "Start learning to appear on the leaderboard!",
+    "you": "(You)",
+    "streakShort": "{{count}}d"
   }
 }

@@ -153,5 +153,24 @@
       "intermediate": "Intermedio",
       "advanced": "Avanzado"
     }
+  },
+  "leaderboard": {
+    "title": "Clasificación",
+    "yourPoints": "Tus puntos:",
+    "rankLabel": "Puesto:",
+    "unranked": "Sin clasificar",
+    "streakLabel": "Racha:",
+    "streakDays_one": "{{count}} día",
+    "streakDays_other": "{{count}} días",
+    "colRank": "Puesto",
+    "colLearner": "Alumno",
+    "colPoints": "Puntos",
+    "colCoursesCompleted": "Cursos completados",
+    "colStreak": "Racha",
+    "pts": "pts",
+    "emptyTitle": "Aún no hay datos de clasificación",
+    "emptyBody": "¡Empieza a aprender para aparecer en la clasificación!",
+    "you": "(Tú)",
+    "streakShort": "{{count}} d"
   }
 }

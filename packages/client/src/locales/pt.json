@@ -153,5 +153,24 @@
       "intermediate": "Intermediário",
       "advanced": "Avançado"
     }
+  },
+  "leaderboard": {
+    "title": "Ranking",
+    "yourPoints": "Seus pontos:",
+    "rankLabel": "Posição:",
+    "unranked": "Sem classificação",
+    "streakLabel": "Sequência:",
+    "streakDays_one": "{{count}} dia",
+    "streakDays_other": "{{count}} dias",
+    "colRank": "Posição",
+    "colLearner": "Aluno",
+    "colPoints": "Pontos",
+    "colCoursesCompleted": "Cursos concluídos",
+    "colStreak": "Sequência",
+    "pts": "pts",
+    "emptyTitle": "Ainda não há dados de ranking",
+    "emptyBody": "Comece a aprender para aparecer no ranking!",
+    "you": "(Você)",
+    "streakShort": "{{count}} d"
   }
 }

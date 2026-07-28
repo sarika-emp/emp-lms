@@ -153,5 +153,24 @@
       "intermediate": "中级",
       "advanced": "高级"
     }
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "yourPoints": "您的积分：",
+    "rankLabel": "排名：",
+    "unranked": "未排名",
+    "streakLabel": "连续天数：",
+    "streakDays_one": "{{count}} 天",
+    "streakDays_other": "{{count}} 天",
+    "colRank": "排名",
+    "colLearner": "学员",
+    "colPoints": "积分",
+    "colCoursesCompleted": "已完成课程",
+    "colStreak": "连续天数",
+    "pts": "分",
+    "emptyTitle": "暂无排行榜数据",
+    "emptyBody": "开始学习即可登上排行榜！",
+    "you": "(您)",
+    "streakShort": "{{count}}天"
   }
 }

@@ -86,5 +86,29 @@
     "hr_admin": "HR Admin",
     "org_admin": "Org Admin",
     "super_admin": "Super Admin"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back! Here's your learning overview.",
+    "totalCourses": "Total Courses",
+    "enrollments": "Enrollments",
+    "myEnrollments": "My Enrollments",
+    "completed": "Completed",
+    "certificatesIssued": "Certificates Issued",
+    "certificatesEarned": "Certificates Earned",
+    "currentStreak": "Current Streak",
+    "streakDays_one": "{{count}} day",
+    "streakDays_other": "{{count}} days",
+    "completionRates": "Completion Rates",
+    "completion": "Completion",
+    "noCompletionData": "No completion data available yet.",
+    "recentActivity": "Recent Activity",
+    "percentComplete": "{{percent}}% complete",
+    "courseFallback": "Course",
+    "noRecentActivity": "No recent activity.",
+    "quickLinks": "Quick Links",
+    "continueLearning": "Continue Learning",
+    "browseCatalog": "Browse Catalog",
+    "upcomingIlt": "Upcoming ILT Sessions"
   }
 }

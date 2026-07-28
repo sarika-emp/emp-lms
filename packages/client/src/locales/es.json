@@ -86,5 +86,29 @@
     "hr_admin": "Administrador de RR. HH.",
     "org_admin": "Administrador de organización",
     "super_admin": "Superadministrador"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "¡Bienvenido de nuevo! Aquí tienes tu resumen de aprendizaje.",
+    "totalCourses": "Cursos totales",
+    "enrollments": "Inscripciones",
+    "myEnrollments": "Mis inscripciones",
+    "completed": "Completados",
+    "certificatesIssued": "Certificados emitidos",
+    "certificatesEarned": "Certificados obtenidos",
+    "currentStreak": "Racha actual",
+    "streakDays_one": "{{count}} día",
+    "streakDays_other": "{{count}} días",
+    "completionRates": "Tasas de finalización",
+    "completion": "Finalización",
+    "noCompletionData": "Aún no hay datos de finalización.",
+    "recentActivity": "Actividad reciente",
+    "percentComplete": "{{percent}}% completado",
+    "courseFallback": "Curso",
+    "noRecentActivity": "Sin actividad reciente.",
+    "quickLinks": "Enlaces rápidos",
+    "continueLearning": "Continuar aprendiendo",
+    "browseCatalog": "Explorar catálogo",
+    "upcomingIlt": "Próximas sesiones ILT"
   }
 }

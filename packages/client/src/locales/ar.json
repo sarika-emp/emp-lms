@@ -86,5 +86,29 @@
     "hr_admin": "مدير الموارد البشرية",
     "org_admin": "مدير المؤسسة",
     "super_admin": "مدير عام"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "مرحبًا بعودتك! إليك نظرة عامة على تعلّمك.",
+    "totalCourses": "إجمالي الدورات",
+    "enrollments": "التسجيلات",
+    "myEnrollments": "تسجيلاتي",
+    "completed": "مكتمل",
+    "certificatesIssued": "الشهادات الصادرة",
+    "certificatesEarned": "الشهادات المكتسبة",
+    "currentStreak": "التتابع الحالي",
+    "streakDays_one": "{{count}} يوم",
+    "streakDays_other": "{{count}} يوم",
+    "completionRates": "معدلات الإكمال",
+    "completion": "الإكمال",
+    "noCompletionData": "لا تتوفر بيانات إكمال بعد.",
+    "recentActivity": "النشاط الأخير",
+    "percentComplete": "{{percent}}% مكتمل",
+    "courseFallback": "دورة",
+    "noRecentActivity": "لا يوجد نشاط حديث.",
+    "quickLinks": "روابط سريعة",
+    "continueLearning": "متابعة التعلم",
+    "browseCatalog": "تصفح الكتالوج",
+    "upcomingIlt": "جلسات ILT القادمة"
   }
 }

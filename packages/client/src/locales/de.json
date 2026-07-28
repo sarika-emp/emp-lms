@@ -86,5 +86,29 @@
     "hr_admin": "HR-Admin",
     "org_admin": "Organisationsadmin",
     "super_admin": "Super-Admin"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen zurück! Hier ist Ihr Lernüberblick.",
+    "totalCourses": "Kurse gesamt",
+    "enrollments": "Anmeldungen",
+    "myEnrollments": "Meine Anmeldungen",
+    "completed": "Abgeschlossen",
+    "certificatesIssued": "Ausgestellte Zertifikate",
+    "certificatesEarned": "Erhaltene Zertifikate",
+    "currentStreak": "Aktuelle Serie",
+    "streakDays_one": "{{count}} Tag",
+    "streakDays_other": "{{count}} Tage",
+    "completionRates": "Abschlussquoten",
+    "completion": "Abschluss",
+    "noCompletionData": "Noch keine Abschlussdaten verfügbar.",
+    "recentActivity": "Letzte Aktivität",
+    "percentComplete": "{{percent}} % abgeschlossen",
+    "courseFallback": "Kurs",
+    "noRecentActivity": "Keine letzte Aktivität.",
+    "quickLinks": "Schnellzugriffe",
+    "continueLearning": "Weiterlernen",
+    "browseCatalog": "Katalog durchsuchen",
+    "upcomingIlt": "Kommende ILT-Sitzungen"
   }
 }

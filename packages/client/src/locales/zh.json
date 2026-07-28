@@ -86,5 +86,29 @@
     "hr_admin": "人力资源管理员",
     "org_admin": "组织管理员",
     "super_admin": "超级管理员"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "welcome": "欢迎回来！这是您的学习概览。",
+    "totalCourses": "课程总数",
+    "enrollments": "报名",
+    "myEnrollments": "我的报名",
+    "completed": "已完成",
+    "certificatesIssued": "已颁发证书",
+    "certificatesEarned": "已获得证书",
+    "currentStreak": "当前连续天数",
+    "streakDays_one": "{{count}} 天",
+    "streakDays_other": "{{count}} 天",
+    "completionRates": "完成率",
+    "completion": "完成度",
+    "noCompletionData": "暂无完成数据。",
+    "recentActivity": "近期活动",
+    "percentComplete": "{{percent}}% 完成",
+    "courseFallback": "课程",
+    "noRecentActivity": "暂无近期活动。",
+    "quickLinks": "快捷链接",
+    "continueLearning": "继续学习",
+    "browseCatalog": "浏览目录",
+    "upcomingIlt": "即将开始的 ILT 课程"
   }
 }

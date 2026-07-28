@@ -86,5 +86,29 @@
     "hr_admin": "人事管理者",
     "org_admin": "組織管理者",
     "super_admin": "スーパー管理者"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "おかえりなさい！学習の概要はこちらです。",
+    "totalCourses": "コース総数",
+    "enrollments": "登録",
+    "myEnrollments": "自分の登録",
+    "completed": "完了",
+    "certificatesIssued": "発行済み認定",
+    "certificatesEarned": "取得した認定",
+    "currentStreak": "現在の連続記録",
+    "streakDays_one": "{{count}} 日",
+    "streakDays_other": "{{count}} 日",
+    "completionRates": "完了率",
+    "completion": "完了",
+    "noCompletionData": "完了データはまだありません。",
+    "recentActivity": "最近のアクティビティ",
+    "percentComplete": "{{percent}}% 完了",
+    "courseFallback": "コース",
+    "noRecentActivity": "最近のアクティビティはありません。",
+    "quickLinks": "クイックリンク",
+    "continueLearning": "学習を続ける",
+    "browseCatalog": "カタログを閲覧",
+    "upcomingIlt": "今後のILTセッション"
   }
 }

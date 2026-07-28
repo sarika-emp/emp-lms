@@ -86,5 +86,29 @@
     "hr_admin": "एचआर एडमिन",
     "org_admin": "संगठन एडमिन",
     "super_admin": "सुपर एडमिन"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "welcome": "वापसी पर स्वागत है! यह रही आपकी शिक्षा का अवलोकन।",
+    "totalCourses": "कुल कोर्स",
+    "enrollments": "नामांकन",
+    "myEnrollments": "मेरे नामांकन",
+    "completed": "पूर्ण",
+    "certificatesIssued": "जारी प्रमाणपत्र",
+    "certificatesEarned": "अर्जित प्रमाणपत्र",
+    "currentStreak": "वर्तमान स्ट्रीक",
+    "streakDays_one": "{{count}} दिन",
+    "streakDays_other": "{{count}} दिन",
+    "completionRates": "पूर्णता दर",
+    "completion": "पूर्णता",
+    "noCompletionData": "अभी तक कोई पूर्णता डेटा उपलब्ध नहीं।",
+    "recentActivity": "हाल की गतिविधि",
+    "percentComplete": "{{percent}}% पूर्ण",
+    "courseFallback": "कोर्स",
+    "noRecentActivity": "कोई हाल की गतिविधि नहीं।",
+    "quickLinks": "त्वरित लिंक",
+    "continueLearning": "सीखना जारी रखें",
+    "browseCatalog": "कैटलॉग ब्राउज़ करें",
+    "upcomingIlt": "आगामी ILT सत्र"
   }
 }

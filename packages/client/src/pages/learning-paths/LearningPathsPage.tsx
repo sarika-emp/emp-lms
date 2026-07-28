@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   BookOpen,
@@ -54,6 +55,7 @@ const statusColor: Record<string, string> = {
 };
 
 export default function LearningPathsPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
 
@@ -89,9 +91,9 @@ export default function LearningPathsPage() {
   const handleEnroll = async (pathId: string) => {
     try {
       await enrollMutation.mutateAsync(pathId);
-      toast.success("Enrolled in learning path!");
+      toast.success(t("learningPaths.enrolled"));
     } catch {
-      toast.error("Failed to enroll");
+      toast.error(t("learningPaths.enrollFailed"));
     }
   };
 
@@ -118,9 +120,9 @@ export default function LearningPathsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Learning Paths</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("learningPaths.title")}</h1>
           <p className="text-gray-500 mt-1">
-            Guided course sequences to build skills step-by-step.
+            {t("learningPaths.subtitle")}
           </p>
         </div>
         {isAdmin && (
@@ -128,7 +130,7 @@ export default function LearningPathsPage() {
             onClick={openCreate}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" /> Create Path
+            <Plus className="h-4 w-4" /> {t("learningPaths.createPath")}
           </button>
         )}
       </div>
@@ -141,7 +143,7 @@ export default function LearningPathsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search learning paths..."
+            placeholder={t("learningPaths.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -156,7 +158,7 @@ export default function LearningPathsPage() {
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              {d === "All" ? "All" : d.charAt(0).toUpperCase() + d.slice(1)}
+              {d === "All" ? t("common.all") : t(`learningPaths.difficulty.${d}`, { defaultValue: d })}
             </button>
           ))}
         </div>
@@ -168,7 +170,7 @@ export default function LearningPathsPage() {
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="h-4 w-4 text-red-500" />
             <h2 className="text-sm font-semibold text-red-700 uppercase tracking-wide">
-              Required Paths
+              {t("learningPaths.requiredPaths")}
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -193,15 +195,15 @@ export default function LearningPathsPage() {
           <Route className="mx-auto h-12 w-12 text-gray-300 mb-4" />
           <p className="text-gray-500">
             {search || difficulty !== "All"
-              ? "No paths match your filters."
-              : "No learning paths yet."}
+              ? t("learningPaths.noMatch")
+              : t("learningPaths.noPaths")}
           </p>
           {isAdmin && !search && difficulty === "All" && (
             <button
               onClick={openCreate}
               className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              Create the first learning path
+              {t("learningPaths.createFirst")}
             </button>
           )}
         </div>
@@ -256,6 +258,7 @@ function PathCard({
   enrollPending: boolean;
   mandatory?: boolean;
 }) {
+  const { t } = useTranslation();
   const progress: number | null = path.progress ?? null;
   const isEnrolled = progress !== null;
   const isCompleted = progress !== null && progress >= 100;
@@ -272,7 +275,7 @@ function PathCard({
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         {mandatory && (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
-            <Star className="h-3 w-3" /> Required
+            <Star className="h-3 w-3" /> {t("learningPaths.required")}
           </span>
         )}
         {path.difficulty && (
@@ -281,7 +284,7 @@ function PathCard({
               difficultyColor[path.difficulty.toLowerCase()] || "bg-gray-100 text-gray-600"
             }`}
           >
-            {path.difficulty}
+            {t(`learningPaths.difficulty.${path.difficulty.toLowerCase()}`, { defaultValue: path.difficulty })}
           </span>
         )}
         {isAdmin && path.status && (
@@ -290,20 +293,20 @@ function PathCard({
               statusColor[path.status] || "bg-gray-100"
             }`}
           >
-            {path.status}
+            {t(`learningPaths.status.${path.status}`, { defaultValue: path.status })}
           </span>
         )}
       </div>
 
       <h3 className="text-base font-semibold text-gray-900 line-clamp-2 mb-2">{path.title}</h3>
       <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
-        {path.description || "No description"}
+        {path.description || t("learningPaths.noDescription")}
       </p>
 
       {/* Meta */}
       <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
         <span className="inline-flex items-center gap-1">
-          <BookOpen className="h-3.5 w-3.5" /> {courseCount} courses
+          <BookOpen className="h-3.5 w-3.5" /> {t("learningPaths.coursesCount", { count: courseCount })}
         </span>
         {duration != null && duration > 0 && (
           <span className="inline-flex items-center gap-1">
@@ -317,7 +320,7 @@ function PathCard({
       {isEnrolled && (
         <div className="mb-4">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-gray-500">{isCompleted ? "Completed" : "In progress"}</span>
+            <span className="text-gray-500">{isCompleted ? t("learningPaths.completed") : t("learningPaths.inProgress")}</span>
             <span className="font-semibold text-gray-900">{progress}%</span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -335,7 +338,7 @@ function PathCard({
           to={`/learning-paths/${path.id}`}
           className="flex-1 text-center px-3 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
         >
-          {isEnrolled ? (isCompleted ? "Review" : "Continue") : "View Details"}
+          {isEnrolled ? (isCompleted ? t("learningPaths.review") : t("learningPaths.continue")) : t("learningPaths.viewDetails")}
         </Link>
         {!isEnrolled && (
           <button
@@ -344,7 +347,7 @@ function PathCard({
             className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             {enrollPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-            Enroll
+            {t("learningPaths.enroll")}
           </button>
         )}
         {isAdmin && (
@@ -352,7 +355,7 @@ function PathCard({
             onClick={() => onEdit(path)}
             className="px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
-            Edit
+            {t("learningPaths.edit")}
           </button>
         )}
       </div>
@@ -365,6 +368,7 @@ function PathCard({
 // ---------------------------------------------------------------------------
 
 function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
+  const { t } = useTranslation();
   const isNew = !path;
   const [title, setTitle] = useState(path?.title || "");
   const [description, setDescription] = useState(path?.description || "");
@@ -391,16 +395,16 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
     try {
       if (createdId) {
         await updateMut.mutateAsync({ title, description, difficulty, is_mandatory: isMandatory });
-        toast.success("Path updated");
+        toast.success(t("learningPaths.pathUpdated"));
       } else {
         const res: any = await createMut.mutateAsync({ title, description, difficulty, is_mandatory: isMandatory });
         const newId = res?.data?.id || res?.id;
         setCreatedId(newId);
-        toast.success("Path created — now add courses");
+        toast.success(t("learningPaths.pathCreated"));
       }
       setStep("courses");
     } catch (err: any) {
-      toast.error(err?.response?.data?.error?.message || "Failed to save");
+      toast.error(err?.response?.data?.error?.message || t("learningPaths.saveFailed"));
     }
   };
 
@@ -408,21 +412,21 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
     if (!createdId) return;
     try {
       await publishMut.mutateAsync(createdId);
-      toast.success("Path published!");
+      toast.success(t("learningPaths.pathPublished"));
       onClose();
     } catch (err: any) {
-      toast.error(err?.response?.data?.error?.message || "Add at least 1 course before publishing");
+      toast.error(err?.response?.data?.error?.message || t("learningPaths.publishNeedsCourse"));
     }
   };
 
   const handleDelete = async () => {
-    if (!createdId || !confirm("Archive this learning path?")) return;
+    if (!createdId || !confirm(t("learningPaths.confirmArchive"))) return;
     try {
       await deleteMut.mutateAsync(createdId);
-      toast.success("Path archived");
+      toast.success(t("learningPaths.pathArchived"));
       onClose();
     } catch {
-      toast.error("Failed to archive");
+      toast.error(t("learningPaths.archiveFailed"));
     }
   };
 
@@ -436,21 +440,21 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              {isNew && !createdId ? "Create Learning Path" : "Edit Learning Path"}
+              {isNew && !createdId ? t("learningPaths.createModalTitle") : t("learningPaths.editModalTitle")}
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={() => setStep("details")}
                 className={`text-xs font-medium px-2 py-0.5 rounded ${step === "details" ? "bg-blue-100 text-blue-700" : "text-gray-400"}`}
               >
-                1. Details
+                {t("learningPaths.stepDetails")}
               </button>
               <span className="text-gray-300">→</span>
               <button
                 onClick={() => createdId && setStep("courses")}
                 className={`text-xs font-medium px-2 py-0.5 rounded ${step === "courses" ? "bg-blue-100 text-blue-700" : "text-gray-400"} ${!createdId ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                2. Courses
+                {t("learningPaths.stepCourses")}
               </button>
             </div>
           </div>
@@ -464,38 +468,38 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
           {step === "details" && (
             <form id="path-details-form" onSubmit={handleSaveDetails} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("learningPaths.titleLabel")}</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Frontend Developer Track"
+                  placeholder={t("learningPaths.titlePlaceholder")}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("learningPaths.descriptionLabel")}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="What will learners achieve by completing this path?"
+                  placeholder={t("learningPaths.descriptionPlaceholder")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("learningPaths.difficultyLabel")}</label>
                   <select
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                    <option value="expert">Expert</option>
+                    <option value="beginner">{t("learningPaths.difficulty.beginner")}</option>
+                    <option value="intermediate">{t("learningPaths.difficulty.intermediate")}</option>
+                    <option value="advanced">{t("learningPaths.difficulty.advanced")}</option>
+                    <option value="expert">{t("learningPaths.difficulty.expert")}</option>
                   </select>
                 </div>
                 <div className="flex items-end pb-1">
@@ -506,7 +510,7 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
                       onChange={(e) => setIsMandatory(e.target.checked)}
                       className="rounded border-gray-300"
                     />
-                    <span className="text-gray-700">Mandatory for all employees</span>
+                    <span className="text-gray-700">{t("learningPaths.mandatory")}</span>
                   </label>
                 </div>
               </div>
@@ -517,20 +521,20 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">
-                  Courses in this path ({pathCourses.length})
+                  {t("learningPaths.coursesInPath", { count: pathCourses.length })}
                 </h3>
                 <button
                   onClick={() => setShowCoursePicker(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
                 >
-                  <Plus className="h-3.5 w-3.5" /> Add Course
+                  <Plus className="h-3.5 w-3.5" /> {t("learningPaths.addCourse")}
                 </button>
               </div>
 
               {pathCourses.length === 0 ? (
                 <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
                   <BookOpen className="mx-auto h-8 w-8 mb-2" />
-                  <p className="text-sm">No courses yet. Click "Add Course" to get started.</p>
+                  <p className="text-sm">{t("learningPaths.noCoursesYet")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -561,13 +565,13 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
           <div>
             {createdId && (
               <button onClick={handleDelete} className="text-sm text-red-600 hover:text-red-700">
-                Archive Path
+                {t("learningPaths.archivePath")}
               </button>
             )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white">
-              {createdId ? "Close" : "Cancel"}
+              {createdId ? t("learningPaths.close") : t("common.cancel")}
             </button>
             {step === "details" && (
               <button
@@ -577,7 +581,7 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {(createMut.isPending || updateMut.isPending) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {createdId ? "Save Changes" : "Create & Continue"}
+                {createdId ? t("learningPaths.saveChanges") : t("learningPaths.createContinue")}
               </button>
             )}
             {step === "courses" && createdId && currentStatus !== "published" && (
@@ -587,12 +591,12 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
                 {publishMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                Publish Path
+                {t("learningPaths.publishPath")}
               </button>
             )}
             {step === "courses" && currentStatus === "published" && (
               <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
-                <CheckCircle2 className="h-4 w-4" /> Published
+                <CheckCircle2 className="h-4 w-4" /> {t("learningPaths.published")}
               </span>
             )}
           </div>
@@ -607,6 +611,7 @@ function PathBuilder({ path, onClose }: { path: any; onClose: () => void }) {
 // ---------------------------------------------------------------------------
 
 function PathCourseRow({ course, index, pathId }: { course: any; index: number; pathId: string }) {
+  const { t } = useTranslation();
   const removeMut = useRemoveCourseFromPath(pathId);
   const courseId = course.id || course.course_id;
 
@@ -627,7 +632,7 @@ function PathCourseRow({ course, index, pathId }: { course: any; index: number; 
           )}
           {course.difficulty && (
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${difficultyColor[course.difficulty?.toLowerCase()] || ""}`}>
-              {course.difficulty}
+              {t(`learningPaths.difficulty.${course.difficulty?.toLowerCase()}`, { defaultValue: course.difficulty })}
             </span>
           )}
         </div>
@@ -656,6 +661,7 @@ function CoursePicker({
   existingCourseIds: string[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const { data } = useCourses({ status: "published" });
   const addMut = useAddCourseToPath(pathId);
@@ -668,16 +674,16 @@ function CoursePicker({
   const handleAdd = async (courseId: string) => {
     try {
       await addMut.mutateAsync({ course_id: courseId });
-      toast.success("Course added");
+      toast.success(t("learningPaths.courseAdded"));
     } catch {
-      toast.error("Failed to add course");
+      toast.error(t("learningPaths.addCourseFailed"));
     }
   };
 
   return (
     <div className="mt-4 border border-blue-200 rounded-xl bg-blue-50/30 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Add Course</h4>
+        <h4 className="text-sm font-semibold text-gray-900">{t("learningPaths.addCourse")}</h4>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
           <X className="h-4 w-4" />
         </button>
@@ -688,7 +694,7 @@ function CoursePicker({
           type="text"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search published courses..."
+          placeholder={t("learningPaths.searchCourses")}
           autoFocus
           className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         />
@@ -696,7 +702,7 @@ function CoursePicker({
       <div className="max-h-48 overflow-y-auto space-y-1">
         {available.length === 0 ? (
           <p className="text-sm text-gray-400 py-4 text-center">
-            {q ? "No courses match" : "All published courses are already in this path"}
+            {q ? t("learningPaths.noCoursesMatch") : t("learningPaths.allCoursesAdded")}
           </p>
         ) : (
           available.slice(0, 10).map((course) => (

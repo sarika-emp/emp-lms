@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Award,
   AlertTriangle,
@@ -21,24 +22,25 @@ import {
 import CertificateDownload from "@/components/lms/CertificateDownload";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 
-function statusBadge(status: string) {
+function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   switch (status) {
     case "active":
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-          <ShieldCheck className="h-3 w-3" /> Active
+          <ShieldCheck className="h-3 w-3" /> {t("certifications.status.active")}
         </span>
       );
     case "expired":
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
-          <XCircle className="h-3 w-3" /> Expired
+          <XCircle className="h-3 w-3" /> {t("certifications.status.expired")}
         </span>
       );
     case "revoked":
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-          <XCircle className="h-3 w-3" /> Revoked
+          <XCircle className="h-3 w-3" /> {t("certifications.status.revoked")}
         </span>
       );
     default:
@@ -53,6 +55,7 @@ function isExpiringSoon(expiryDate: string | null) {
 
 /* ── Verify Certificate Dialog ──────────────────────────────────────────── */
 function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [certNumber, setCertNumber] = useState("");
   const [result, setResult] = useState<any | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -61,7 +64,7 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!certNumber.trim()) {
-      toast.error("Enter a certificate number");
+      toast.error(t("certifications.enterCertNumber"));
       return;
     }
     setResult(null);
@@ -93,7 +96,7 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
             <div className="rounded-lg bg-indigo-100 p-1.5">
               <ShieldCheck className="h-4 w-4 text-indigo-600" />
             </div>
-            <h3 className="text-base font-semibold text-gray-900">Verify Certificate</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t("certifications.verifyCertificate")}</h3>
           </div>
           <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -103,14 +106,14 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
         <div className="px-6 py-5">
           <form onSubmit={handleVerify} className="space-y-3">
             <label className="block text-sm font-medium text-gray-700">
-              Certificate Number
+              {t("certifications.certificateNumber")}
             </label>
             <div className="flex gap-2">
               <input
                 autoFocus
                 value={certNumber}
                 onChange={(e) => setCertNumber(e.target.value)}
-                placeholder="e.g. CERT-2026-0001"
+                placeholder={t("certifications.certNumberPlaceholder")}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
               />
               <button
@@ -123,18 +126,18 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
                 ) : (
                   <Search className="h-4 w-4" />
                 )}
-                Verify
+                {t("certifications.verify")}
               </button>
             </div>
             <p className="text-xs text-gray-500">
-              Paste a certificate number to check if it&apos;s valid, active, expired, or revoked.
+              {t("certifications.verifyHint")}
             </p>
           </form>
 
           {notFound && (
             <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm">
               <XCircle className="h-5 w-5 text-red-600" />
-              <span className="text-red-700 font-medium">Certificate not found</span>
+              <span className="text-red-700 font-medium">{t("certifications.notFound")}</span>
             </div>
           )}
 
@@ -144,39 +147,39 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
                 {result.is_valid ? (
                   <>
                     <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-semibold text-green-700">Certificate is Valid</span>
+                    <span className="text-sm font-semibold text-green-700">{t("certifications.isValid")}</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-5 w-5 text-red-600" />
-                    <span className="text-sm font-semibold text-red-700">Certificate is Not Valid</span>
+                    <span className="text-sm font-semibold text-red-700">{t("certifications.isNotValid")}</span>
                   </>
                 )}
               </div>
               <dl className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Number</dt>
+                  <dt className="text-gray-500">{t("certifications.number")}</dt>
                   <dd className="font-mono text-gray-800">{result.certificate_number}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Status</dt>
-                  <dd className="capitalize text-gray-800">{result.status}</dd>
+                  <dt className="text-gray-500">{t("common.status")}</dt>
+                  <dd className="capitalize text-gray-800">{t(`certifications.status.${result.status}`, { defaultValue: result.status })}</dd>
                 </div>
                 {result.course_title && (
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Course</dt>
+                    <dt className="text-gray-500">{t("certifications.course")}</dt>
                     <dd className="text-gray-800">{result.course_title}</dd>
                   </div>
                 )}
                 {result.issued_at && (
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Issued</dt>
+                    <dt className="text-gray-500">{t("certifications.issued")}</dt>
                     <dd className="text-gray-800">{dayjs(result.issued_at).format("MMM D, YYYY")}</dd>
                   </div>
                 )}
                 {result.expires_at && (
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Expires</dt>
+                    <dt className="text-gray-500">{t("certifications.expires")}</dt>
                     <dd className="text-gray-800">{dayjs(result.expires_at).format("MMM D, YYYY")}</dd>
                   </div>
                 )}
@@ -191,11 +194,12 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
 
 /* ── Certificate Card ───────────────────────────────────────────────────── */
 function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean; isAdmin: boolean }) {
+  const { t } = useTranslation();
   return (
     <div className="relative flex flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
       {isExpiringSoon(cert.expiryDate) && (
         <div className="absolute -top-2 -right-2 flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-          <AlertTriangle className="h-3 w-3" /> Expiring soon
+          <AlertTriangle className="h-3 w-3" /> {t("certifications.expiringSoon")}
         </div>
       )}
 
@@ -203,7 +207,7 @@ function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean
         <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
           {cert.courseName}
         </h3>
-        {statusBadge(cert.status)}
+        <StatusBadge status={cert.status} />
       </div>
 
       {showOwner && cert.userName && (
@@ -216,16 +220,16 @@ function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean
 
       <dl className="flex-1 space-y-1 text-sm text-gray-500">
         <div className="flex justify-between">
-          <dt>Certificate #</dt>
+          <dt>{t("certifications.certificateHash")}</dt>
           <dd className="font-mono text-xs text-gray-700">{cert.certificateNumber}</dd>
         </div>
         <div className="flex justify-between">
-          <dt>Issued</dt>
+          <dt>{t("certifications.issued")}</dt>
           <dd>{dayjs(cert.issuedDate).format("MMM D, YYYY")}</dd>
         </div>
         {cert.expiryDate && (
           <div className="flex justify-between">
-            <dt>Expires</dt>
+            <dt>{t("certifications.expires")}</dt>
             <dd
               className={
                 isExpiringSoon(cert.expiryDate)
@@ -250,6 +254,7 @@ function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean
 
 /* ── Admin View: all org certificates + verify by number ────────────────── */
 function AdminCertificationsView() {
+  const { t } = useTranslation();
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [search, setSearch] = useState("");
   const { data, isLoading } = useAllCertificates({ limit: 100 });
@@ -282,9 +287,9 @@ function AdminCertificationsView() {
         <div className="flex items-center gap-3">
           <Award className="h-7 w-7 text-brand-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Certifications</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("certifications.title")}</h1>
             <p className="text-sm text-gray-500">
-              {allCerts.length} certificate{allCerts.length === 1 ? "" : "s"} issued across your organization
+              {t("certifications.certsIssued", { count: allCerts.length })}
             </p>
           </div>
         </div>
@@ -294,7 +299,7 @@ function AdminCertificationsView() {
           className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition"
         >
           <ShieldCheck className="h-4 w-4" />
-          Verify Certificate
+          {t("certifications.verifyCertificate")}
         </button>
       </div>
 
@@ -304,7 +309,7 @@ function AdminCertificationsView() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by certificate number, course, employee name or email..."
+            placeholder={t("certifications.searchPlaceholder")}
             className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
           />
         </div>
@@ -314,12 +319,12 @@ function AdminCertificationsView() {
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <Award className="h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">
-            {allCerts.length === 0 ? "No certificates issued yet" : "No matches found"}
+            {allCerts.length === 0 ? t("certifications.noCertsIssued") : t("certifications.noMatches")}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
             {allCerts.length === 0
-              ? "Certificates will appear here once learners complete their courses."
-              : "Try a different search term."}
+              ? t("certifications.noCertsIssuedBody")
+              : t("certifications.tryDifferentSearch")}
           </p>
         </div>
       ) : (
@@ -337,6 +342,7 @@ function AdminCertificationsView() {
 
 /* ── Employee View: own certificates ────────────────────────────────────── */
 function EmployeeCertificationsView() {
+  const { t } = useTranslation();
   const { data, isLoading } = useMyCertificates();
   const certificates: any[] = data?.data ?? [];
 
@@ -352,15 +358,15 @@ function EmployeeCertificationsView() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Award className="h-7 w-7 text-brand-600" />
-        <h1 className="text-2xl font-bold text-gray-900">My Certifications</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("certifications.myTitle")}</h1>
       </div>
 
       {certificates.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <Award className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No certificates yet</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("certifications.noCertsYet")}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Complete courses to earn your first certification.
+            {t("certifications.noCertsYetBody")}
           </p>
         </div>
       ) : (

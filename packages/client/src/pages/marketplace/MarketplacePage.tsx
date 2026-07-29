@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Store, Search, Import, Loader2, ExternalLink, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMarketplace, useCourses, useCourse, useImportMarketplaceItem } from "@/api/hooks";
@@ -16,7 +17,8 @@ const TYPE_OPTIONS = [
   { value: "text", label: "Article" },
 ];
 
-function typeBadge(type: string) {
+function TypeBadge({ type }: { type: string }) {
+  const { t } = useTranslation();
   const colors: Record<string, string> = {
     scorm: "bg-purple-100 text-purple-700",
     video: "bg-blue-100 text-blue-700",
@@ -31,12 +33,13 @@ function typeBadge(type: string) {
   const cls = colors[type] ?? "bg-gray-100 text-gray-700";
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>
-      {type}
+      {t(`marketplace.type.${type}`, { defaultValue: type })}
     </span>
   );
 }
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
 
@@ -55,7 +58,7 @@ export default function MarketplacePage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Store className="h-7 w-7 text-brand-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Content Marketplace</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("marketplace.title")}</h1>
       </div>
 
       {/* Filters */}
@@ -64,7 +67,7 @@ export default function MarketplacePage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search marketplace…"
+            placeholder={t("marketplace.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -77,7 +80,7 @@ export default function MarketplacePage() {
         >
           {TYPE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`marketplace.type.${o.value}`, { defaultValue: o.label })}
             </option>
           ))}
         </select>
@@ -90,8 +93,8 @@ export default function MarketplacePage() {
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <Store className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No content found</h3>
-          <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("marketplace.noContentFound")}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t("marketplace.adjustFilters")}</p>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -116,10 +119,10 @@ export default function MarketplacePage() {
                       <Store className="h-10 w-10 text-gray-300" />
                     </div>
                   )}
-                  {type && <div className="absolute left-2 top-2">{typeBadge(type)}</div>}
+                  {type && <div className="absolute left-2 top-2"><TypeBadge type={type} /></div>}
                   {item.is_public ? (
                     <span className="absolute right-2 top-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                      Public
+                      {t("marketplace.public")}
                     </span>
                   ) : null}
                 </div>
@@ -149,7 +152,7 @@ export default function MarketplacePage() {
                         rel="noreferrer"
                         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" /> Preview
+                        <ExternalLink className="h-3.5 w-3.5" /> {t("marketplace.preview")}
                       </a>
                     )}
                     {isAdmin && (
@@ -157,7 +160,7 @@ export default function MarketplacePage() {
                         onClick={() => setImportTarget({ id: item.id, title: item.title })}
                         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-600 px-3 py-2 text-xs font-medium text-white hover:bg-brand-700 transition"
                       >
-                        <Import className="h-3.5 w-3.5" /> Import
+                        <Import className="h-3.5 w-3.5" /> {t("common.import")}
                       </button>
                     )}
                   </div>
@@ -189,6 +192,7 @@ function ImportModal({
   item: { id: string; title: string };
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [courseId, setCourseId] = useState("");
   const [moduleId, setModuleId] = useState("");
 
@@ -212,9 +216,9 @@ function ImportModal({
     await toast.promise(
       importMutation.mutateAsync({ itemId: item.id, courseId, moduleId }),
       {
-        loading: "Importing content…",
-        success: "Content imported as a lesson!",
-        error: (e: any) => e?.message ?? "Failed to import content",
+        loading: t("marketplace.importing"),
+        success: t("marketplace.importSuccess"),
+        error: (e: any) => e?.message ?? t("marketplace.importFailed"),
       }
     );
     onClose();
@@ -225,13 +229,13 @@ function ImportModal({
       <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
         <div className="flex items-start justify-between border-b border-gray-200 px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Import to Course</h2>
+            <h2 className="text-base font-semibold text-gray-900">{t("marketplace.importToCourse")}</h2>
             <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{item.title}</p>
           </div>
           <button
             onClick={onClose}
             className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -239,14 +243,14 @@ function ImportModal({
 
         <div className="space-y-4 px-5 py-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Target Course</label>
+            <label className="mb-1 block text-xs font-medium text-gray-700">{t("marketplace.targetCourse")}</label>
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               disabled={coursesLoading}
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50"
             >
-              <option value="">{coursesLoading ? "Loading courses…" : "Select a course"}</option>
+              <option value="">{coursesLoading ? t("marketplace.loadingCourses") : t("marketplace.selectCourse")}</option>
               {courses.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.title}
@@ -256,7 +260,7 @@ function ImportModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Target Module</label>
+            <label className="mb-1 block text-xs font-medium text-gray-700">{t("marketplace.targetModule")}</label>
             <select
               value={moduleId}
               onChange={(e) => setModuleId(e.target.value)}
@@ -265,12 +269,12 @@ function ImportModal({
             >
               <option value="">
                 {!courseId
-                  ? "Select a course first"
+                  ? t("marketplace.selectCourseFirst")
                   : courseLoading
-                    ? "Loading modules…"
+                    ? t("marketplace.loadingModules")
                     : modules.length === 0
-                      ? "No modules in this course"
-                      : "Select a module"}
+                      ? t("marketplace.noModules")
+                      : t("marketplace.selectModule")}
               </option>
               {modules.map((m: any) => (
                 <option key={m.id} value={m.id}>
@@ -286,7 +290,7 @@ function ImportModal({
             onClick={onClose}
             className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSubmit}
@@ -298,7 +302,7 @@ function ImportModal({
             ) : (
               <Import className="h-3.5 w-3.5" />
             )}
-            Import
+            {t("common.import")}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen,
   Clock,
@@ -35,6 +36,14 @@ import { formatDuration, formatDate, cn, progressColor } from "@/lib/utils";
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
 const TABS = ["Modules & Lessons", "Quizzes", "Discussions", "Ratings"] as const;
 type Tab = (typeof TABS)[number];
+
+/* Map each tab identifier to its translation key (values stay stable identifiers). */
+const TAB_LABEL_KEYS: Record<Tab, string> = {
+  "Modules & Lessons": "courseDetail.tabModules",
+  Quizzes: "courseDetail.tabQuizzes",
+  Discussions: "courseDetail.tabDiscussions",
+  Ratings: "courseDetail.tabRatings",
+};
 
 /* ── Star Row ────────────────────────────────────────────────────────────── */
 function Stars({ rating, size = 4 }: { rating: number; size?: number }) {
@@ -77,6 +86,7 @@ function ModuleAccordion({
   module: any;
   defaultOpen: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const lessons: any[] = module.lessons ?? [];
 
@@ -96,7 +106,7 @@ function ModuleAccordion({
           {module.title}
         </span>
         <span className="text-xs text-gray-500">
-          {lessons.length} lesson{lessons.length !== 1 && "s"}
+          {t("courseDetail.lessonCount", { count: lessons.length })}
         </span>
       </button>
 
@@ -123,7 +133,7 @@ function ModuleAccordion({
           ))}
           {lessons.length === 0 && (
             <li className="px-4 py-3 text-sm text-gray-400">
-              No lessons in this module.
+              {t("courseDetail.noLessons")}
             </li>
           )}
         </ul>
@@ -134,6 +144,7 @@ function ModuleAccordion({
 
 /* ── Rating Distribution ─────────────────────────────────────────────────── */
 function RatingDistribution({ ratings }: { ratings: any[] }) {
+  const { t } = useTranslation();
   const counts = [0, 0, 0, 0, 0];
   for (const r of ratings) counts[(r.rating ?? 1) - 1]++;
   const total = ratings.length || 1;
@@ -150,7 +161,7 @@ function RatingDistribution({ ratings }: { ratings: any[] }) {
         <div>
           <Stars rating={avg} size={5} />
           <p className="mt-1 text-sm text-gray-500">
-            {ratings.length} rating{ratings.length !== 1 && "s"}
+            {t("courseDetail.ratingCount", { count: ratings.length })}
           </p>
         </div>
       </div>
@@ -188,6 +199,7 @@ function DetailSkeleton() {
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 export default function CourseDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const currentUser = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(currentUser?.role);
@@ -200,24 +212,24 @@ export default function CourseDetailPage() {
   const publishCourse = useMutation({
     mutationFn: () => apiPost(`/courses/${id}/publish`, {}),
     onSuccess: () => {
-      toast.success("Course published");
+      toast.success(t("courseDetail.coursePublished"));
       qc.invalidateQueries({ queryKey: ["course", id] });
       qc.invalidateQueries({ queryKey: ["courses"] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error?.message || "Failed to publish");
+      toast.error(err?.response?.data?.error?.message || t("courseDetail.publishFailed"));
     },
   });
 
   const unpublishCourse = useMutation({
     mutationFn: () => apiPost(`/courses/${id}/unpublish`, {}),
     onSuccess: () => {
-      toast.success("Course unpublished");
+      toast.success(t("courseDetail.courseUnpublished"));
       qc.invalidateQueries({ queryKey: ["course", id] });
       qc.invalidateQueries({ queryKey: ["courses"] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error?.message || "Failed to unpublish");
+      toast.error(err?.response?.data?.error?.message || t("courseDetail.unpublishFailed"));
     },
   });
   const { data: quizzesRes } = useQuizzes(id!);
@@ -235,15 +247,15 @@ export default function CourseDetailPage() {
 
   function handleEnroll() {
     if (!id || !currentUser?.empcloudUserId) {
-      toast.error("You must be logged in to enroll.");
+      toast.error(t("courseDetail.mustBeLoggedIn"));
       return;
     }
     enroll.mutate(
       { user_id: currentUser.empcloudUserId, course_id: id },
       {
-        onSuccess: () => toast.success("Enrolled successfully!"),
+        onSuccess: () => toast.success(t("courseDetail.enrollSuccess")),
         onError: (err: any) => {
-          const msg = err?.response?.data?.error?.message || "Failed to enroll. Please try again.";
+          const msg = err?.response?.data?.error?.message || t("courseDetail.enrollFailed");
           toast.error(msg);
         },
       },
@@ -256,12 +268,12 @@ export default function CourseDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <BookOpen className="h-12 w-12 text-gray-300" />
-        <p className="mt-4 text-gray-500">Course not found.</p>
+        <p className="mt-4 text-gray-500">{t("courseDetail.courseNotFound")}</p>
         <Link
           to="/courses"
           className="mt-3 text-sm font-medium text-indigo-600 hover:underline"
         >
-          Back to courses
+          {t("courseDetail.backToCourses")}
         </Link>
       </div>
     );
@@ -275,7 +287,7 @@ export default function CourseDetailPage() {
         className="inline-flex items-center gap-1 text-sm text-gray-500 transition hover:text-gray-700"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to courses
+        {t("courseDetail.backToCourses")}
       </Link>
 
       {/* Hero */}
@@ -305,7 +317,7 @@ export default function CourseDetailPage() {
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
             <span className="inline-flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {course.instructorName ?? course.instructor?.name ?? "Instructor"}
+              {course.instructorName ?? course.instructor?.name ?? t("courseDetail.instructorFallback")}
             </span>
             {course.difficulty && (
               <span
@@ -318,7 +330,7 @@ export default function CourseDetailPage() {
                       : "bg-green-100 text-green-700",
                 )}
               >
-                {course.difficulty}
+                {t(`courseDetail.difficulty.${String(course.difficulty).toLowerCase()}`, { defaultValue: course.difficulty })}
               </span>
             )}
             {course.duration != null && (
@@ -339,7 +351,7 @@ export default function CourseDetailPage() {
           {isEnrolled && (
             <div className="mt-4">
               <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-700">Progress</span>
+                <span className="font-medium text-gray-700">{t("courseDetail.progress")}</span>
                 <span className="text-gray-500">{progress}%</span>
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -362,7 +374,7 @@ export default function CourseDetailPage() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
               >
                 <Play className="h-4 w-4" />
-                Continue Learning
+                {t("courseDetail.continueLearning")}
               </Link>
             ) : (
               <button
@@ -370,20 +382,20 @@ export default function CourseDetailPage() {
                 disabled={enroll.isPending}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
               >
-                {enroll.isPending ? "Enrolling..." : "Enroll Now"}
+                {enroll.isPending ? t("courseDetail.enrolling") : t("courseDetail.enrollNow")}
               </button>
             )}
 
             {/* Admin actions */}
             {isAdmin && (
               <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
-                <p className="text-xs font-medium uppercase text-gray-400">Admin</p>
+                <p className="text-xs font-medium uppercase text-gray-400">{t("courseDetail.admin")}</p>
                 <Link
                   to={`/courses/${id}/builder`}
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                 >
                   <Settings className="h-4 w-4" />
-                  Manage Content
+                  {t("courseDetail.manageContent")}
                 </Link>
                 {course?.status === "published" ? (
                   <button
@@ -393,7 +405,7 @@ export default function CourseDetailPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
                   >
                     <Archive className="h-4 w-4" />
-                    {unpublishCourse.isPending ? "Unpublishing..." : "Unpublish"}
+                    {unpublishCourse.isPending ? t("courseDetail.unpublishing") : t("courseDetail.unpublish")}
                   </button>
                 ) : (
                   <button
@@ -403,12 +415,12 @@ export default function CourseDetailPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:opacity-50"
                   >
                     <Upload className="h-4 w-4" />
-                    {publishCourse.isPending ? "Publishing..." : "Publish Course"}
+                    {publishCourse.isPending ? t("courseDetail.publishing") : t("courseDetail.publishCourse")}
                   </button>
                 )}
                 {course?.status && (
                   <p className="text-center text-xs text-gray-400">
-                    Status: <span className="font-medium capitalize">{course.status}</span>
+                    {t("common.status")}: <span className="font-medium capitalize">{t(`courseDetail.status.${String(course.status).toLowerCase()}`, { defaultValue: course.status })}</span>
                   </p>
                 )}
               </div>
@@ -419,14 +431,14 @@ export default function CourseDetailPage() {
               <div className="flex items-center justify-between text-gray-600">
                 <span className="inline-flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-gray-400" />
-                  Modules
+                  {t("courseDetail.modules")}
                 </span>
                 <span className="font-medium">{modules.length}</span>
               </div>
               <div className="flex items-center justify-between text-gray-600">
                 <span className="inline-flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-400" />
-                  Enrolled
+                  {t("courseDetail.enrolled")}
                 </span>
                 <span className="font-medium">
                   {course.enrollmentCount ?? 0}
@@ -436,7 +448,7 @@ export default function CourseDetailPage() {
                 <div className="flex items-center justify-between text-gray-600">
                   <span className="inline-flex items-center gap-2">
                     <Award className="h-4 w-4 text-gray-400" />
-                    Passing Score
+                    {t("courseDetail.passingScore")}
                   </span>
                   <span className="font-medium">{course.passingScore}%</span>
                 </div>
@@ -450,11 +462,11 @@ export default function CourseDetailPage() {
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-emerald-600" />
                 <span className="text-sm font-semibold text-emerald-800">
-                  Certificate Available
+                  {t("courseDetail.certificateAvailable")}
                 </span>
               </div>
               <p className="mt-1 text-xs text-emerald-600">
-                Complete all modules to earn your certificate.
+                {t("courseDetail.certificateBody")}
               </p>
             </div>
           )}
@@ -465,11 +477,11 @@ export default function CourseDetailPage() {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-amber-600" />
                 <span className="text-sm font-semibold text-amber-800">
-                  Compliance Required
+                  {t("courseDetail.complianceRequired")}
                 </span>
               </div>
               <p className="mt-1 text-xs text-amber-600">
-                Deadline: {formatDate(course.complianceDeadline)}
+                {t("courseDetail.deadline", { date: formatDate(course.complianceDeadline) })}
               </p>
             </div>
           )}
@@ -479,18 +491,18 @@ export default function CourseDetailPage() {
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex gap-6 overflow-x-auto">
-          {TABS.map((t) => (
+          {TABS.map((tabItem) => (
             <button
-              key={t}
-              onClick={() => setActiveTab(t)}
+              key={tabItem}
+              onClick={() => setActiveTab(tabItem)}
               className={cn(
                 "whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition",
-                activeTab === t
+                activeTab === tabItem
                   ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
               )}
             >
-              {t}
+              {t(TAB_LABEL_KEYS[tabItem])}
             </button>
           ))}
         </nav>
@@ -505,7 +517,7 @@ export default function CourseDetailPage() {
             ))
           ) : (
             <p className="py-10 text-center text-sm text-gray-400">
-              No modules available yet.
+              {t("courseDetail.noModules")}
             </p>
           )}
         </div>
@@ -524,21 +536,21 @@ export default function CourseDetailPage() {
                     {q.title}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500">
-                    {q.questionCount ?? 0} questions
-                    {q.timeLimit ? ` \u00b7 ${q.timeLimit} min` : ""}
+                    {t("courseDetail.questionCount", { count: q.questionCount ?? 0 })}
+                    {q.timeLimit ? ` \u00b7 ${t("courseDetail.minutesShort", { count: q.timeLimit })}` : ""}
                   </p>
                 </div>
                 <Link
                   to={`/quizzes/${q.id}`}
                   className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-100"
                 >
-                  Start
+                  {t("courseDetail.start")}
                 </Link>
               </div>
             ))
           ) : (
             <p className="py-10 text-center text-sm text-gray-400">
-              No quizzes for this course.
+              {t("courseDetail.noQuizzes")}
             </p>
           )}
         </div>
@@ -559,7 +571,7 @@ export default function CourseDetailPage() {
                       {d.title ?? d.subject}
                     </p>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      {d.authorName ?? "Anonymous"}
+                      {d.authorName ?? t("courseDetail.anonymous")}
                       {d.createdAt ? ` \u00b7 ${formatDate(d.createdAt)}` : ""}
                     </p>
                   </div>
@@ -568,7 +580,7 @@ export default function CourseDetailPage() {
             ))
           ) : (
             <p className="py-10 text-center text-sm text-gray-400">
-              No discussions yet.
+              {t("courseDetail.noDiscussions")}
             </p>
           )}
         </div>
@@ -580,7 +592,7 @@ export default function CourseDetailPage() {
             <RatingDistribution ratings={ratings} />
           ) : (
             <p className="py-10 text-center text-sm text-gray-400">
-              No ratings yet. Be the first to rate this course!
+              {t("courseDetail.noRatings")}
             </p>
           )}
         </div>

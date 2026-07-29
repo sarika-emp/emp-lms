@@ -1,9 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, useNavigate, Navigate, Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   BookOpen,
   ArrowLeft,
@@ -25,41 +27,42 @@ import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 import { cn } from "@/lib/utils";
 
 /* ── Schema ──────────────────────────────────────────────────────────────── */
-const courseSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters").max(200),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  short_description: z.string().max(300).optional().or(z.literal("")),
-  category_id: z.string().min(1, "Category is required"),
-  // BUG-10: the blank select submits "" (not undefined), which made Zod emit
-  // the raw "Invalid enum value. Expected 'beginner' | ..." message. Map "" to
-  // undefined so the friendly required_error is shown instead.
-  difficulty: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["beginner", "intermediate", "advanced"], {
-      required_error: "Difficulty is required",
-    }),
-  ),
-  duration: z.coerce
-    .number()
-    .int("Duration must be a whole number of minutes")
-    .min(1, "Duration must be at least 1 minute"),
-  is_mandatory: z.boolean().default(false),
-  is_featured: z.boolean().default(false),
-  is_compliance: z.boolean().default(false),
-  compliance_type: z.enum(["policy", "training", "document_submission", "quiz"]).nullable().optional(),
-  compliance_code: z.string().max(50).optional().or(z.literal("")),
-  tags: z.string().optional().or(z.literal("")),
-  passing_score: z.coerce
-    .number()
-    .int("Passing score must be a whole number")
-    .min(0)
-    .max(100)
-    .optional()
-    .or(z.literal(0)),
-  thumbnail_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-});
+const buildCourseSchema = (t: TFunction) =>
+  z.object({
+    title: z.string().min(3, t("courseForm.validation.titleMin")).max(200),
+    description: z.string().min(10, t("courseForm.validation.descriptionMin")),
+    short_description: z.string().max(300).optional().or(z.literal("")),
+    category_id: z.string().min(1, t("courseForm.validation.categoryRequired")),
+    // BUG-10: the blank select submits "" (not undefined), which made Zod emit
+    // the raw "Invalid enum value. Expected 'beginner' | ..." message. Map "" to
+    // undefined so the friendly required_error is shown instead.
+    difficulty: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.enum(["beginner", "intermediate", "advanced"], {
+        required_error: t("courseForm.validation.difficultyRequired"),
+      }),
+    ),
+    duration: z.coerce
+      .number()
+      .int(t("courseForm.validation.durationInt"))
+      .min(1, t("courseForm.validation.durationMin")),
+    is_mandatory: z.boolean().default(false),
+    is_featured: z.boolean().default(false),
+    is_compliance: z.boolean().default(false),
+    compliance_type: z.enum(["policy", "training", "document_submission", "quiz"]).nullable().optional(),
+    compliance_code: z.string().max(50).optional().or(z.literal("")),
+    tags: z.string().optional().or(z.literal("")),
+    passing_score: z.coerce
+      .number()
+      .int(t("courseForm.validation.passingScoreInt"))
+      .min(0)
+      .max(100)
+      .optional()
+      .or(z.literal(0)),
+    thumbnail_url: z.string().url(t("courseForm.validation.urlInvalid")).optional().or(z.literal("")),
+  });
 
-type CourseFormData = z.infer<typeof courseSchema>;
+type CourseFormData = z.infer<ReturnType<typeof buildCourseSchema>>;
 
 /* ── Field Wrapper ───────────────────────────────────────────────────────── */
 function Field({
@@ -91,6 +94,7 @@ const inputCls =
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 export default function CourseFormPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -110,6 +114,8 @@ export default function CourseFormPage() {
   const updateCourse = useUpdateCourse(id ?? "");
 
   const categories: any[] = categoriesRes?.data ?? [];
+
+  const courseSchema = useMemo(() => buildCourseSchema(t), [t]);
 
   const {
     register,
@@ -174,7 +180,7 @@ export default function CourseFormPage() {
       tags: data.tags
         ? data.tags
             .split(",")
-            .map((t) => t.trim())
+            .map((tag) => tag.trim())
             .filter(Boolean)
         : [],
     };
@@ -182,14 +188,14 @@ export default function CourseFormPage() {
     try {
       if (isEdit) {
         await updateCourse.mutateAsync(payload);
-        toast.success("Course updated successfully!");
+        toast.success(t("courseForm.courseUpdated"));
       } else {
         await createCourse.mutateAsync(payload);
-        toast.success("Course created successfully!");
+        toast.success(t("courseForm.courseCreated"));
       }
       navigate("/courses");
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("courseForm.saveError"));
     }
   }
 
@@ -212,7 +218,7 @@ export default function CourseFormPage() {
           <Link
             to="/courses"
             className="rounded-lg bg-white/10 p-2 text-white/90 transition hover:bg-white/20"
-            aria-label="Back to courses"
+            aria-label={t("courseForm.backToCourses")}
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -222,12 +228,12 @@ export default function CourseFormPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">
-                {isEdit ? "Edit Course" : "Create a New Course"}
+                {isEdit ? t("courseForm.editTitle") : t("courseForm.createTitle")}
               </h1>
               <p className="mt-0.5 text-sm text-indigo-100">
                 {isEdit
-                  ? "Update the course details below."
-                  : "Fill in the details to launch a new learning experience."}
+                  ? t("courseForm.editSubtitle")
+                  : t("courseForm.createSubtitle")}
               </p>
             </div>
           </div>
@@ -239,11 +245,11 @@ export default function CourseFormPage() {
         <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-500" />
           <div>
-            <strong className="font-semibold">Please fix the following before saving:</strong>
+            <strong className="font-semibold">{t("courseForm.fixErrors")}</strong>
             <ul className="mt-1 list-disc pl-5">
               {Object.entries(errors).map(([field, err]: [string, any]) => (
                 <li key={field}>
-                  <span className="font-medium">{field}</span>: {err?.message || "invalid"}
+                  <span className="font-medium">{field}</span>: {err?.message || t("courseForm.invalid")}
                 </li>
               ))}
             </ul>
@@ -265,28 +271,28 @@ export default function CourseFormPage() {
             <div className="rounded-lg bg-indigo-100 p-1.5">
               <FileText className="h-4 w-4 text-indigo-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Basic Information</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t("courseForm.sectionBasic")}</h2>
           </div>
           <div className="space-y-5 p-6">
-            <Field label="Title" error={errors.title?.message} required>
-              <input {...register("title")} className={inputCls} placeholder="e.g. Introduction to React" />
+            <Field label={t("courseForm.title")} error={errors.title?.message} required>
+              <input {...register("title")} className={inputCls} placeholder={t("courseForm.titlePlaceholder")} />
             </Field>
 
-            <Field label="Short Description" error={errors.short_description?.message}>
+            <Field label={t("courseForm.shortDescription")} error={errors.short_description?.message}>
               <input
                 {...register("short_description")}
                 className={inputCls}
-                placeholder="One-line summary shown on course cards (max 300 chars)"
+                placeholder={t("courseForm.shortDescriptionPlaceholder")}
                 maxLength={300}
               />
             </Field>
 
-            <Field label="Description" error={errors.description?.message} required>
+            <Field label={t("courseForm.description")} error={errors.description?.message} required>
               <textarea
                 {...register("description")}
                 rows={5}
                 className={cn(inputCls, "resize-y")}
-                placeholder="Full course description — what learners will get, who it's for, outcomes..."
+                placeholder={t("courseForm.descriptionPlaceholder")}
               />
             </Field>
           </div>
@@ -298,13 +304,13 @@ export default function CourseFormPage() {
             <div className="rounded-lg bg-sky-100 p-1.5">
               <Layers className="h-4 w-4 text-sky-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Course Details</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t("courseForm.sectionDetails")}</h2>
           </div>
           <div className="space-y-5 p-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Category" error={errors.category_id?.message} required>
+              <Field label={t("courseForm.category")} error={errors.category_id?.message} required>
                 <select {...register("category_id")} className={inputCls}>
-                  <option value="">Select category</option>
+                  <option value="">{t("courseForm.selectCategory")}</option>
                   {categories
                     .filter((c: any) => c && typeof c === "object" && c.id)
                     .map((c: any) => (
@@ -314,45 +320,45 @@ export default function CourseFormPage() {
                     ))}
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  {categories.length === 0 ? "No categories yet — " : ""}
+                  {categories.length === 0 ? t("courseForm.noCategoriesYet") : ""}
                   <Link to="/settings" className="font-medium text-indigo-600 hover:text-indigo-700">
-                    Manage categories in Settings
+                    {t("courseForm.manageCategories")}
                   </Link>
                 </p>
               </Field>
 
-              <Field label="Difficulty" error={errors.difficulty?.message} required>
+              <Field label={t("courseForm.difficultyLabel")} error={errors.difficulty?.message} required>
                 <select {...register("difficulty")} className={inputCls}>
-                  <option value="">Select difficulty</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  <option value="">{t("courseForm.selectDifficulty")}</option>
+                  <option value="beginner">{t("courseForm.difficulty.beginner")}</option>
+                  <option value="intermediate">{t("courseForm.difficulty.intermediate")}</option>
+                  <option value="advanced">{t("courseForm.difficulty.advanced")}</option>
                 </select>
               </Field>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Duration (minutes)" error={errors.duration?.message} required>
+              <Field label={t("courseForm.durationLabel")} error={errors.duration?.message} required>
                 <div className="relative">
                   <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <input
                     type="number"
                     {...register("duration")}
                     className={cn(inputCls, "pl-9")}
-                    placeholder="e.g. 120"
+                    placeholder={t("courseForm.durationPlaceholder")}
                     min={1}
                   />
                 </div>
               </Field>
 
-              <Field label="Passing Score (%)" error={errors.passing_score?.message}>
+              <Field label={t("courseForm.passingScoreLabel")} error={errors.passing_score?.message}>
                 <div className="relative">
                   <Target className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <input
                     type="number"
                     {...register("passing_score")}
                     className={cn(inputCls, "pl-9")}
-                    placeholder="e.g. 70"
+                    placeholder={t("courseForm.passingScorePlaceholder")}
                     min={0}
                     max={100}
                   />
@@ -368,29 +374,29 @@ export default function CourseFormPage() {
             <div className="rounded-lg bg-amber-100 p-1.5">
               <ImageIcon className="h-4 w-4 text-amber-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Media &amp; Tags</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t("courseForm.sectionMedia")}</h2>
           </div>
           <div className="space-y-5 p-6">
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <Field label="Thumbnail URL" error={errors.thumbnail_url?.message}>
+                <Field label={t("courseForm.thumbnailUrl")} error={errors.thumbnail_url?.message}>
                   <input
                     {...register("thumbnail_url")}
                     className={inputCls}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder={t("courseForm.thumbnailUrlPlaceholder")}
                   />
                 </Field>
                 <p className="mt-1 text-xs text-gray-500">
-                  Recommended: 16:9 aspect ratio, at least 1280×720px
+                  {t("courseForm.thumbnailHint")}
                 </p>
               </div>
               <div className="lg:col-span-1">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">Preview</label>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("courseForm.preview")}</label>
                 <div className="flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-200 bg-gray-50">
                   {thumbnailUrl ? (
                     <img
                       src={thumbnailUrl}
-                      alt="Thumbnail preview"
+                      alt={t("courseForm.thumbnailPreviewAlt")}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
@@ -399,20 +405,20 @@ export default function CourseFormPage() {
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-gray-400">
                       <ImageIcon className="h-6 w-6" />
-                      <span className="text-xs">No image</span>
+                      <span className="text-xs">{t("courseForm.noImage")}</span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <Field label="Tags" error={errors.tags?.message}>
+            <Field label={t("courseForm.tags")} error={errors.tags?.message}>
               <div className="relative">
                 <TagIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   {...register("tags")}
                   className={cn(inputCls, "pl-9")}
-                  placeholder="Comma-separated, e.g. react, javascript, frontend"
+                  placeholder={t("courseForm.tagsPlaceholder")}
                 />
               </div>
             </Field>
@@ -425,7 +431,7 @@ export default function CourseFormPage() {
             <div className="rounded-lg bg-emerald-100 p-1.5">
               <Settings2 className="h-4 w-4 text-emerald-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Options</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t("courseForm.sectionOptions")}</h2>
           </div>
           <div className="grid gap-3 p-6 sm:grid-cols-2">
             <Controller
@@ -447,9 +453,9 @@ export default function CourseFormPage() {
                     className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <div>
-                    <p className="text-sm font-medium text-gray-800">Mandatory course</p>
+                    <p className="text-sm font-medium text-gray-800">{t("courseForm.mandatoryCourse")}</p>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      Learners must complete this course
+                      {t("courseForm.mandatoryCourseHint")}
                     </p>
                   </div>
                 </label>
@@ -475,10 +481,10 @@ export default function CourseFormPage() {
                   />
                   <div>
                     <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
-                      Featured course <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      {t("courseForm.featuredCourse")} <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                     </p>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      Highlight on dashboard &amp; catalog
+                      {t("courseForm.featuredCourseHint")}
                     </p>
                   </div>
                 </label>
@@ -493,7 +499,7 @@ export default function CourseFormPage() {
             <div className="rounded-lg bg-purple-100 p-1.5">
               <ShieldCheck className="h-4 w-4 text-purple-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Compliance Settings</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t("courseForm.sectionCompliance")}</h2>
           </div>
           <div className="space-y-5 p-6">
             <Controller
@@ -516,10 +522,10 @@ export default function CourseFormPage() {
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-800">
-                      This is a compliance course
+                      {t("courseForm.isComplianceCourse")}
                     </p>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      Track acceptance, document submission, or mandatory training with audit trail
+                      {t("courseForm.isComplianceCourseHint")}
                     </p>
                   </div>
                 </label>
@@ -528,21 +534,21 @@ export default function CourseFormPage() {
 
             {watch("is_compliance") && (
               <div className="grid grid-cols-1 gap-4 rounded-lg border border-purple-100 bg-purple-50/40 p-4 sm:grid-cols-2">
-                <Field label="Compliance Type" error={errors.compliance_type?.message}>
+                <Field label={t("courseForm.complianceType")} error={errors.compliance_type?.message}>
                   <select {...register("compliance_type")} className={inputCls}>
-                    <option value="">Select type</option>
-                    <option value="policy">Policy (Accept terms)</option>
-                    <option value="training">Training (Complete course)</option>
-                    <option value="document_submission">Document Submission (Upload file)</option>
-                    <option value="quiz">Quiz (Pass assessment)</option>
+                    <option value="">{t("courseForm.selectType")}</option>
+                    <option value="policy">{t("courseForm.complianceTypes.policy")}</option>
+                    <option value="training">{t("courseForm.complianceTypes.training")}</option>
+                    <option value="document_submission">{t("courseForm.complianceTypes.document")}</option>
+                    <option value="quiz">{t("courseForm.complianceTypes.quiz")}</option>
                   </select>
                 </Field>
 
-                <Field label="Compliance Code" error={errors.compliance_code?.message}>
+                <Field label={t("courseForm.complianceCode")} error={errors.compliance_code?.message}>
                   <input
                     {...register("compliance_code")}
                     className={inputCls}
-                    placeholder="e.g. GDPR-2024, SOC2-T1"
+                    placeholder={t("courseForm.complianceCodePlaceholder")}
                     maxLength={50}
                   />
                 </Field>
@@ -559,7 +565,7 @@ export default function CourseFormPage() {
               onClick={() => navigate("/courses")}
               className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -571,7 +577,7 @@ export default function CourseFormPage() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {isEdit ? "Update Course" : "Create Course"}
+              {isEdit ? t("courseForm.updateCourse") : t("courseForm.createCourse")}
             </button>
           </div>
         </div>

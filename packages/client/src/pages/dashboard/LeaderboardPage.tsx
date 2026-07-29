@@ -1,4 +1,5 @@
 import { Trophy, Flame, Loader2, Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useLeaderboard, useMyPoints } from "@/api/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -18,6 +19,7 @@ const PODIUM_STYLES: Record<number, { ring: string; bg: string; text: string }> 
 };
 
 export default function LeaderboardPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { data: lbData, isLoading: lbLoading } = useLeaderboard();
   const { data: ptsData, isLoading: ptsLoading } = useMyPoints();
@@ -40,7 +42,7 @@ export default function LeaderboardPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Trophy className="h-7 w-7 text-brand-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Leaderboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("leaderboard.title")}</h1>
       </div>
 
       {/* Current User Stats */}
@@ -49,22 +51,22 @@ export default function LeaderboardPage() {
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-brand-600" />
             <span className="text-sm font-medium text-brand-900">
-              Your Points: <span className="text-lg font-bold">{myPoints.totalPoints?.toLocaleString() ?? 0}</span>
+              {t("leaderboard.yourPoints")} <span className="text-lg font-bold">{myPoints.totalPoints?.toLocaleString() ?? 0}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-brand-600" />
             <span className="text-sm font-medium text-brand-900">
-              Rank:{" "}
+              {t("leaderboard.rankLabel")}{" "}
               <span className="text-lg font-bold">
-                {myPoints.rank != null ? `#${myPoints.rank}` : "Unranked"}
+                {myPoints.rank != null ? `#${myPoints.rank}` : t("leaderboard.unranked")}
               </span>
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
             <span className="text-sm font-medium text-brand-900">
-              Streak: <span className="text-lg font-bold">{myPoints.streak ?? 0} days</span>
+              {t("leaderboard.streakLabel")} <span className="text-lg font-bold">{t("leaderboard.streakDays", { count: myPoints.streak ?? 0 })}</span>
             </span>
           </div>
         </div>
@@ -100,7 +102,7 @@ export default function LeaderboardPage() {
                 <p className={`mt-1 text-sm font-semibold ${isMe ? "text-brand-600" : "text-gray-900"}`}>
                   {entry.name}
                 </p>
-                <p className="text-xs text-gray-500">{entry.points?.toLocaleString()} pts</p>
+                <p className="text-xs text-gray-500">{entry.points?.toLocaleString()} {t("leaderboard.pts")}</p>
               </div>
             );
           })}
@@ -111,8 +113,8 @@ export default function LeaderboardPage() {
       {leaders.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <Trophy className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No leaderboard data yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Start learning to appear on the leaderboard!</p>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("leaderboard.emptyTitle")}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t("leaderboard.emptyBody")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -120,19 +122,19 @@ export default function LeaderboardPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Rank
+                  {t("leaderboard.colRank")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Learner
+                  {t("leaderboard.colLearner")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Points
+                  {t("leaderboard.colPoints")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Courses Completed
+                  {t("leaderboard.colCoursesCompleted")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Streak
+                  {t("leaderboard.colStreak")}
                 </th>
               </tr>
             </thead>
@@ -176,7 +178,7 @@ export default function LeaderboardPage() {
                         <span className={`font-medium ${isMe ? "text-brand-600" : "text-gray-900"}`}>
                           {entry.name}
                           {isMe && (
-                            <span className="ml-1.5 text-xs text-brand-500">(You)</span>
+                            <span className="ml-1.5 text-xs text-brand-500">{t("leaderboard.you")}</span>
                           )}
                         </span>
                       </div>
@@ -190,7 +192,7 @@ export default function LeaderboardPage() {
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Flame className="h-4 w-4 text-orange-500" />
-                        {entry.streak ?? 0}d
+                        {t("leaderboard.streakShort", { count: entry.streak ?? 0 })}
                       </span>
                     </td>
                   </tr>

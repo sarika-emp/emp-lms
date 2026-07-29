@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { BookOpen, Clock, Calendar, Play, CheckCircle, Library } from "lucide-react";
 import { useMyEnrollments } from "@/api/hooks";
 
@@ -13,6 +14,7 @@ function getProgress(e: any): number {
 }
 
 export default function MyLearningPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("in-progress");
   const { data, isLoading, isError } = useMyEnrollments();
 
@@ -25,9 +27,9 @@ export default function MyLearningPage() {
   }, [enrollments, tab]);
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "in-progress", label: "In Progress" },
-    { key: "completed", label: "Completed" },
-    { key: "all", label: "All" },
+    { key: "in-progress", label: t("myLearning.tabInProgress") },
+    { key: "completed", label: t("myLearning.tabCompleted") },
+    { key: "all", label: t("common.all") },
   ];
 
   if (isLoading) {
@@ -41,29 +43,29 @@ export default function MyLearningPage() {
   if (isError) {
     return (
       <div className="text-center py-20 text-red-600">
-        Failed to load your enrollments. Please try again later.
+        {t("myLearning.loadError")}
       </div>
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Learning</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t("myLearning.title")}</h1>
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-6 -mb-px">
-          {tabs.map((t) => (
+          {tabs.map((tabItem) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={tabItem.key}
+              onClick={() => setTab(tabItem.key)}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-                tab === t.key
+                tab === tabItem.key
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
         </nav>
@@ -76,19 +78,19 @@ export default function MyLearningPage() {
           <Library className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-600 mb-4">
             {enrollments.length === 0
-              ? "You haven't enrolled in any courses yet."
+              ? t("myLearning.emptyNone")
               : tab === "in-progress"
-                ? "No courses in progress."
+                ? t("myLearning.emptyInProgress")
                 : tab === "completed"
-                  ? "You haven't completed any courses yet."
-                  : "No courses to show."}
+                  ? t("myLearning.emptyCompleted")
+                  : t("myLearning.emptyAll")}
           </p>
           <Link
             to="/courses"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <BookOpen className="h-4 w-4" />
-            Browse Catalog
+            {t("myLearning.browseCatalog")}
           </Link>
         </div>
       )}
@@ -107,13 +109,13 @@ export default function MyLearningPage() {
                 className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col"
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
-                  {enrollment.course_title ?? enrollment.course?.title ?? "Untitled Course"}
+                  {enrollment.course_title ?? enrollment.course?.title ?? t("myLearning.untitledCourse")}
                 </h3>
 
                 {/* Progress bar */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-gray-500">Progress</span>
+                    <span className="text-gray-500">{t("myLearning.progress")}</span>
                     <span className="font-medium text-gray-900">{progress}%</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -131,13 +133,13 @@ export default function MyLearningPage() {
                   {timeSpent != null && Number(timeSpent) > 0 && (
                     <span className="flex items-center gap-1.5">
                       <Clock className="h-4 w-4" />
-                      {timeSpent} min spent
+                      {t("myLearning.minSpent", { count: Number(timeSpent) })}
                     </span>
                   )}
                   {lastAccessed && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4" />
-                      Last accessed {new Date(lastAccessed).toLocaleDateString()}
+                      {t("myLearning.lastAccessed", { date: new Date(lastAccessed).toLocaleDateString() })}
                     </span>
                   )}
                 </div>
@@ -146,7 +148,7 @@ export default function MyLearningPage() {
                   {progress >= 100 ? (
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
                       <CheckCircle className="h-4 w-4" />
-                      Completed
+                      {t("myLearning.completed")}
                     </span>
                   ) : (
                     <Link
@@ -154,7 +156,7 @@ export default function MyLearningPage() {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <Play className="h-4 w-4" />
-                      Continue
+                      {t("myLearning.continue")}
                     </Link>
                   )}
                 </div>

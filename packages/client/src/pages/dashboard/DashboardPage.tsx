@@ -19,6 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 import { useOverviewAnalytics, useMyEnrollments, useMyCertificates, useMyPoints } from "@/api/hooks";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
@@ -121,6 +122,7 @@ function QuickLink({
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
 
@@ -215,45 +217,45 @@ export default function DashboardPage() {
     <div className="space-y-6 p-6">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.title")}</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Welcome back! Here&apos;s your learning overview.
+          {t("dashboard.welcome")}
         </p>
       </div>
 
       {/* ── Stats Grid ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
-          label="Total Courses"
+          label={t("dashboard.totalCourses")}
           value={stats?.totalCourses ?? 0}
           icon={<BookOpen className="h-5 w-5 text-indigo-600" />}
           color="bg-indigo-50"
           to="/courses"
         />
         <StatCard
-          label={isAdmin ? "Enrollments" : "My Enrollments"}
+          label={isAdmin ? t("dashboard.enrollments") : t("dashboard.myEnrollments")}
           value={stats?.myEnrollments ?? 0}
           icon={<Users className="h-5 w-5 text-sky-600" />}
           color="bg-sky-50"
           to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
-          label="Completed"
+          label={t("dashboard.completed")}
           value={stats?.completed ?? 0}
           icon={<Award className="h-5 w-5 text-emerald-600" />}
           color="bg-emerald-50"
           to={isAdmin ? "/analytics" : "/my-learning"}
         />
         <StatCard
-          label={isAdmin ? "Certificates Issued" : "Certificates Earned"}
+          label={isAdmin ? t("dashboard.certificatesIssued") : t("dashboard.certificatesEarned")}
           value={stats?.certificatesEarned ?? 0}
           icon={<Award className="h-5 w-5 text-amber-600" />}
           color="bg-amber-50"
           to={isAdmin ? "/certifications" : "/certifications?view=my"}
         />
         <StatCard
-          label="Current Streak"
-          value={`${stats?.currentStreak ?? 0} days`}
+          label={t("dashboard.currentStreak")}
+          value={t("dashboard.streakDays", { count: stats?.currentStreak ?? 0 })}
           icon={<Flame className="h-5 w-5 text-rose-600" />}
           color="bg-rose-50"
           to="/leaderboard"
@@ -265,7 +267,7 @@ export default function DashboardPage() {
         {/* Completion chart */}
         <div className="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Completion Rates
+            {t("dashboard.completionRates")}
           </h2>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={320}>
@@ -289,7 +291,7 @@ export default function DashboardPage() {
                   tickFormatter={(v: number) => `${v}%`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`${value}%`, "Completion"]}
+                  formatter={(value: number) => [`${value}%`, t("dashboard.completion")]}
                   contentStyle={{ borderRadius: "0.5rem", fontSize: "0.875rem" }}
                 />
                 <Bar
@@ -301,7 +303,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           ) : (
             <div className="flex h-64 items-center justify-center text-sm text-gray-400">
-              No completion data available yet.
+              {t("dashboard.noCompletionData")}
             </div>
           )}
         </div>
@@ -309,7 +311,7 @@ export default function DashboardPage() {
         {/* Recent activity */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Recent Activity
+            {t("dashboard.recentActivity")}
           </h2>
           {Array.isArray(recentEnrollments) && recentEnrollments.length > 0 ? (
             <ul className="space-y-4">
@@ -322,10 +324,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-800">
-                      {enrollment.courseTitle ?? enrollment.course?.title ?? enrollment.courseName ?? enrollment.course_title ?? "Course"}
+                      {enrollment.courseTitle ?? enrollment.course?.title ?? enrollment.courseName ?? enrollment.course_title ?? t("dashboard.courseFallback")}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {Number(enrollment.progressPercentage ?? enrollment.progress_percentage ?? enrollment.progress ?? 0)}% complete
+                      {t("dashboard.percentComplete", { percent: Number(enrollment.progressPercentage ?? enrollment.progress_percentage ?? enrollment.progress ?? 0) })}
                       {(enrollment.updatedAt || enrollment.updated_at) &&
                         ` \u00b7 ${formatDate(enrollment.updatedAt || enrollment.updated_at)}`}
                     </p>
@@ -334,7 +336,7 @@ export default function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-gray-400">No recent activity.</p>
+            <p className="text-sm text-gray-400">{t("dashboard.noRecentActivity")}</p>
           )}
         </div>
       </div>
@@ -342,23 +344,23 @@ export default function DashboardPage() {
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
       <div>
         <h2 className="mb-3 text-lg font-semibold text-gray-900">
-          Quick Links
+          {t("dashboard.quickLinks")}
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <QuickLink
             to="/courses"
             icon={<Play className="h-5 w-5 text-indigo-500" />}
-            label="Continue Learning"
+            label={t("dashboard.continueLearning")}
           />
           <QuickLink
             to="/courses?tab=all"
             icon={<LayoutGrid className="h-5 w-5 text-sky-500" />}
-            label="Browse Catalog"
+            label={t("dashboard.browseCatalog")}
           />
           <QuickLink
             to="/ilt"
             icon={<CalendarDays className="h-5 w-5 text-amber-500" />}
-            label="Upcoming ILT Sessions"
+            label={t("dashboard.upcomingIlt")}
           />
         </div>
       </div>

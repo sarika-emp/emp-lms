@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -21,6 +22,7 @@ import { LessonPlayer } from "@/components/lesson-player/LessonPlayer";
  * page only drives it from the client.
  */
 export default function LearnerRuntimePage() {
+  const { t } = useTranslation();
   const { id: courseId } = useParams<{ id: string }>();
   const { data: courseRes, isLoading, isError } = useCourse(courseId!);
   const course = courseRes?.data;
@@ -91,9 +93,9 @@ export default function LearnerRuntimePage() {
     return (
       <div className="py-12 text-center">
         <p className="text-gray-500">
-          Failed to load course.{" "}
+          {t("learnerRuntime.failedToLoad")}{" "}
           <Link to="/courses" className="text-indigo-600 hover:underline">
-            Back to courses
+            {t("learnerRuntime.backToCourses")}
           </Link>
         </p>
       </div>
@@ -118,14 +120,14 @@ export default function LearnerRuntimePage() {
           setCompletedIds((prev) => new Set(prev).add(lessonId));
           const pct = res?.data?.progress_percentage ?? res?.progress_percentage;
           if (res?.data?.is_course_completed || res?.is_course_completed) {
-            toast.success("🎉 Course complete!");
+            toast.success(t("learnerRuntime.courseComplete"));
           } else {
-            toast.success(`Lesson complete — ${pct ?? 0}% done`);
+            toast.success(t("learnerRuntime.lessonComplete", { pct: pct ?? 0 }));
           }
           if (nextLesson) setActiveLessonId(nextLesson.id);
         },
         onError: (err: any) => {
-          toast.error(err?.response?.data?.error?.message || "Failed to mark lesson complete");
+          toast.error(err?.response?.data?.error?.message || t("learnerRuntime.markCompleteFailed"));
         },
       },
     );
@@ -145,12 +147,12 @@ export default function LearnerRuntimePage() {
             className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to course
+            {t("learnerRuntime.backToCourse")}
           </Link>
           <h1 className="mt-1 text-2xl font-bold text-gray-900">{course.title}</h1>
         </div>
         <div className="text-right">
-          <div className="text-xs text-gray-500">Progress</div>
+          <div className="text-xs text-gray-500">{t("learnerRuntime.progress")}</div>
           <div className="text-lg font-semibold text-gray-900">{pct}%</div>
           <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-gray-100">
             <div
@@ -165,7 +167,7 @@ export default function LearnerRuntimePage() {
         {/* Sidebar — module / lesson list */}
         <aside className="lg:col-span-1">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-gray-700">Course Contents</h2>
+            <h2 className="mb-3 text-sm font-semibold text-gray-700">{t("learnerRuntime.courseContents")}</h2>
             <div className="space-y-4">
               {[...course.modules]
                 .sort(
@@ -229,7 +231,7 @@ export default function LearnerRuntimePage() {
               />
             ) : (
               <p className="py-12 text-center text-gray-400">
-                No lessons in this course yet. Ask an admin to add content in the Course Builder.
+                {t("learnerRuntime.noLessons")}
               </p>
             )}
           </div>

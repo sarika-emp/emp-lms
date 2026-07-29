@@ -18,10 +18,13 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 import { BackToDashboard } from "@/components/BackToDashboard";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface NavItem {
+  // i18n key under the `nav` namespace, resolved via t() at render.
   label: string;
   to: string;
   icon: React.ElementType;
@@ -43,40 +46,42 @@ interface NavSection {
 // personal learner view apart from admin-only management tools.
 // For Certifications and Compliance, admins get TWO items — a "My ___" view
 // (their own records) and a "Manage ___" view (org-wide admin dashboard).
+// `label` and `heading` hold i18n keys under the `nav` namespace; they're
+// resolved via t() at render so the whole sidebar re-renders on language change.
 const navSections: NavSection[] = [
   {
-    items: [{ label: "Dashboard", to: "/dashboard", icon: LayoutDashboard }],
+    items: [{ label: "nav.dashboard", to: "/dashboard", icon: LayoutDashboard }],
   },
   {
-    heading: "My Learning",
+    heading: "nav.secMyLearning",
     items: [
-      { label: "My Learning", to: "/my-learning", icon: BookOpen },
-      { label: "Course Catalog", to: "/courses", icon: Library },
-      { label: "Learning Paths", to: "/learning-paths", icon: Route },
-      { label: "Live Training", to: "/ilt", icon: Video },
+      { label: "nav.myLearning", to: "/my-learning", icon: BookOpen },
+      { label: "nav.courseCatalog", to: "/courses", icon: Library },
+      { label: "nav.learningPaths", to: "/learning-paths", icon: Route },
+      { label: "nav.liveTraining", to: "/ilt", icon: Video },
       // Employee-only single entry
-      { label: "Certifications", to: "/certifications", icon: Award, employeeOnly: true },
-      { label: "Compliance", to: "/compliance", icon: ShieldCheck, employeeOnly: true },
+      { label: "nav.certifications", to: "/certifications", icon: Award, employeeOnly: true },
+      { label: "nav.compliance", to: "/compliance", icon: ShieldCheck, employeeOnly: true },
       // Admin-only: personal views (force ?view=my)
-      { label: "My Certifications", to: "/certifications?view=my", icon: Award, adminOnly: true },
-      { label: "My Compliance", to: "/compliance?view=my", icon: ShieldCheck, adminOnly: true },
-      { label: "Leaderboard", to: "/leaderboard", icon: Trophy },
-      { label: "Marketplace", to: "/marketplace", icon: ShoppingBag },
+      { label: "nav.myCertifications", to: "/certifications?view=my", icon: Award, adminOnly: true },
+      { label: "nav.myCompliance", to: "/compliance?view=my", icon: ShieldCheck, adminOnly: true },
+      { label: "nav.leaderboard", to: "/leaderboard", icon: Trophy },
+      { label: "nav.marketplace", to: "/marketplace", icon: ShoppingBag },
     ],
   },
   {
-    heading: "Administration",
+    heading: "nav.secAdministration",
     items: [
-      { label: "Analytics", to: "/analytics", icon: BarChart3, adminOnly: true },
-      { label: "Manage Certifications", to: "/certifications", icon: Award, adminOnly: true },
-      { label: "Manage Compliance", to: "/compliance", icon: ShieldCheck, adminOnly: true },
-      { label: "Manage Quizzes", to: "/quizzes/manage", icon: ClipboardCheck, adminOnly: true },
-      { label: "Users", to: "/users", icon: Users, adminOnly: true },
+      { label: "nav.analytics", to: "/analytics", icon: BarChart3, adminOnly: true },
+      { label: "nav.manageCertifications", to: "/certifications", icon: Award, adminOnly: true },
+      { label: "nav.manageCompliance", to: "/compliance", icon: ShieldCheck, adminOnly: true },
+      { label: "nav.manageQuizzes", to: "/quizzes/manage", icon: ClipboardCheck, adminOnly: true },
+      { label: "nav.users", to: "/users", icon: Users, adminOnly: true },
     ],
   },
   {
-    heading: "Account",
-    items: [{ label: "Settings", to: "/settings", icon: Settings }],
+    heading: "nav.secAccount",
+    items: [{ label: "nav.settings", to: "/settings", icon: Settings }],
   },
 ];
 
@@ -90,6 +95,7 @@ function UserAvatar({ firstName, lastName }: { firstName: string; lastName: stri
 }
 
 export default function DashboardLayout() {
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
 
@@ -121,9 +127,13 @@ export default function DashboardLayout() {
   const firstName = user?.firstName ?? "";
   const lastName = user?.lastName ?? "";
   const displayName = `${firstName} ${lastName}`.trim() || "User";
+  // Prefer a translated role label; fall back to a prettified version of the
+  // raw role for any role not in the `roles` namespace.
+  const prettifyRole = (r: string) =>
+    r.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const displayRole = user?.role
-    ? user.role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : "Learner";
+    ? t(`roles.${user.role}`, { defaultValue: prettifyRole(user.role) })
+    : t("nav.defaultRole");
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -146,11 +156,11 @@ export default function DashboardLayout() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
             <BookOpen className="h-5 w-5" />
           </div>
-          <span className="text-lg font-bold text-gray-900">EmpCloud LMS</span>
+          <span className="text-lg font-bold text-gray-900">{t("nav.brand")}</span>
           <button
             className="ml-auto lg:hidden"
             onClick={() => setSidebarOpen(false)}
-            aria-label="Close sidebar"
+            aria-label={t("nav.closeSidebar")}
           >
             <X className="h-5 w-5 text-gray-500" />
           </button>
@@ -162,7 +172,7 @@ export default function DashboardLayout() {
             <div key={section.heading ?? `section-${sIdx}`} className={sIdx > 0 ? "mt-5" : ""}>
               {section.heading && (
                 <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  {section.heading}
+                  {t(section.heading)}
                 </p>
               )}
               <ul className="space-y-1">
@@ -180,7 +190,7 @@ export default function DashboardLayout() {
                         }`}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {item.label}
+                        {t(item.label)}
                       </NavLink>
                     </li>
                   );
@@ -201,8 +211,8 @@ export default function DashboardLayout() {
             <button
               onClick={logout}
               className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              aria-label="Log out"
-              title="Log out"
+              aria-label={t("nav.logout")}
+              title={t("nav.logout")}
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -217,13 +227,14 @@ export default function DashboardLayout() {
           <button
             className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
             onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
+            aria-label={t("nav.openSidebar")}
           >
             <Menu className="h-6 w-6" />
           </button>
           <BackToDashboard />
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <span className="hidden text-sm text-gray-600 sm:inline">{user?.orgName}</span>
             <div className="lg:hidden">
               <UserAvatar firstName={firstName} lastName={lastName} />

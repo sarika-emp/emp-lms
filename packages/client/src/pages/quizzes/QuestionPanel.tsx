@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { apiDelete, apiGet } from "@/api/client";
@@ -12,6 +13,7 @@ interface QuestionPanelProps {
 }
 
 export default function QuestionPanel({ quizId }: QuestionPanelProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
@@ -26,12 +28,12 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
   const deleteMutation = useMutation({
     mutationFn: (questionId: string) => apiDelete(`/quizzes/questions/${questionId}`),
     onSuccess: () => {
-      toast.success("Question deleted");
+      toast.success(t("quizzes.toast.questionDeleted"));
       queryClient.invalidateQueries({ queryKey: ["quizzes", "detail", quizId] });
       setPendingDelete(null);
     },
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, "Failed to delete question"));
+      toast.error(getErrorMessage(err, t("quizzes.toast.deleteQuestionFailed")));
     },
   });
 
@@ -46,7 +48,7 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
   if (isError) {
     return (
       <p className="py-4 text-sm text-red-600">
-        {getErrorMessage(error, "Failed to load questions.")}
+        {getErrorMessage(error, t("quizzes.loadQuestionsFailed"))}
       </p>
     );
   }
@@ -55,7 +57,7 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-900">
-          Questions ({questions.length})
+          {t("quizzes.questionsCount", { count: questions.length })}
         </h4>
         <button
           type="button"
@@ -63,13 +65,13 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
-          Add Question
+          {t("quizzes.addQuestion")}
         </button>
       </div>
 
       {questions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-          No questions yet. Add the first question to make this quiz takeable.
+          {t("quizzes.noQuestions")}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -87,10 +89,12 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
                         {index + 1}. {q.text}
                       </span>
                       <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                        {QUESTION_TYPE_LABELS[q.type] ?? q.type}
+                        {t(`quizzes.questionType.${q.type}`, {
+                          defaultValue: QUESTION_TYPE_LABELS[q.type] ?? q.type,
+                        })}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {q.points ?? 1} pt{(q.points ?? 1) === 1 ? "" : "s"}
+                        {t("quizzes.points", { count: q.points ?? 1 })}
                       </span>
                     </div>
                     {options.length > 0 && (
@@ -117,7 +121,7 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
                     )}
                     {q.explanation && (
                       <p className="mt-1.5 text-xs italic text-gray-500">
-                        Explanation: {q.explanation}
+                        {t("quizzes.explanationWithText", { text: q.explanation })}
                       </p>
                     )}
                   </div>
@@ -126,7 +130,7 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
                       type="button"
                       onClick={() => setEditing(q)}
                       className="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                      title="Edit question"
+                      title={t("quizzes.editQuestion")}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -134,7 +138,7 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
                       type="button"
                       onClick={() => setPendingDelete(q)}
                       className="rounded-md p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                      title="Delete question"
+                      title={t("quizzes.deleteQuestion")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -165,8 +169,10 @@ export default function QuestionPanel({ quizId }: QuestionPanelProps) {
 
       {pendingDelete && (
         <ConfirmModal
-          title="Delete this question?"
-          message={`"${String(pendingDelete.text).slice(0, 120)}" will be permanently removed from the quiz. This action cannot be undone.`}
+          title={t("quizzes.deleteQuestionConfirmTitle")}
+          message={t("quizzes.deleteQuestionConfirmBody", {
+            text: String(pendingDelete.text).slice(0, 120),
+          })}
           busy={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate(pendingDelete.id)}
           onCancel={() => setPendingDelete(null)}

@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ChevronDown, Loader2, Search, X } from "lucide-react";
 import dayjs from "dayjs";
@@ -99,17 +100,20 @@ function badge(style: { bg: string; text: string; label: string }) {
 }
 
 export function SessionStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const s = SESSION_STATUS_STYLES[status] ?? { bg: "bg-gray-100", text: "text-gray-600", label: status };
-  return badge(s);
+  return badge({ ...s, label: t(`ilt.sessionStatus.${status}`, { defaultValue: s.label }) });
 }
 
 export function AttendanceStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const s = ATTENDANCE_STATUS_STYLES[status] ?? { bg: "bg-gray-100", text: "text-gray-600", label: status };
-  return badge(s);
+  return badge({ ...s, label: t(`ilt.attendanceStatus.${status}`, { defaultValue: s.label }) });
 }
 
 export function FullBadge() {
-  return badge({ bg: "bg-amber-100", text: "text-amber-700", label: "Full" });
+  const { t } = useTranslation();
+  return badge({ bg: "bg-amber-100", text: "text-amber-700", label: t("ilt.full") });
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +139,7 @@ export function ConfirmModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -147,7 +152,7 @@ export function ConfirmModal({
             disabled={busy}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -186,6 +191,7 @@ function InstructorPicker({
   valueName: string | null;
   onChange: (id: number | null, name: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -206,12 +212,12 @@ function InstructorPicker({
   if (value != null) {
     return (
       <div className="flex items-center justify-between rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
-        <span className="font-medium text-gray-900">{valueName ?? `User #${value}`}</span>
+        <span className="font-medium text-gray-900">{valueName ?? t("ilt.userFallback", { id: value })}</span>
         <button
           type="button"
           onClick={() => onChange(null, null)}
           className="text-gray-400 hover:text-gray-600 transition"
-          aria-label="Clear instructor"
+          aria-label={t("ilt.clearInstructor")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -228,7 +234,7 @@ function InstructorPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setOpen(true)}
-          placeholder="Search employees by name..."
+          placeholder={t("ilt.searchEmployees")}
           className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-8 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
         <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -240,7 +246,7 @@ function InstructorPicker({
               <Loader2 className="h-4 w-4 animate-spin text-brand-600" />
             </div>
           ) : users.length === 0 ? (
-            <p className="p-3 text-sm text-gray-500">No employees found</p>
+            <p className="p-3 text-sm text-gray-500">{t("ilt.noEmployees")}</p>
           ) : (
             users.map((u) => (
               <button
@@ -285,6 +291,7 @@ export function SessionFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const isEdit = !!initial;
 
   const [title, setTitle] = useState("");
@@ -335,15 +342,15 @@ export function SessionFormModal({
     e.preventDefault();
     setError(null);
 
-    if (!title.trim()) return setError("Title is required");
-    if (instructorId == null) return setError("Please select an instructor");
-    if (!startLocal || !endLocal) return setError("Start time and end time are required");
+    if (!title.trim()) return setError(t("ilt.errTitleRequired"));
+    if (instructorId == null) return setError(t("ilt.errInstructorRequired"));
+    if (!startLocal || !endLocal) return setError(t("ilt.errTimesRequired"));
     const start = new Date(startLocal);
     const end = new Date(endLocal);
-    if (end <= start) return setError("End time must be after start time");
+    if (end <= start) return setError(t("ilt.errEndAfterStart"));
     const max = maxAttendees.trim() === "" ? null : Number(maxAttendees);
     if (max != null && (!Number.isInteger(max) || max <= 0)) {
-      return setError("Max attendees must be a positive whole number");
+      return setError(t("ilt.errMaxAttendees"));
     }
 
     const body = {
@@ -368,10 +375,10 @@ export function SessionFormModal({
         onSaved();
         onClose();
       } else {
-        setError(res.error?.message ?? "Failed to save session");
+        setError(res.error?.message ?? t("ilt.saveFailed"));
       }
     } catch (err: any) {
-      setError(apiErrorMessage(err, "Failed to save session"));
+      setError(apiErrorMessage(err, t("ilt.saveFailed")));
     } finally {
       setSaving(false);
     }
@@ -385,12 +392,12 @@ export function SessionFormModal({
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            {isEdit ? "Edit Session" : "Create ILT Session"}
+            {isEdit ? t("ilt.editSession") : t("ilt.createIltSession")}
           </h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -406,31 +413,31 @@ export function SessionFormModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Title <span className="text-red-500">*</span>
+              {t("ilt.fieldTitle")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Effective Communication Workshop"
+              placeholder={t("ilt.titlePlaceholder")}
               className={inputClass}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t("ilt.fieldDescription")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="What will this session cover?"
+              placeholder={t("ilt.descriptionPlaceholder")}
               className={inputClass}
             />
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Instructor <span className="text-red-500">*</span>
+              {t("ilt.fieldInstructor")} <span className="text-red-500">*</span>
             </label>
             <InstructorPicker
               value={instructorId}
@@ -444,14 +451,14 @@ export function SessionFormModal({
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Linked Course (optional)
+              {t("ilt.linkedCourse")}
             </label>
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               className={inputClass}
             >
-              <option value="">-- No linked course --</option>
+              <option value="">{t("ilt.noLinkedCourse")}</option>
               {courses.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.title}
@@ -463,7 +470,7 @@ export function SessionFormModal({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Start Time <span className="text-red-500">*</span>
+                {t("ilt.startTime")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -474,7 +481,7 @@ export function SessionFormModal({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                End Time <span className="text-red-500">*</span>
+                {t("ilt.endTime")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -487,46 +494,46 @@ export function SessionFormModal({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Location</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t("ilt.location")}</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Conference Room B"
+                placeholder={t("ilt.locationPlaceholder")}
                 className={inputClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Max Attendees</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t("ilt.maxAttendees")}</label>
               <input
                 type="number"
                 min={1}
                 value={maxAttendees}
                 onChange={(e) => setMaxAttendees(e.target.value)}
-                placeholder="Unlimited"
+                placeholder={t("ilt.unlimited")}
                 className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Meeting URL</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t("ilt.meetingUrl")}</label>
             <input
               type="url"
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
-              placeholder="https://meet.example.com/..."
+              placeholder={t("ilt.meetingUrlPlaceholder")}
               className={inputClass}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Materials URL</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t("ilt.materialsUrl")}</label>
             <input
               type="url"
               value={materialsUrl}
               onChange={(e) => setMaterialsUrl(e.target.value)}
-              placeholder="https://docs.example.com/..."
+              placeholder={t("ilt.materialsUrlPlaceholder")}
               className={inputClass}
             />
           </div>
@@ -538,7 +545,7 @@ export function SessionFormModal({
               disabled={saving}
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -546,7 +553,7 @@ export function SessionFormModal({
               className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 transition"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isEdit ? "Save Changes" : "Create Session"}
+              {isEdit ? t("ilt.saveChanges") : t("ilt.createSession")}
             </button>
           </div>
         </form>

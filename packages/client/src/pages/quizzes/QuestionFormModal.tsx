@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader2, Plus, Trash2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { apiPost, apiPut } from "@/api/client";
@@ -36,6 +37,7 @@ export default function QuestionFormModal({
   nextSortOrder,
   onClose,
 }: QuestionFormModalProps) {
+  const { t } = useTranslation();
   const isEdit = Boolean(question);
   const queryClient = useQueryClient();
 
@@ -67,13 +69,16 @@ export default function QuestionFormModal({
         ? apiPut<any>(`/quizzes/questions/${question.id}`, body)
         : apiPost<any>(`/quizzes/${quizId}/questions`, body),
     onSuccess: () => {
-      toast.success(isEdit ? "Question updated" : "Question added");
+      toast.success(isEdit ? t("quizzes.toast.questionUpdated") : t("quizzes.toast.questionAdded"));
       queryClient.invalidateQueries({ queryKey: ["quizzes", "detail", quizId] });
       onClose();
     },
     onError: (err: any) => {
       toast.error(
-        getErrorMessage(err, isEdit ? "Failed to update question" : "Failed to add question")
+        getErrorMessage(
+          err,
+          isEdit ? t("quizzes.toast.updateQuestionFailed") : t("quizzes.toast.addQuestionFailed")
+        )
       );
     },
   });
@@ -106,16 +111,16 @@ export default function QuestionFormModal({
     if (type === "mcq" || type === "multi_select") {
       const filled = options.filter((o) => o.text.trim() !== "");
       if (filled.length < 2) {
-        setFormError("Provide at least 2 answer options.");
+        setFormError(t("quizzes.errors.minOptions"));
         return null;
       }
       const correctCount = filled.filter((o) => o.is_correct).length;
       if (type === "mcq" && correctCount !== 1) {
-        setFormError("Mark exactly one option as correct.");
+        setFormError(t("quizzes.errors.oneCorrect"));
         return null;
       }
       if (type === "multi_select" && correctCount < 1) {
-        setFormError("Mark at least one option as correct.");
+        setFormError(t("quizzes.errors.atLeastOneCorrect"));
         return null;
       }
       return filled.map((o, i) => ({
@@ -148,7 +153,7 @@ export default function QuestionFormModal({
 
     if (type === "fill_blank") {
       if (fillAnswer.trim() === "") {
-        setFormError("Provide the accepted answer text.");
+        setFormError(t("quizzes.errors.provideAnswer"));
         return null;
       }
       const existing = normalizeOptions(question);
@@ -171,12 +176,12 @@ export default function QuestionFormModal({
     setFormError(null);
 
     if (text.trim() === "") {
-      setFormError("Question text is required.");
+      setFormError(t("quizzes.errors.questionTextRequired"));
       return;
     }
     const pts = Number(points);
     if (!Number.isInteger(pts) || pts < 0) {
-      setFormError("Points must be a whole number of 0 or more.");
+      setFormError(t("quizzes.errors.pointsInvalid"));
       return;
     }
 
@@ -210,13 +215,13 @@ export default function QuestionFormModal({
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            {isEdit ? "Edit Question" : "Add Question"}
+            {isEdit ? t("quizzes.editQuestionTitle") : t("quizzes.addQuestion")}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -225,11 +230,13 @@ export default function QuestionFormModal({
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Question type</label>
+              <label className={labelClass}>{t("quizzes.form.questionType")}</label>
               {optionsLocked ? (
                 <input
                   type="text"
-                  value={QUESTION_TYPE_LABELS[type] ?? type}
+                  value={t(`quizzes.questionType.${type}`, {
+                    defaultValue: QUESTION_TYPE_LABELS[type] ?? type,
+                  })}
                   disabled
                   className={`${inputClass} bg-gray-50 text-gray-500`}
                 />
@@ -239,16 +246,18 @@ export default function QuestionFormModal({
                   onChange={(e) => changeType(e.target.value)}
                   className={inputClass}
                 >
-                  {AUTHORABLE_QUESTION_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {QUESTION_TYPE_LABELS[t]}
+                  {AUTHORABLE_QUESTION_TYPES.map((qType) => (
+                    <option key={qType} value={qType}>
+                      {t(`quizzes.questionType.${qType}`, {
+                        defaultValue: QUESTION_TYPE_LABELS[qType],
+                      })}
                     </option>
                   ))}
                 </select>
               )}
             </div>
             <div>
-              <label className={labelClass}>Points</label>
+              <label className={labelClass}>{t("quizzes.form.points")}</label>
               <input
                 type="number"
                 min={0}
@@ -261,13 +270,13 @@ export default function QuestionFormModal({
 
           <div>
             <label className={labelClass}>
-              Question text <span className="text-red-500">*</span>
+              {t("quizzes.form.questionText")} <span className="text-red-500">*</span>
             </label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={2}
-              placeholder="Ask the question…"
+              placeholder={t("quizzes.form.questionTextPlaceholder")}
               className={inputClass}
             />
           </div>
@@ -275,9 +284,9 @@ export default function QuestionFormModal({
           {(type === "mcq" || type === "multi_select") && !optionsLocked && (
             <div>
               <label className={labelClass}>
-                Answer options{" "}
+                {t("quizzes.form.answerOptions")}{" "}
                 <span className="font-normal text-gray-500">
-                  ({type === "mcq" ? "select the one correct answer" : "tick all correct answers"})
+                  ({type === "mcq" ? t("quizzes.form.selectOneCorrect") : t("quizzes.form.selectAllCorrect")})
                 </span>
               </label>
               <div className="space-y-2">
@@ -295,13 +304,13 @@ export default function QuestionFormModal({
                       className={`h-4 w-4 border-gray-300 text-brand-600 focus:ring-brand-500 ${
                         type === "mcq" ? "" : "rounded"
                       }`}
-                      title="Correct answer"
+                      title={t("quizzes.form.correctAnswer")}
                     />
                     <input
                       type="text"
                       value={opt.text}
                       onChange={(e) => updateOption(i, { text: e.target.value })}
-                      placeholder={`Option ${i + 1}`}
+                      placeholder={t("quizzes.form.optionPlaceholder", { number: i + 1 })}
                       className={inputClass}
                     />
                     <button
@@ -309,7 +318,7 @@ export default function QuestionFormModal({
                       onClick={() => removeOption(i)}
                       disabled={options.length <= 2}
                       className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                      title="Remove option"
+                      title={t("quizzes.form.removeOption")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -322,14 +331,14 @@ export default function QuestionFormModal({
                 className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700"
               >
                 <Plus className="h-4 w-4" />
-                Add option
+                {t("quizzes.form.addOption")}
               </button>
             </div>
           )}
 
           {type === "true_false" && !optionsLocked && (
             <div>
-              <label className={labelClass}>Correct answer</label>
+              <label className={labelClass}>{t("quizzes.form.correctAnswer")}</label>
               <div className="flex gap-4">
                 {(["true", "false"] as const).map((v) => (
                   <label
@@ -343,7 +352,7 @@ export default function QuestionFormModal({
                       onChange={() => setTfCorrect(v)}
                       className="h-4 w-4 border-gray-300 text-brand-600 focus:ring-brand-500"
                     />
-                    {v === "true" ? "True" : "False"}
+                    {v === "true" ? t("quizzes.trueLabel") : t("quizzes.falseLabel")}
                   </label>
                 ))}
               </div>
@@ -353,13 +362,13 @@ export default function QuestionFormModal({
           {type === "fill_blank" && !optionsLocked && (
             <div>
               <label className={labelClass}>
-                Accepted answer <span className="text-red-500">*</span>
+                {t("quizzes.form.acceptedAnswer")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={fillAnswer}
                 onChange={(e) => setFillAnswer(e.target.value)}
-                placeholder="Exact answer text (case-insensitive match)"
+                placeholder={t("quizzes.form.acceptedAnswerPlaceholder")}
                 className={inputClass}
               />
             </div>
@@ -367,24 +376,27 @@ export default function QuestionFormModal({
 
           {type === "essay" && (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-              Essay answers are not auto-graded and are flagged for manual review.
+              {t("quizzes.form.essayNote")}
             </p>
           )}
 
           {optionsLocked && (
             <p className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
-              Options for {QUESTION_TYPE_LABELS[type] ?? type} questions cannot be edited here;
-              only the text, points and explanation will be updated.
+              {t("quizzes.form.optionsLockedNote", {
+                type: t(`quizzes.questionType.${type}`, {
+                  defaultValue: QUESTION_TYPE_LABELS[type] ?? type,
+                }),
+              })}
             </p>
           )}
 
           <div>
-            <label className={labelClass}>Explanation (shown after answering)</label>
+            <label className={labelClass}>{t("quizzes.form.explanation")}</label>
             <textarea
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
               rows={2}
-              placeholder="Optional explanation of the correct answer"
+              placeholder={t("quizzes.form.explanationPlaceholder")}
               className={inputClass}
             />
           </div>
@@ -401,7 +413,7 @@ export default function QuestionFormModal({
             disabled={mutation.isPending}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -410,7 +422,7 @@ export default function QuestionFormModal({
             className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isEdit ? "Save Changes" : "Add Question"}
+            {isEdit ? t("quizzes.saveChanges") : t("quizzes.addQuestion")}
           </button>
         </div>
       </div>

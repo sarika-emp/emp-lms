@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   ClipboardCheck,
   AlertTriangle,
@@ -63,7 +65,7 @@ const COMPLIANCE_TYPE_MAP: Record<string, { icon: React.ComponentType<any>; labe
   quiz: { icon: HelpCircle, label: "Quiz", color: "bg-teal-100 text-teal-700" },
 };
 
-function complianceTypeBadge(type: string | null | undefined) {
+function complianceTypeBadge(type: string | null | undefined, t: TFunction) {
   if (!type) return null;
   const ct = COMPLIANCE_TYPE_MAP[type];
   if (!ct) return null;
@@ -71,12 +73,12 @@ function complianceTypeBadge(type: string | null | undefined) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${ct.color}`}>
       <Icon className="h-3 w-3" />
-      {ct.label}
+      {t(`compliance.type.${type}`, { defaultValue: ct.label })}
     </span>
   );
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: TFunction) {
   const map: Record<string, { bg: string; text: string; label: string }> = {
     not_started: { bg: "bg-gray-100", text: "text-gray-700", label: "Not Started" },
     in_progress: { bg: "bg-blue-100", text: "text-blue-700", label: "In Progress" },
@@ -86,12 +88,12 @@ function statusBadge(status: string) {
   const s = map[status] ?? map.not_started;
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${s.bg} ${s.text}`}>
-      {s.label}
+      {t(`compliance.status.${status}`, { defaultValue: s.label })}
     </span>
   );
 }
 
-function deadlineIndicator(dueDate: string | undefined, status: string) {
+function deadlineIndicator(dueDate: string | undefined, status: string, t: TFunction) {
   if (!dueDate || status === "completed") return null;
   const now = dayjs();
   const due = dayjs(dueDate);
@@ -101,7 +103,7 @@ function deadlineIndicator(dueDate: string | undefined, status: string) {
     return (
       <span className="flex items-center gap-1 text-xs font-medium text-red-600">
         <AlertTriangle className="h-3 w-3" />
-        {Math.abs(daysLeft)}d overdue
+        {t("compliance.daysOverdue", { days: Math.abs(daysLeft) })}
       </span>
     );
   }
@@ -109,7 +111,7 @@ function deadlineIndicator(dueDate: string | undefined, status: string) {
     return (
       <span className="flex items-center gap-1 text-xs font-medium text-orange-600">
         <Clock className="h-3 w-3" />
-        {daysLeft}d left
+        {t("compliance.daysLeft", { days: daysLeft })}
       </span>
     );
   }
@@ -117,13 +119,13 @@ function deadlineIndicator(dueDate: string | undefined, status: string) {
     return (
       <span className="flex items-center gap-1 text-xs font-medium text-amber-600">
         <Clock className="h-3 w-3" />
-        {daysLeft}d left
+        {t("compliance.daysLeft", { days: daysLeft })}
       </span>
     );
   }
   return (
     <span className="text-xs text-gray-500">
-      {daysLeft}d left
+      {t("compliance.daysLeft", { days: daysLeft })}
     </span>
   );
 }
@@ -160,6 +162,7 @@ function AssignmentModal({
   onClose: () => void;
   assignment?: any;
 }) {
+  const { t } = useTranslation();
   const isEdit = !!assignment;
   const { data: coursesRes } = useCourses({ limit: 100 });
   const createAssignment = useCreateComplianceAssignment();
@@ -217,14 +220,14 @@ function AssignmentModal({
     // BUG-11: collect per-field errors and show them inline so a blank submit
     // gives clear feedback instead of appearing to do nothing.
     const nextErrors: Record<string, string> = {};
-    if (!form.name.trim()) nextErrors.name = "Assignment name is required";
-    if (!form.course_id) nextErrors.course_id = "Please select a compliance course";
-    if (!form.due_date) nextErrors.due_date = "Due date is required";
+    if (!form.name.trim()) nextErrors.name = t("compliance.errName");
+    if (!form.course_id) nextErrors.course_id = t("compliance.errCourse");
+    if (!form.due_date) nextErrors.due_date = t("compliance.errDueDate");
     if (!isEdit && needsIds && selectedIds.length === 0) {
       nextErrors.selectedIds =
         form.assigned_to_type === "department"
-          ? "Please select at least one department"
-          : "Please select at least one role";
+          ? t("compliance.errDepartment")
+          : t("compliance.errRole");
     }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -236,7 +239,7 @@ function AssignmentModal({
           due_date: form.due_date,
           description: form.description || undefined,
         });
-        toast.success("Compliance assignment updated!");
+        toast.success(t("compliance.updated"));
       } else {
         await createAssignment.mutateAsync({
           name: form.name,
@@ -246,11 +249,11 @@ function AssignmentModal({
           due_date: form.due_date,
           description: form.description || undefined,
         });
-        toast.success("Compliance assignment created!");
+        toast.success(t("compliance.created"));
       }
       onClose();
     } catch {
-      toast.error(isEdit ? "Failed to update assignment" : "Failed to create assignment");
+      toast.error(isEdit ? t("compliance.updateFailed") : t("compliance.createFailed"));
     }
   };
 
@@ -273,7 +276,7 @@ function AssignmentModal({
               <ClipboardCheck className="h-4 w-4 text-indigo-600" />
             </div>
             <h3 className="text-base font-semibold text-gray-900">
-              {isEdit ? "Edit Compliance Assignment" : "Create Compliance Assignment"}
+              {isEdit ? t("compliance.editTitle") : t("compliance.createTitle")}
             </h3>
           </div>
           <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
@@ -285,20 +288,20 @@ function AssignmentModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Assignment Name <span className="text-red-500">*</span>
+              {t("compliance.assignmentName")} <span className="text-red-500">*</span>
             </label>
             <input
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               className={inputCls}
-              placeholder="e.g. Q2 2026 GDPR Refresher"
+              placeholder={t("compliance.assignmentNamePlaceholder")}
             />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Compliance Course <span className="text-red-500">*</span>
+              {t("compliance.complianceCourse")} <span className="text-red-500">*</span>
             </label>
             <select
               value={form.course_id}
@@ -306,21 +309,21 @@ function AssignmentModal({
               className={`${inputCls} ${isEdit ? "cursor-not-allowed bg-gray-100 text-gray-500" : ""}`}
               disabled={isEdit}
             >
-              <option value="">Select a compliance course</option>
+              <option value="">{t("compliance.selectCourse")}</option>
               {complianceCourses.map((c: any) => (
                 <option key={c.id} value={c.id}>
-                  {c.title} {complianceTypeBadge(c.complianceType ?? c.compliance_type) ? `(${(c.complianceType ?? c.compliance_type)})` : ""}
+                  {c.title} {complianceTypeBadge(c.complianceType ?? c.compliance_type, t) ? `(${(c.complianceType ?? c.compliance_type)})` : ""}
                 </option>
               ))}
             </select>
             {errors.course_id && <p className="mt-1 text-xs text-red-600">{errors.course_id}</p>}
             {isEdit ? (
               <p className="mt-1 text-xs text-gray-500">
-                Course cannot be changed once the assignment exists.
+                {t("compliance.courseLocked")}
               </p>
             ) : complianceCourses.length === 0 ? (
               <p className="mt-1 text-xs text-amber-600">
-                No compliance courses found. Mark a course as compliance in the course editor first.
+                {t("compliance.noComplianceCourses")}
               </p>
             ) : null}
           </div>
@@ -328,7 +331,7 @@ function AssignmentModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Assign To <span className="text-red-500">*</span>
+                {t("compliance.assignTo")} <span className="text-red-500">*</span>
               </label>
               <select
                 value={form.assigned_to_type}
@@ -336,14 +339,14 @@ function AssignmentModal({
                 className={`${inputCls} ${isEdit ? "cursor-not-allowed bg-gray-100 text-gray-500" : ""}`}
                 disabled={isEdit}
               >
-                <option value="all">All Employees</option>
-                <option value="department">By Department</option>
-                <option value="role">By Role</option>
+                <option value="all">{t("compliance.allEmployees")}</option>
+                <option value="department">{t("compliance.byDepartment")}</option>
+                <option value="role">{t("compliance.byRole")}</option>
               </select>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Due Date <span className="text-red-500">*</span>
+                {t("compliance.colDueDate")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -360,13 +363,13 @@ function AssignmentModal({
           {!isEdit && needsIds && (
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                {form.assigned_to_type === "department" ? "Departments" : "Roles"}{" "}
+                {form.assigned_to_type === "department" ? t("compliance.departmentsLabel") : t("compliance.rolesLabel")}{" "}
                 <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 {form.assigned_to_type === "department"
                   ? (facets.departments.length === 0 ? (
-                      <span className="text-xs text-gray-400">No departments found.</span>
+                      <span className="text-xs text-gray-400">{t("compliance.noDepartments")}</span>
                     ) : (
                       facets.departments.map((d) => {
                         const active = selectedIds.includes(d.id);
@@ -381,13 +384,13 @@ function AssignmentModal({
                                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
                             }`}
                           >
-                            Department {d.id} ({d.count})
+                            {t("compliance.deptChip", { id: d.id })} ({d.count})
                           </button>
                         );
                       })
                     ))
                   : facets.roles.length === 0 ? (
-                      <span className="text-xs text-gray-400">No roles found.</span>
+                      <span className="text-xs text-gray-400">{t("compliance.noRoles")}</span>
                     ) : (
                       facets.roles.map((r) => {
                         const active = selectedIds.includes(r.role);
@@ -402,7 +405,7 @@ function AssignmentModal({
                                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
                             }`}
                           >
-                            {ROLE_LABELS[r.role] ?? r.role} ({r.count})
+                            {t(`roles.${r.role}`, { defaultValue: ROLE_LABELS[r.role] ?? r.role })} ({r.count})
                           </button>
                         );
                       })
@@ -410,20 +413,24 @@ function AssignmentModal({
               </div>
               {errors.selectedIds && <p className="mt-1 text-xs text-red-600">{errors.selectedIds}</p>}
               <p className="mt-1 text-xs text-gray-400">
-                Records will be created for everyone in the selected{" "}
-                {form.assigned_to_type === "department" ? "departments" : "roles"}.
+                {t("compliance.recordsCreatedHint", {
+                  target:
+                    form.assigned_to_type === "department"
+                      ? t("compliance.departmentsLower")
+                      : t("compliance.rolesLower"),
+                })}
               </p>
             </div>
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t("compliance.description")}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
               className={`${inputCls} resize-y`}
               rows={2}
-              placeholder="Optional notes about this assignment..."
+              placeholder={t("compliance.descriptionPlaceholder")}
             />
           </div>
 
@@ -433,7 +440,7 @@ function AssignmentModal({
               onClick={onClose}
               className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -447,7 +454,7 @@ function AssignmentModal({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {isEdit ? "Save Changes" : "Create Assignment"}
+              {isEdit ? t("compliance.saveChanges") : t("compliance.createAssignment")}
             </button>
           </div>
         </form>
@@ -469,6 +476,7 @@ function DeleteAssignmentDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -483,11 +491,11 @@ function DeleteAssignmentDialog({
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
             <Trash2 className="h-6 w-6 text-red-600" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900">Deactivate Assignment?</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t("compliance.deactivateTitle")}</h3>
           <p className="mt-2 text-sm text-gray-600">
-            Are you sure you want to deactivate <span className="font-medium text-gray-900">&quot;{assignment.name}&quot;</span>?
-            This will stop new records from being created for this assignment. Existing compliance
-            records will remain but the assignment will no longer be visible in the active list.
+            {t("compliance.deactivateConfirm1")}{" "}
+            <span className="font-medium text-gray-900">&quot;{assignment.name}&quot;</span>
+            {t("compliance.deactivateConfirm2")}
           </p>
         </div>
         <div className="mt-5 flex justify-end gap-3 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-3">
@@ -496,7 +504,7 @@ function DeleteAssignmentDialog({
             disabled={isPending}
             className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -504,7 +512,7 @@ function DeleteAssignmentDialog({
             className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
           >
             {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-            Deactivate
+            {t("compliance.deactivate")}
           </button>
         </div>
       </div>
@@ -516,6 +524,7 @@ function DeleteAssignmentDialog({
 // Admin Compliance Dashboard
 // ---------------------------------------------------------------------------
 function AdminComplianceDashboard() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editAssignment, setEditAssignment] = useState<any | null>(null);
@@ -545,25 +554,25 @@ function AdminComplianceDashboard() {
   const stats = [
     {
       icon: ClipboardCheck,
-      label: "Total Assignments",
+      label: t("compliance.stats.totalAssignments"),
       value: dashboard?.total_assignments ?? 0,
       color: "bg-indigo-500",
     },
     {
       icon: Target,
-      label: "Completion Rate",
+      label: t("compliance.stats.completionRate"),
       value: `${dashboard?.completion_rate ?? 0}%`,
       color: "bg-green-500",
     },
     {
       icon: AlertTriangle,
-      label: "Overdue",
+      label: t("compliance.stats.overdue"),
       value: dashboard?.overdue ?? 0,
       color: "bg-red-500",
     },
     {
       icon: Users,
-      label: "Total Records",
+      label: t("compliance.stats.totalRecords"),
       value: dashboard?.total_records ?? 0,
       color: "bg-cyan-500",
     },
@@ -576,14 +585,14 @@ function AdminComplianceDashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-7 w-7 text-brand-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Compliance Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("compliance.dashboardTitle")}</h1>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition"
         >
           <Plus className="h-4 w-4" />
-          New Assignment
+          {t("compliance.newAssignment")}
         </button>
       </div>
 
@@ -599,19 +608,19 @@ function AdminComplianceDashboard() {
         <div className="grid gap-4 sm:grid-cols-4">
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
             <p className="text-2xl font-bold text-green-600">{dashboard.completed ?? 0}</p>
-            <p className="text-xs text-gray-500">Completed</p>
+            <p className="text-xs text-gray-500">{t("compliance.status.completed")}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
             <p className="text-2xl font-bold text-blue-600">{dashboard.in_progress ?? 0}</p>
-            <p className="text-xs text-gray-500">In Progress</p>
+            <p className="text-xs text-gray-500">{t("compliance.status.in_progress")}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
             <p className="text-2xl font-bold text-gray-600">{dashboard.not_started ?? 0}</p>
-            <p className="text-xs text-gray-500">Not Started</p>
+            <p className="text-xs text-gray-500">{t("compliance.status.not_started")}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
             <p className="text-2xl font-bold text-red-600">{dashboard.overdue ?? 0}</p>
-            <p className="text-xs text-gray-500">Overdue</p>
+            <p className="text-xs text-gray-500">{t("compliance.status.overdue")}</p>
           </div>
         </div>
       )}
@@ -621,7 +630,7 @@ function AdminComplianceDashboard() {
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <Building2 className="h-5 w-5 text-gray-400" />
-            Department Breakdown
+            {t("compliance.departmentBreakdown")}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {deptBreakdown.map((dept: any, i: number) => {
@@ -632,7 +641,7 @@ function AdminComplianceDashboard() {
               return (
                 <div key={dept.department_id ?? i} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="text-sm font-medium text-gray-800">
-                    Dept #{dept.department_id ?? "Unknown"}
+                    {t("compliance.deptNumber", { id: dept.department_id ?? t("compliance.unknown") })}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
@@ -644,8 +653,8 @@ function AdminComplianceDashboard() {
                     <span className="text-xs font-medium text-gray-600">{pct}%</span>
                   </div>
                   <div className="mt-1 flex gap-3 text-xs text-gray-500">
-                    <span>{completed}/{total} done</span>
-                    {overdue > 0 && <span className="text-red-500">{overdue} overdue</span>}
+                    <span>{t("compliance.deptDone", { completed, total })}</span>
+                    {overdue > 0 && <span className="text-red-500">{t("compliance.overdueCount", { n: overdue })}</span>}
                   </div>
                 </div>
               );
@@ -659,7 +668,7 @@ function AdminComplianceDashboard() {
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <CalendarDays className="h-5 w-5 text-gray-400" />
-            Active Assignments
+            {t("compliance.activeAssignments")}
           </h2>
           <div className="space-y-2">
             {assignments.slice(0, 10).map((a: any) => {
@@ -669,25 +678,25 @@ function AdminComplianceDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-800">{a.name}</p>
                     <p className="text-xs text-gray-500">
-                      Due {dayjs(a.dueDate ?? a.due_date).format("MMM D, YYYY")}
+                      {t("compliance.dueDate", { date: dayjs(a.dueDate ?? a.due_date).format("MMM D, YYYY") })}
                       {" \u00b7 "}
-                      {assignType === "all" ? "All employees" : assignType}
+                      {assignType === "all" ? t("compliance.allEmployees") : assignType}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {deadlineIndicator(a.dueDate ?? a.due_date, "")}
+                    {deadlineIndicator(a.dueDate ?? a.due_date, "", t)}
                     <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
                       <button
                         onClick={() => setEditAssignment(a)}
                         className="rounded p-1.5 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600"
-                        title="Edit"
+                        title={t("common.edit")}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => setDeleteAssignment(a)}
                         className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
+                        title={t("common.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -702,7 +711,7 @@ function AdminComplianceDashboard() {
 
       {/* Records Table */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Compliance Records</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t("compliance.complianceRecords")}</h2>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -710,7 +719,7 @@ function AdminComplianceDashboard() {
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`compliance.statusFilter.${o.value}`, { defaultValue: o.label })}
             </option>
           ))}
         </select>
@@ -719,8 +728,8 @@ function AdminComplianceDashboard() {
       {records.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <ClipboardCheck className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No compliance records</h3>
-          <p className="mt-1 text-sm text-gray-500">No compliance records found for the selected filter.</p>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("compliance.noRecords")}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t("compliance.noRecordsBody")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -728,22 +737,22 @@ function AdminComplianceDashboard() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Employee
+                  {t("compliance.colEmployee")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Course
+                  {t("compliance.colCourse")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Type
+                  {t("compliance.colType")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
+                  {t("common.status")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Due Date
+                  {t("compliance.colDueDate")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Progress
+                  {t("compliance.colProgress")}
                 </th>
               </tr>
             </thead>
@@ -753,16 +762,16 @@ function AdminComplianceDashboard() {
                 return (
                   <tr key={record.id} className={isOverdue ? "bg-red-50" : "hover:bg-gray-50"}>
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                      {record.user_name ?? record.userName ?? `User #${record.user_id}`}
+                      {record.user_name ?? record.userName ?? t("compliance.userFallback", { id: record.user_id })}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                       {record.course_title ?? record.courseName ?? "\u2014"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {complianceTypeBadge(record.compliance_type ?? record.complianceType)}
+                      {complianceTypeBadge(record.compliance_type ?? record.complianceType, t)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {statusBadge(record.status)}
+                      {statusBadge(record.status, t)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                       <div className="flex flex-col">
@@ -771,7 +780,7 @@ function AdminComplianceDashboard() {
                             ? dayjs(record.due_date ?? record.dueDate).format("MMM D, YYYY")
                             : "\u2014"}
                         </span>
-                        {deadlineIndicator(record.due_date ?? record.dueDate, record.status)}
+                        {deadlineIndicator(record.due_date ?? record.dueDate, record.status, t)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
@@ -814,10 +823,10 @@ function AdminComplianceDashboard() {
           onConfirm={async () => {
             try {
               await deactivateAssignment.mutateAsync(deleteAssignment.id);
-              toast.success("Assignment deactivated");
+              toast.success(t("compliance.assignmentDeactivated"));
               setDeleteAssignment(null);
             } catch {
-              toast.error("Failed to deactivate assignment");
+              toast.error(t("compliance.deactivateFailed"));
             }
           }}
         />
@@ -836,12 +845,13 @@ function PolicyAcceptanceCard({
   item: any;
   onAccepted: () => void;
 }) {
+  const { t } = useTranslation();
   const [agreed, setAgreed] = useState(false);
   const acceptPolicy = useAcceptPolicy();
 
   const handleAccept = async () => {
     if (!agreed) {
-      toast.error("Please check the agreement checkbox first");
+      toast.error(t("compliance.checkAgreement"));
       return;
     }
     try {
@@ -849,10 +859,10 @@ function PolicyAcceptanceCard({
         course_id: item.courseId ?? item.course_id,
         enrollment_id: item.enrollmentId ?? item.enrollment_id,
       });
-      toast.success("Policy accepted successfully!");
+      toast.success(t("compliance.policyAccepted"));
       onAccepted();
     } catch {
-      toast.error("Failed to accept policy");
+      toast.error(t("compliance.acceptFailed"));
     }
   };
 
@@ -864,16 +874,16 @@ function PolicyAcceptanceCard({
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-gray-900">
-            {item.courseName ?? item.course_title ?? "Policy Agreement"}
+            {item.courseName ?? item.course_title ?? t("compliance.policyAgreement")}
           </h3>
           <p className="mt-1 text-xs text-gray-500">
-            Please review and accept this policy to complete this compliance requirement.
+            {t("compliance.policyReviewPrompt")}
           </p>
           {(item.dueDate ?? item.due_date) && (
             <p className="mt-1 text-xs text-gray-500">
-              Due by {dayjs(item.dueDate ?? item.due_date).format("MMM D, YYYY")}
+              {t("compliance.dueBy", { date: dayjs(item.dueDate ?? item.due_date).format("MMM D, YYYY") })}
               {" \u00b7 "}
-              {deadlineIndicator(item.dueDate ?? item.due_date, item.status)}
+              {deadlineIndicator(item.dueDate ?? item.due_date, item.status, t)}
             </p>
           )}
 
@@ -886,8 +896,7 @@ function PolicyAcceptanceCard({
               className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
             />
             <label htmlFor={`agree-${item.id}`} className="text-sm text-gray-700">
-              I have read and agree to the terms of this policy. I understand that my acceptance
-              is being recorded with a timestamp for compliance purposes.
+              {t("compliance.agreementText")}
             </label>
           </div>
 
@@ -901,7 +910,7 @@ function PolicyAcceptanceCard({
             ) : (
               <CheckCircle className="h-4 w-4" />
             )}
-            I Accept
+            {t("compliance.iAccept")}
           </button>
         </div>
       </div>
@@ -913,6 +922,7 @@ function PolicyAcceptanceCard({
 // Employee Compliance View
 // ---------------------------------------------------------------------------
 function EmployeeComplianceView() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState("all");
   const params = statusFilter !== "all" ? { status: statusFilter } : undefined;
   const { data, isLoading, refetch } = useMyCompliance(params);
@@ -945,11 +955,11 @@ function EmployeeComplianceView() {
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-7 w-7 text-brand-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Compliance Training</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("compliance.trainingTitle")}</h1>
             <p className="text-sm text-gray-500">
-              {completedItems}/{totalItems} completed
+              {t("compliance.completedCount", { completed: completedItems, total: totalItems })}
               {overdueItems > 0 && (
-                <span className="ml-2 text-red-500 font-medium">{overdueItems} overdue</span>
+                <span className="ml-2 text-red-500 font-medium">{t("compliance.overdueCount", { n: overdueItems })}</span>
               )}
             </p>
           </div>
@@ -962,7 +972,7 @@ function EmployeeComplianceView() {
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`compliance.statusFilter.${o.value}`, { defaultValue: o.label })}
             </option>
           ))}
         </select>
@@ -982,8 +992,8 @@ function EmployeeComplianceView() {
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <ClipboardCheck className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No compliance assignments</h3>
-          <p className="mt-1 text-sm text-gray-500">You have no compliance training assigned.</p>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("compliance.noAssignments")}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t("compliance.noAssignmentsBody")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -991,22 +1001,22 @@ function EmployeeComplianceView() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Course
+                  {t("compliance.colCourse")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Type
+                  {t("compliance.colType")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
+                  {t("common.status")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Due Date
+                  {t("compliance.colDueDate")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Progress
+                  {t("compliance.colProgress")}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Action
+                  {t("compliance.colAction")}
                 </th>
               </tr>
             </thead>
@@ -1022,18 +1032,18 @@ function EmployeeComplianceView() {
                     className={isOverdue ? "bg-red-50" : "hover:bg-gray-50"}
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                      {item.courseName ?? item.course_title ?? "Course"}
+                      {item.courseName ?? item.course_title ?? t("compliance.courseFallback")}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {complianceTypeBadge(ct)}
+                      {complianceTypeBadge(ct, t)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {statusBadge(item.status)}
+                      {statusBadge(item.status, t)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                       <div className="flex flex-col">
                         <span>{dayjs(item.dueDate ?? item.due_date).format("MMM D, YYYY")}</span>
-                        {deadlineIndicator(item.dueDate ?? item.due_date, item.status)}
+                        {deadlineIndicator(item.dueDate ?? item.due_date, item.status, t)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
@@ -1056,10 +1066,10 @@ function EmployeeComplianceView() {
                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                       {item.status === "completed" ? (
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
-                          <CheckCircle className="h-3.5 w-3.5" /> Done
+                          <CheckCircle className="h-3.5 w-3.5" /> {t("compliance.done")}
                         </span>
                       ) : isPolicyPending ? (
-                        <span className="text-xs text-purple-600 font-medium">See above</span>
+                        <span className="text-xs text-purple-600 font-medium">{t("compliance.seeAbove")}</span>
                       ) : (
                         <button
                           onClick={() => navigate(`/courses/${cid}`)}
@@ -1067,11 +1077,11 @@ function EmployeeComplianceView() {
                         >
                           {item.status === "not_started" ? (
                             <>
-                              <Play className="h-3.5 w-3.5" /> Start
+                              <Play className="h-3.5 w-3.5" /> {t("compliance.start")}
                             </>
                           ) : (
                             <>
-                              <RotateCcw className="h-3.5 w-3.5" /> Continue
+                              <RotateCcw className="h-3.5 w-3.5" /> {t("compliance.continue")}
                             </>
                           )}
                         </button>

@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
   ClipboardCheck,
@@ -19,7 +20,8 @@ import QuizFormModal, { CourseOption } from "./QuizFormModal";
 import QuestionPanel from "./QuestionPanel";
 import { getErrorMessage, getField } from "./quizAdminUtils";
 
-function typeBadge(type: string) {
+function TypeBadge({ type }: { type: string }) {
+  const { t } = useTranslation();
   const map: Record<string, { bg: string; text: string; label: string }> = {
     graded: { bg: "bg-indigo-100", text: "text-indigo-700", label: "Graded" },
     practice: { bg: "bg-green-100", text: "text-green-700", label: "Practice" },
@@ -28,12 +30,13 @@ function typeBadge(type: string) {
   const s = map[type] ?? map.graded;
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${s.bg} ${s.text}`}>
-      {s.label}
+      {t(`quizzes.quizType.${type}`, { defaultValue: s.label })}
     </span>
   );
 }
 
 export default function QuizManagePage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,13 +83,13 @@ export default function QuizManagePage() {
   const deleteMutation = useMutation({
     mutationFn: (quizId: string) => apiDelete(`/quizzes/${quizId}`),
     onSuccess: (_data, quizId) => {
-      toast.success("Quiz deleted");
+      toast.success(t("quizzes.toast.quizDeleted"));
       if (expandedId === quizId) setExpandedId(null);
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       setPendingDelete(null);
     },
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, "Failed to delete quiz"));
+      toast.error(getErrorMessage(err, t("quizzes.toast.deleteQuizFailed")));
     },
   });
 
@@ -94,8 +97,8 @@ export default function QuizManagePage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <ClipboardCheck className="h-12 w-12 text-gray-400" />
-        <h2 className="mt-4 text-lg font-medium text-gray-900">Access Restricted</h2>
-        <p className="mt-1 text-sm text-gray-500">Quiz management is available to administrators only.</p>
+        <h2 className="mt-4 text-lg font-medium text-gray-900">{t("quizzes.accessRestricted")}</h2>
+        <p className="mt-1 text-sm text-gray-500">{t("quizzes.accessRestrictedBody")}</p>
       </div>
     );
   }
@@ -119,7 +122,7 @@ export default function QuizManagePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-7 w-7 text-brand-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Quiz Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("quizzes.title")}</h1>
         </div>
         <button
           type="button"
@@ -127,20 +130,20 @@ export default function QuizManagePage() {
           className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
-          Create Quiz
+          {t("quizzes.createQuiz")}
         </button>
       </div>
 
       {loadError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {getErrorMessage(loadError, "Failed to load quizzes.")}
+          {getErrorMessage(loadError, t("quizzes.loadFailed"))}
         </div>
       ) : quizzes.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <ClipboardCheck className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No quizzes yet</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("quizzes.emptyTitle")}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Create your first quiz to assess learners on course content.
+            {t("quizzes.emptyBody")}
           </p>
           <button
             type="button"
@@ -148,7 +151,7 @@ export default function QuizManagePage() {
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
           >
             <Plus className="h-4 w-4" />
-            Create Quiz
+            {t("quizzes.createQuiz")}
           </button>
         </div>
       ) : (
@@ -157,25 +160,25 @@ export default function QuizManagePage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Title
+                  {t("quizzes.table.title")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Course
+                  {t("quizzes.table.course")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Type
+                  {t("quizzes.table.type")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Passing Score
+                  {t("quizzes.table.passingScore")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Time Limit
+                  {t("quizzes.table.timeLimit")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Attempts
+                  {t("quizzes.table.attempts")}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
+                  {t("common.actions")}
                 </th>
               </tr>
             </thead>
@@ -193,13 +196,13 @@ export default function QuizManagePage() {
                         {quiz.courseTitle ?? "—"}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
-                        {typeBadge(quiz.type ?? "graded")}
+                        <TypeBadge type={quiz.type ?? "graded"} />
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                         {getField(quiz, "passing_score") ?? 70}%
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                        {timeLimit ? `${timeLimit} min` : "No limit"}
+                        {timeLimit ? t("quizzes.minutesShort", { minutes: timeLimit }) : t("quizzes.noLimit")}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                         {getField(quiz, "max_attempts") ?? 3}
@@ -214,10 +217,10 @@ export default function QuizManagePage() {
                                 ? "bg-brand-50 text-brand-700"
                                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                             }`}
-                            title="Manage questions"
+                            title={t("quizzes.manageQuestions")}
                           >
                             <ListChecks className="h-4 w-4" />
-                            Questions
+                            {t("quizzes.questions")}
                             <ChevronDown
                               className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
                             />
@@ -226,7 +229,7 @@ export default function QuizManagePage() {
                             type="button"
                             onClick={() => navigate(`/quizzes/${quiz.id}`)}
                             className="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                            title="View"
+                            title={t("quizzes.view")}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -234,7 +237,7 @@ export default function QuizManagePage() {
                             type="button"
                             onClick={() => setEditingQuiz(quiz)}
                             className="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                            title="Edit quiz"
+                            title={t("quizzes.editQuiz")}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -242,7 +245,7 @@ export default function QuizManagePage() {
                             type="button"
                             onClick={() => setPendingDelete(quiz)}
                             className="rounded-md p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                            title="Delete quiz"
+                            title={t("quizzes.deleteQuiz")}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -278,8 +281,8 @@ export default function QuizManagePage() {
 
       {pendingDelete && (
         <ConfirmModal
-          title={`Delete "${pendingDelete.title}"?`}
-          message="The quiz and its questions will be permanently removed. This action cannot be undone."
+          title={t("quizzes.deleteQuizConfirmTitle", { title: pendingDelete.title })}
+          message={t("quizzes.deleteQuizConfirmBody")}
           busy={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate(pendingDelete.id)}
           onCancel={() => setPendingDelete(null)}

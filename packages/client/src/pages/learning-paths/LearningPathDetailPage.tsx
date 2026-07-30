@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen,
   Clock,
@@ -44,35 +45,36 @@ function statusIcon(status?: string) {
   }
 }
 
-function statusLabel(status?: string) {
+function statusLabelKey(status?: string) {
   switch (status) {
     case "completed":
-      return "Completed";
+      return "completed";
     case "in_progress":
     case "in-progress":
-      return "In Progress";
+      return "inProgress";
     case "available":
-      return "Available";
+      return "available";
     default:
-      return "Locked";
+      return "locked";
   }
 }
 
-function statusAction(status?: string) {
+function statusActionKey(status?: string): string | null {
   switch (status) {
     case "completed":
-      return "Review";
+      return "review";
     case "in_progress":
     case "in-progress":
-      return "Continue";
+      return "continue";
     case "available":
-      return "Start";
+      return "start";
     default:
       return null;
   }
 }
 
 export default function LearningPathDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, isError } = useLearningPath(id!);
   const enrollMutation = useEnrollInPath();
@@ -82,9 +84,9 @@ export default function LearningPathDetailPage() {
   const handleEnroll = async () => {
     try {
       await enrollMutation.mutateAsync(id!);
-      toast.success("Enrolled in learning path!");
+      toast.success(t("learningPathDetail.enrollSuccess"));
     } catch {
-      toast.error("Failed to enroll");
+      toast.error(t("learningPathDetail.enrollFailed"));
     }
   };
 
@@ -99,7 +101,7 @@ export default function LearningPathDetailPage() {
   if (isError || !path) {
     return (
       <div className="text-center py-20 text-red-600">
-        Failed to load learning path.
+        {t("learningPathDetail.loadError")}
       </div>
     );
   }
@@ -119,7 +121,7 @@ export default function LearningPathDetailPage() {
         to="/learning-paths"
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Learning Paths
+        <ArrowLeft className="h-4 w-4" /> {t("learningPathDetail.backToPaths")}
       </Link>
 
       {/* Hero header */}
@@ -131,7 +133,7 @@ export default function LearningPathDetailPage() {
               {/* detail endpoint returns camelCase isMandatory (snake fallback) */}
               {(path.isMandatory ?? path.is_mandatory) && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
-                  <Star className="h-3 w-3" /> Required
+                  <Star className="h-3 w-3" /> {t("learningPathDetail.required")}
                 </span>
               )}
               {path.difficulty && (
@@ -140,7 +142,7 @@ export default function LearningPathDetailPage() {
                     difficultyColor[path.difficulty.toLowerCase()] || "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {path.difficulty}
+                  {t(`learningPathDetail.difficulty.${path.difficulty.toLowerCase()}`, { defaultValue: path.difficulty })}
                 </span>
               )}
             </div>
@@ -150,17 +152,19 @@ export default function LearningPathDetailPage() {
 
             <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
               <span className="inline-flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4" /> {courseCount} courses
+                <BookOpen className="h-4 w-4" /> {t("learningPathDetail.coursesCount", { count: courseCount })}
               </span>
               {duration != null && duration > 0 && (
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />{" "}
-                  {duration >= 60 ? `${Math.round(duration / 60)}h` : `${duration}m`}
+                  {duration >= 60
+                    ? t("learningPathDetail.durationHours", { hours: Math.round(duration / 60) })
+                    : t("learningPathDetail.durationMinutes", { minutes: duration })}
                 </span>
               )}
               {path.enrollment_count != null && (
                 <span className="inline-flex items-center gap-1.5">
-                  <Users className="h-4 w-4" /> {path.enrollment_count} enrolled
+                  <Users className="h-4 w-4" /> {t("learningPathDetail.enrolledCount", { count: path.enrollment_count })}
                 </span>
               )}
             </div>
@@ -176,7 +180,7 @@ export default function LearningPathDetailPage() {
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
-                Enroll in Path
+                {t("learningPathDetail.enrollInPath")}
               </button>
             )}
           </div>
@@ -186,7 +190,7 @@ export default function LearningPathDetailPage() {
             <div className="flex flex-col items-center shrink-0">
               <ProgressRing progress={progress} size={120} />
               <p className="text-sm text-gray-500 mt-2">
-                {completedCount} of {courseCount} completed
+                {t("learningPathDetail.completedOf", { completed: completedCount, total: courseCount })}
               </p>
             </div>
           )}
@@ -198,9 +202,9 @@ export default function LearningPathDetailPage() {
         <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-5 mb-6 flex items-center gap-4">
           <Award className="h-10 w-10 text-yellow-600 shrink-0" />
           <div>
-            <h3 className="font-semibold text-gray-900">Path Complete!</h3>
+            <h3 className="font-semibold text-gray-900">{t("learningPathDetail.pathComplete")}</h3>
             <p className="text-sm text-gray-600">
-              Congratulations — you've finished all courses in this learning path.
+              {t("learningPathDetail.pathCompleteBody")}
             </p>
           </div>
         </div>
@@ -208,7 +212,7 @@ export default function LearningPathDetailPage() {
 
       {/* Course timeline */}
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Course Roadmap
+        {t("learningPathDetail.courseRoadmap")}
       </h2>
 
       <div className="relative">
@@ -219,7 +223,7 @@ export default function LearningPathDetailPage() {
           {courses.map((course: any, idx: number) => {
             const status: string = course.status ?? "locked";
             const isLocked = status === "locked";
-            const action = statusAction(status);
+            const actionKey = statusActionKey(status);
             const courseId = course.id ?? course.course_id;
 
             return (
@@ -262,15 +266,15 @@ export default function LearningPathDetailPage() {
                           <span className="inline-flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {course.duration_minutes >= 60
-                              ? `${Math.round(course.duration_minutes / 60)}h`
-                              : `${course.duration_minutes}m`}
+                              ? t("learningPathDetail.durationHours", { hours: Math.round(course.duration_minutes / 60) })
+                              : t("learningPathDetail.durationMinutes", { minutes: course.duration_minutes })}
                           </span>
                         )}
                         {/* Also handle the `duration` key for backward compat */}
                         {course.duration != null && !course.duration_minutes && (
                           <span className="inline-flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {course.duration}h
+                            {t("learningPathDetail.durationHours", { hours: course.duration })}
                           </span>
                         )}
                         {course.difficulty && (
@@ -279,7 +283,7 @@ export default function LearningPathDetailPage() {
                               difficultyColor[course.difficulty.toLowerCase()] || ""
                             }`}
                           >
-                            {course.difficulty}
+                            {t(`learningPathDetail.difficulty.${course.difficulty.toLowerCase()}`, { defaultValue: course.difficulty })}
                           </span>
                         )}
                         <span
@@ -291,12 +295,12 @@ export default function LearningPathDetailPage() {
                                 : "text-blue-600"
                           }`}
                         >
-                          {statusLabel(status)}
+                          {t(`learningPathDetail.status.${statusLabelKey(status)}`)}
                         </span>
                       </div>
                     </div>
 
-                    {action && courseId && (
+                    {actionKey && courseId && (
                       <Link
                         to={
                           status === "completed" || status === "in_progress" || status === "in-progress"
@@ -310,12 +314,12 @@ export default function LearningPathDetailPage() {
                         }`}
                       >
                         <Play className="h-3.5 w-3.5" />
-                        {action}
+                        {t(`learningPathDetail.action.${actionKey}`)}
                       </Link>
                     )}
                     {isLocked && (
                       <span className="shrink-0 text-xs text-gray-400 font-medium px-3 py-2">
-                        Locked
+                        {t("learningPathDetail.status.locked")}
                       </span>
                     )}
                   </div>
@@ -334,6 +338,7 @@ export default function LearningPathDetailPage() {
 // ---------------------------------------------------------------------------
 
 function ProgressRing({ progress, size = 120 }: { progress: number; size?: number }) {
+  const { t } = useTranslation();
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -366,7 +371,7 @@ function ProgressRing({ progress, size = 120 }: { progress: number; size?: numbe
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-bold text-gray-900">{Math.round(progress)}%</span>
-        <span className="text-[10px] text-gray-500">Complete</span>
+        <span className="text-[10px] text-gray-500">{t("learningPathDetail.complete")}</span>
       </div>
     </div>
   );

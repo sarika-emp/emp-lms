@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { GraduationCap, Eye, EyeOff, Loader2, Clock } from "lucide-react";
 import toast from "react-hot-toast";
@@ -22,17 +23,18 @@ interface LoginResponse {
 }
 
 const FEATURES = [
-  "Course catalog",
-  "SCORM support",
-  "Quizzes",
-  "Certifications",
-  "Learning paths",
-  "Compliance training",
-  "Progress tracking",
-  "Analytics",
-];
+  "catalog",
+  "scorm",
+  "quizzes",
+  "certifications",
+  "paths",
+  "compliance",
+  "progress",
+  "analytics",
+] as const;
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +55,7 @@ export default function LoginPage() {
     mutationFn: async () => {
       const res = await apiPost<LoginResponse>("/auth/login", { email, password });
       if (!res.success || !res.data) {
-        throw new Error(res.error?.message || "Login failed");
+        throw new Error(res.error?.message || t("auth.loginFailed"));
       }
       return res.data;
     },
@@ -61,18 +63,18 @@ export default function LoginPage() {
       const accessToken = data.tokens?.accessToken || data.accessToken!;
       const refreshToken = data.tokens?.refreshToken || data.refreshToken!;
       login(data.user, { accessToken, refreshToken });
-      toast.success("Welcome back!");
+      toast.success(t("auth.welcomeToast"));
       navigate("/dashboard", { replace: true });
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Invalid credentials");
+      toast.error(err.message || t("auth.invalidCredentials"));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Please enter email and password");
+      toast.error(t("auth.enterCredentials"));
       return;
     }
     mutation.mutate();
@@ -91,19 +93,18 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-4xl font-bold leading-tight">
-            Empower learning and development
+            {t("auth.brandTagline")}
           </h1>
 
           <p className="mt-4 text-lg text-brand-100">
-            Create courses, run quizzes, track certifications, manage compliance
-            training, and build learning paths &mdash; all in one place.
+            {t("auth.brandDescription")}
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-3">
             {FEATURES.map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm text-brand-100">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-300" />
-                {f}
+                {t(`auth.features.${f}`)}
               </div>
             ))}
           </div>
@@ -120,15 +121,15 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">EMP LMS</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Sign in to your learning platform
+              {t("auth.signInSubtitle")}
             </p>
           </div>
 
           {/* Desktop heading */}
           <div className="mb-8 hidden lg:block">
-            <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t("common.welcome")}</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Sign in to your learning platform
+              {t("auth.signInSubtitle")}
             </p>
           </div>
 
@@ -137,8 +138,8 @@ export default function LoginPage() {
             <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
               <Clock className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p className="font-medium">Your session has expired</p>
-                <p className="mt-0.5 text-amber-700">Please sign in again to continue.</p>
+                <p className="font-medium">{t("auth.sessionExpiredTitle")}</p>
+                <p className="mt-0.5 text-amber-700">{t("auth.sessionExpiredBody")}</p>
               </div>
             </div>
           )}
@@ -152,7 +153,7 @@ export default function LoginPage() {
                   htmlFor="email"
                   className="mb-1.5 block text-sm font-medium text-gray-700"
                 >
-                  Email address
+                  {t("auth.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -161,7 +162,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
@@ -172,7 +173,7 @@ export default function LoginPage() {
                   htmlFor="password"
                   className="mb-1.5 block text-sm font-medium text-gray-700"
                 >
-                  Password
+                  {t("auth.passwordLabel")}
                 </label>
                 <div className="relative">
                   <input
@@ -182,14 +183,14 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t("auth.passwordPlaceholder")}
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -207,7 +208,7 @@ export default function LoginPage() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {mutation.isPending ? "Signing in..." : "Sign in"}
+                {mutation.isPending ? t("auth.signingIn") : t("auth.signIn")}
               </button>
             </form>
           </div>

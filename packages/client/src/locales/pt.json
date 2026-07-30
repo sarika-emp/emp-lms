@@ -75,7 +75,8 @@
     "logout": "Sair",
     "openSidebar": "Abrir barra lateral",
     "closeSidebar": "Fechar barra lateral",
-    "defaultRole": "Aprendiz"
+    "defaultRole": "Aprendiz",
+    "changeLanguage": "Alterar idioma"
   },
   "roles": {
     "learner": "Aprendiz",
@@ -651,7 +652,8 @@
       "analytics": "Análises"
     },
     "ssoSuccess": "Conectado via SSO",
-    "ssoFailed": "Falha na autenticação SSO"
+    "ssoFailed": "Falha na autenticação SSO",
+    "ssoTimeout": "O login via SSO expirou. O servidor pode estar indisponível."
   },
   "compliance": {
     "type": {

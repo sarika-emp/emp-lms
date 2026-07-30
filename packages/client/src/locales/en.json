@@ -75,7 +75,8 @@
     "logout": "Log out",
     "openSidebar": "Open sidebar",
     "closeSidebar": "Close sidebar",
-    "defaultRole": "Learner"
+    "defaultRole": "Learner",
+    "changeLanguage": "Change language"
   },
   "roles": {
     "learner": "Learner",
@@ -651,7 +652,8 @@
       "analytics": "Analytics"
     },
     "ssoSuccess": "Signed in via SSO",
-    "ssoFailed": "SSO authentication failed"
+    "ssoFailed": "SSO authentication failed",
+    "ssoTimeout": "SSO login timed out. The server may be unavailable."
   },
   "compliance": {
     "type": {

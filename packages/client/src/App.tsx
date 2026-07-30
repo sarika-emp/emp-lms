@@ -67,7 +67,7 @@ function SSOGate({ children }: { children: React.ReactNode }) {
       if (!cancelled) {
         cancelled = true;
         console.error("SSO exchange timed out after 10s");
-        toast.error("SSO login timed out. The server may be unavailable.");
+        toast.error(t("auth.ssoTimeout"));
         setChecking(false);
       }
     }, 10000);

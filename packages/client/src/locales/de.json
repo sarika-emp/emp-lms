@@ -75,7 +75,8 @@
     "logout": "Abmelden",
     "openSidebar": "Seitenleiste öffnen",
     "closeSidebar": "Seitenleiste schließen",
-    "defaultRole": "Lernende(r)"
+    "defaultRole": "Lernende(r)",
+    "changeLanguage": "Sprache ändern"
   },
   "roles": {
     "learner": "Lernende(r)",
@@ -651,7 +652,8 @@
       "analytics": "Analytik"
     },
     "ssoSuccess": "Über SSO angemeldet",
-    "ssoFailed": "SSO-Authentifizierung fehlgeschlagen"
+    "ssoFailed": "SSO-Authentifizierung fehlgeschlagen",
+    "ssoTimeout": "Zeitüberschreitung bei der SSO-Anmeldung. Der Server ist möglicherweise nicht verfügbar."
   },
   "compliance": {
     "type": {

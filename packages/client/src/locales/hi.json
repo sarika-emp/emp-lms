@@ -75,7 +75,8 @@
     "logout": "लॉग आउट",
     "openSidebar": "साइडबार खोलें",
     "closeSidebar": "साइडबार बंद करें",
-    "defaultRole": "शिक्षार्थी"
+    "defaultRole": "शिक्षार्थी",
+    "changeLanguage": "भाषा बदलें"
   },
   "roles": {
     "learner": "शिक्षार्थी",
@@ -651,7 +652,8 @@
       "analytics": "एनालिटिक्स"
     },
     "ssoSuccess": "SSO के माध्यम से साइन इन किया गया",
-    "ssoFailed": "SSO प्रमाणीकरण विफल"
+    "ssoFailed": "SSO प्रमाणीकरण विफल",
+    "ssoTimeout": "SSO लॉगिन का समय समाप्त हो गया। सर्वर अनुपलब्ध हो सकता है।"
   },
   "compliance": {
     "type": {

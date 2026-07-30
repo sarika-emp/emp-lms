@@ -75,7 +75,8 @@
     "logout": "ログアウト",
     "openSidebar": "サイドバーを開く",
     "closeSidebar": "サイドバーを閉じる",
-    "defaultRole": "学習者"
+    "defaultRole": "学習者",
+    "changeLanguage": "言語を変更"
   },
   "roles": {
     "learner": "学習者",
@@ -651,7 +652,8 @@
       "analytics": "分析"
     },
     "ssoSuccess": "SSOでサインインしました",
-    "ssoFailed": "SSO認証に失敗しました"
+    "ssoFailed": "SSO認証に失敗しました",
+    "ssoTimeout": "SSOログインがタイムアウトしました。サーバーが利用できない可能性があります。"
   },
   "compliance": {
     "type": {

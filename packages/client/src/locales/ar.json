@@ -75,7 +75,8 @@
     "logout": "تسجيل الخروج",
     "openSidebar": "فتح الشريط الجانبي",
     "closeSidebar": "إغلاق الشريط الجانبي",
-    "defaultRole": "متعلم"
+    "defaultRole": "متعلم",
+    "changeLanguage": "تغيير اللغة"
   },
   "roles": {
     "learner": "متعلم",
@@ -651,7 +652,8 @@
       "analytics": "التحليلات"
     },
     "ssoSuccess": "تم تسجيل الدخول عبر SSO",
-    "ssoFailed": "فشلت مصادقة SSO"
+    "ssoFailed": "فشلت مصادقة SSO",
+    "ssoTimeout": "انتهت مهلة تسجيل الدخول عبر SSO. قد يكون الخادم غير متاح."
   },
   "compliance": {
     "type": {

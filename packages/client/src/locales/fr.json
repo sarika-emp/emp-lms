@@ -75,7 +75,8 @@
     "logout": "Déconnexion",
     "openSidebar": "Ouvrir la barre latérale",
     "closeSidebar": "Fermer la barre latérale",
-    "defaultRole": "Apprenant"
+    "defaultRole": "Apprenant",
+    "changeLanguage": "Changer de langue"
   },
   "roles": {
     "learner": "Apprenant",
@@ -651,7 +652,8 @@
       "analytics": "Analytique"
     },
     "ssoSuccess": "Connecté via SSO",
-    "ssoFailed": "Échec de l'authentification SSO"
+    "ssoFailed": "Échec de l'authentification SSO",
+    "ssoTimeout": "La connexion SSO a expiré. Le serveur est peut-être indisponible."
   },
   "compliance": {
     "type": {

@@ -75,7 +75,8 @@
     "logout": "退出登录",
     "openSidebar": "打开侧边栏",
     "closeSidebar": "关闭侧边栏",
-    "defaultRole": "学员"
+    "defaultRole": "学员",
+    "changeLanguage": "更改语言"
   },
   "roles": {
     "learner": "学员",
@@ -651,7 +652,8 @@
       "analytics": "分析"
     },
     "ssoSuccess": "已通过 SSO 登录",
-    "ssoFailed": "SSO 身份验证失败"
+    "ssoFailed": "SSO 身份验证失败",
+    "ssoTimeout": "SSO 登录超时。服务器可能不可用。"
   },
   "compliance": {
     "type": {

@@ -75,7 +75,8 @@
     "logout": "Cerrar sesión",
     "openSidebar": "Abrir barra lateral",
     "closeSidebar": "Cerrar barra lateral",
-    "defaultRole": "Alumno"
+    "defaultRole": "Alumno",
+    "changeLanguage": "Cambiar idioma"
   },
   "roles": {
     "learner": "Alumno",
@@ -651,7 +652,8 @@
       "analytics": "Analíticas"
     },
     "ssoSuccess": "Sesión iniciada mediante SSO",
-    "ssoFailed": "Error de autenticación SSO"
+    "ssoFailed": "Error de autenticación SSO",
+    "ssoTimeout": "El inicio de sesión SSO agotó el tiempo de espera. El servidor puede no estar disponible."
   },
   "compliance": {
     "type": {

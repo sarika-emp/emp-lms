@@ -649,7 +649,9 @@
       "compliance": "Formation à la conformité",
       "progress": "Suivi de la progression",
       "analytics": "Analytique"
-    }
+    },
+    "ssoSuccess": "Connecté via SSO",
+    "ssoFailed": "Échec de l'authentification SSO"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(vous)",
     "showingCount_one": "Affichage de {{count}} utilisateur",
     "showingCount_other": "Affichage de {{count}} utilisateurs"
+  },
+  "certificate": {
+    "download": "Télécharger",
+    "print": "Imprimer",
+    "verify": "Vérifier",
+    "verifying": "Vérification...",
+    "popupBlocked": "Veuillez autoriser les pop-ups pour ouvrir le certificat.",
+    "openFailed": "Impossible d'ouvrir le certificat. Veuillez réessayer.",
+    "verifyFailed": "La demande de vérification a échoué",
+    "valid": "Certificat valide",
+    "invalid": "Certificat non valide",
+    "holder": "Titulaire",
+    "course": "Cours",
+    "issued": "Émis",
+    "status": "Statut"
+  },
+  "player": {
+    "markComplete": "Marquer comme terminé",
+    "completed": "Terminé",
+    "saving": "Enregistrement...",
+    "autoCompleteVideo": "Marqué comme terminé à la fin de la vidéo, ou appuyez sur le bouton.",
+    "autoCompleteArticle": "Marqué comme terminé lorsque vous atteignez la fin de l'article.",
+    "autoCompleteManual": "Appuyez sur le bouton lorsque vous avez terminé.",
+    "lessonDocument": "Document de la leçon",
+    "lessonVideo": "Vidéo de la leçon",
+    "toggleChapters": "Afficher/masquer les chapitres",
+    "fullscreen": "Plein écran"
   }
 }

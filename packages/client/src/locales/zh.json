@@ -649,7 +649,9 @@
       "compliance": "合规培训",
       "progress": "进度跟踪",
       "analytics": "分析"
-    }
+    },
+    "ssoSuccess": "已通过 SSO 登录",
+    "ssoFailed": "SSO 身份验证失败"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "（您）",
     "showingCount_one": "显示 {{count}} 位用户",
     "showingCount_other": "显示 {{count}} 位用户"
+  },
+  "certificate": {
+    "download": "下载",
+    "print": "打印",
+    "verify": "验证",
+    "verifying": "验证中...",
+    "popupBlocked": "请允许弹出窗口以打开证书。",
+    "openFailed": "无法打开证书。请重试。",
+    "verifyFailed": "验证请求失败",
+    "valid": "证书有效",
+    "invalid": "证书无效",
+    "holder": "持有人",
+    "course": "课程",
+    "issued": "颁发",
+    "status": "状态"
+  },
+  "player": {
+    "markComplete": "标记为完成",
+    "completed": "已完成",
+    "saving": "保存中...",
+    "autoCompleteVideo": "视频结束时标记为完成，或点击按钮。",
+    "autoCompleteArticle": "阅读到文章末尾时标记为完成。",
+    "autoCompleteManual": "完成后点击按钮。",
+    "lessonDocument": "课程文档",
+    "lessonVideo": "课程视频",
+    "toggleChapters": "切换章节",
+    "fullscreen": "全屏"
   }
 }

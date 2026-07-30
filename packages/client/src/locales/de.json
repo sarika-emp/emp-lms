@@ -649,7 +649,9 @@
       "compliance": "Compliance-Schulungen",
       "progress": "Fortschrittsverfolgung",
       "analytics": "Analytik"
-    }
+    },
+    "ssoSuccess": "Über SSO angemeldet",
+    "ssoFailed": "SSO-Authentifizierung fehlgeschlagen"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(Sie)",
     "showingCount_one": "{{count}} Benutzer wird angezeigt",
     "showingCount_other": "{{count}} Benutzer werden angezeigt"
+  },
+  "certificate": {
+    "download": "Herunterladen",
+    "print": "Drucken",
+    "verify": "Überprüfen",
+    "verifying": "Wird überprüft...",
+    "popupBlocked": "Bitte erlauben Sie Pop-ups, um das Zertifikat zu öffnen.",
+    "openFailed": "Zertifikat konnte nicht geöffnet werden. Bitte erneut versuchen.",
+    "verifyFailed": "Überprüfungsanfrage fehlgeschlagen",
+    "valid": "Zertifikat gültig",
+    "invalid": "Zertifikat ungültig",
+    "holder": "Inhaber",
+    "course": "Kurs",
+    "issued": "Ausgestellt",
+    "status": "Status"
+  },
+  "player": {
+    "markComplete": "Als abgeschlossen markieren",
+    "completed": "Abgeschlossen",
+    "saving": "Wird gespeichert...",
+    "autoCompleteVideo": "Wird als abgeschlossen markiert, wenn das Video endet, oder tippen Sie auf die Schaltfläche.",
+    "autoCompleteArticle": "Wird als abgeschlossen markiert, wenn Sie das Ende des Artikels erreichen.",
+    "autoCompleteManual": "Tippen Sie auf die Schaltfläche, wenn Sie fertig sind.",
+    "lessonDocument": "Lektionsdokument",
+    "lessonVideo": "Lektionsvideo",
+    "toggleChapters": "Kapitel umschalten",
+    "fullscreen": "Vollbild"
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Loader2, ExternalLink } from "lucide-react";
 import { VideoPlayer } from "./VideoPlayer";
 import { PdfViewer } from "./PdfViewer";
@@ -32,6 +33,7 @@ interface Props {
  * lessons. Intentionally simple — each individual player is in its own file.
  */
 export function LessonPlayer({ lesson, isCompleted, onComplete, saving }: Props) {
+  const { t } = useTranslation();
   const contentType = lesson.contentType ?? lesson.content_type ?? "text";
   const contentUrl = lesson.contentUrl ?? lesson.content_url ?? lesson.content ?? "";
   const contentText =
@@ -98,15 +100,15 @@ export function LessonPlayer({ lesson, isCompleted, onComplete, saving }: Props)
       <div className="flex items-center justify-between border-t border-gray-100 pt-4">
         <p className="text-xs text-gray-400">
           {contentType === "video"
-            ? "Marks complete when the video finishes, or tap the button."
+            ? t("player.autoCompleteVideo")
             : contentType === "text" || contentType === "slide"
-              ? "Marks complete when you reach the end of the article."
-              : "Tap the button when you're done."}
+              ? t("player.autoCompleteArticle")
+              : t("player.autoCompleteManual")}
         </p>
         {isCompleted ? (
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
             <CheckCircle2 className="h-4 w-4" />
-            Completed
+            {t("player.completed")}
           </span>
         ) : (
           <button
@@ -119,14 +121,14 @@ export function LessonPlayer({ lesson, isCompleted, onComplete, saving }: Props)
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("player.saving")}
               </>
             ) : autoCompletable ? (
               <>
-                <CheckCircle2 className="h-4 w-4" /> Mark Complete
+                <CheckCircle2 className="h-4 w-4" /> {t("player.markComplete")}
               </>
             ) : (
-              "Mark Complete"
+              t("player.markComplete")
             )}
           </button>
         )}

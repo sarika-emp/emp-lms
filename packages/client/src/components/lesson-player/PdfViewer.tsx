@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   src: string;
@@ -12,6 +13,7 @@ interface Props {
  * prefer, but it won't auto-fire the moment the page mounts.
  */
 export function PdfViewer({ src, onViewed }: Props) {
+  const { t } = useTranslation();
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export function PdfViewer({ src, onViewed }: Props) {
     <div className="relative h-[70vh] w-full bg-gray-100">
       <iframe
         src={src}
-        title="Lesson document"
+        title={t("player.lessonDocument")}
         className="h-full w-full"
       />
     </div>

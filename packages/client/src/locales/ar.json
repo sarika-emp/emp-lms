@@ -649,7 +649,9 @@
       "compliance": "تدريب الامتثال",
       "progress": "تتبّع التقدّم",
       "analytics": "التحليلات"
-    }
+    },
+    "ssoSuccess": "تم تسجيل الدخول عبر SSO",
+    "ssoFailed": "فشلت مصادقة SSO"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(أنت)",
     "showingCount_one": "عرض {{count}} مستخدم",
     "showingCount_other": "عرض {{count}} مستخدم"
+  },
+  "certificate": {
+    "download": "تنزيل",
+    "print": "طباعة",
+    "verify": "تحقق",
+    "verifying": "جارٍ التحقق...",
+    "popupBlocked": "يرجى السماح بالنوافذ المنبثقة لفتح الشهادة.",
+    "openFailed": "تعذّر فتح الشهادة. يرجى المحاولة مرة أخرى.",
+    "verifyFailed": "فشل طلب التحقق",
+    "valid": "الشهادة صالحة",
+    "invalid": "الشهادة غير صالحة",
+    "holder": "الحامل",
+    "course": "الدورة",
+    "issued": "صدرت",
+    "status": "الحالة"
+  },
+  "player": {
+    "markComplete": "وضع علامة مكتمل",
+    "completed": "مكتمل",
+    "saving": "جارٍ الحفظ...",
+    "autoCompleteVideo": "يُوضع علامة مكتمل عند انتهاء الفيديو، أو اضغط على الزر.",
+    "autoCompleteArticle": "يُوضع علامة مكتمل عند وصولك إلى نهاية المقال.",
+    "autoCompleteManual": "اضغط على الزر عند الانتهاء.",
+    "lessonDocument": "مستند الدرس",
+    "lessonVideo": "فيديو الدرس",
+    "toggleChapters": "تبديل الفصول",
+    "fullscreen": "ملء الشاشة"
   }
 }

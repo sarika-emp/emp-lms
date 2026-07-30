@@ -649,7 +649,9 @@
       "compliance": "Compliance training",
       "progress": "Progress tracking",
       "analytics": "Analytics"
-    }
+    },
+    "ssoSuccess": "Signed in via SSO",
+    "ssoFailed": "SSO authentication failed"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(you)",
     "showingCount_one": "Showing {{count}} user",
     "showingCount_other": "Showing {{count}} users"
+  },
+  "certificate": {
+    "download": "Download",
+    "print": "Print",
+    "verify": "Verify",
+    "verifying": "Verifying...",
+    "popupBlocked": "Please allow pop-ups to open the certificate.",
+    "openFailed": "Failed to open certificate. Please try again.",
+    "verifyFailed": "Verification request failed",
+    "valid": "Certificate Valid",
+    "invalid": "Certificate Invalid",
+    "holder": "Holder",
+    "course": "Course",
+    "issued": "Issued",
+    "status": "Status"
+  },
+  "player": {
+    "markComplete": "Mark Complete",
+    "completed": "Completed",
+    "saving": "Saving...",
+    "autoCompleteVideo": "Marks complete when the video finishes, or tap the button.",
+    "autoCompleteArticle": "Marks complete when you reach the end of the article.",
+    "autoCompleteManual": "Tap the button when you're done.",
+    "lessonDocument": "Lesson document",
+    "lessonVideo": "Lesson video",
+    "toggleChapters": "Toggle chapters",
+    "fullscreen": "Fullscreen"
   }
 }

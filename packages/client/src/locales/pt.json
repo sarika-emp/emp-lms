@@ -649,7 +649,9 @@
       "compliance": "Treinamento de conformidade",
       "progress": "Acompanhamento de progresso",
       "analytics": "Análises"
-    }
+    },
+    "ssoSuccess": "Conectado via SSO",
+    "ssoFailed": "Falha na autenticação SSO"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(você)",
     "showingCount_one": "Mostrando {{count}} usuário",
     "showingCount_other": "Mostrando {{count}} usuários"
+  },
+  "certificate": {
+    "download": "Baixar",
+    "print": "Imprimir",
+    "verify": "Verificar",
+    "verifying": "Verificando...",
+    "popupBlocked": "Permita pop-ups para abrir o certificado.",
+    "openFailed": "Falha ao abrir o certificado. Tente novamente.",
+    "verifyFailed": "A solicitação de verificação falhou",
+    "valid": "Certificado válido",
+    "invalid": "Certificado inválido",
+    "holder": "Titular",
+    "course": "Curso",
+    "issued": "Emitido",
+    "status": "Status"
+  },
+  "player": {
+    "markComplete": "Marcar como concluído",
+    "completed": "Concluído",
+    "saving": "Salvando...",
+    "autoCompleteVideo": "Marca como concluído quando o vídeo termina, ou toque no botão.",
+    "autoCompleteArticle": "Marca como concluído quando você chega ao fim do artigo.",
+    "autoCompleteManual": "Toque no botão quando terminar.",
+    "lessonDocument": "Documento da lição",
+    "lessonVideo": "Vídeo da lição",
+    "toggleChapters": "Alternar capítulos",
+    "fullscreen": "Tela cheia"
   }
 }

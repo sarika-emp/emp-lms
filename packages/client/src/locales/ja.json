@@ -649,7 +649,9 @@
       "compliance": "コンプライアンス研修",
       "progress": "進捗トラッキング",
       "analytics": "分析"
-    }
+    },
+    "ssoSuccess": "SSOでサインインしました",
+    "ssoFailed": "SSO認証に失敗しました"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(あなた)",
     "showingCount_one": "{{count}} 人のユーザーを表示",
     "showingCount_other": "{{count}} 人のユーザーを表示"
+  },
+  "certificate": {
+    "download": "ダウンロード",
+    "print": "印刷",
+    "verify": "検証",
+    "verifying": "検証中...",
+    "popupBlocked": "証明書を開くにはポップアップを許可してください。",
+    "openFailed": "証明書を開けませんでした。もう一度お試しください。",
+    "verifyFailed": "検証リクエストに失敗しました",
+    "valid": "証明書は有効です",
+    "invalid": "証明書は無効です",
+    "holder": "保有者",
+    "course": "コース",
+    "issued": "発行日",
+    "status": "ステータス"
+  },
+  "player": {
+    "markComplete": "完了にする",
+    "completed": "完了",
+    "saving": "保存中...",
+    "autoCompleteVideo": "動画が終了すると完了になります。またはボタンをタップしてください。",
+    "autoCompleteArticle": "記事の最後に到達すると完了になります。",
+    "autoCompleteManual": "完了したらボタンをタップしてください。",
+    "lessonDocument": "レッスン資料",
+    "lessonVideo": "レッスン動画",
+    "toggleChapters": "チャプターの切り替え",
+    "fullscreen": "全画面"
   }
 }

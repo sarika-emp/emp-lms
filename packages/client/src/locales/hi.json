@@ -649,7 +649,9 @@
       "compliance": "अनुपालन प्रशिक्षण",
       "progress": "प्रगति ट्रैकिंग",
       "analytics": "एनालिटिक्स"
-    }
+    },
+    "ssoSuccess": "SSO के माध्यम से साइन इन किया गया",
+    "ssoFailed": "SSO प्रमाणीकरण विफल"
   },
   "compliance": {
     "type": {
@@ -1127,5 +1129,32 @@
     "you": "(आप)",
     "showingCount_one": "{{count}} उपयोगकर्ता दिखा रहे हैं",
     "showingCount_other": "{{count}} उपयोगकर्ता दिखा रहे हैं"
+  },
+  "certificate": {
+    "download": "डाउनलोड",
+    "print": "प्रिंट",
+    "verify": "सत्यापित करें",
+    "verifying": "सत्यापित हो रहा है...",
+    "popupBlocked": "प्रमाणपत्र खोलने के लिए कृपया पॉप-अप की अनुमति दें।",
+    "openFailed": "प्रमाणपत्र खोलने में विफल। कृपया पुनः प्रयास करें।",
+    "verifyFailed": "सत्यापन अनुरोध विफल",
+    "valid": "प्रमाणपत्र मान्य",
+    "invalid": "प्रमाणपत्र अमान्य",
+    "holder": "धारक",
+    "course": "कोर्स",
+    "issued": "जारी",
+    "status": "स्थिति"
+  },
+  "player": {
+    "markComplete": "पूर्ण चिह्नित करें",
+    "completed": "पूर्ण",
+    "saving": "सहेजा जा रहा है...",
+    "autoCompleteVideo": "वीडियो समाप्त होने पर पूर्ण चिह्नित होता है, या बटन टैप करें।",
+    "autoCompleteArticle": "लेख के अंत तक पहुँचने पर पूर्ण चिह्नित होता है।",
+    "autoCompleteManual": "काम पूरा होने पर बटन टैप करें।",
+    "lessonDocument": "पाठ दस्तावेज़",
+    "lessonVideo": "पाठ वीडियो",
+    "toggleChapters": "अध्याय टॉगल करें",
+    "fullscreen": "पूर्ण स्क्रीन"
   }
 }

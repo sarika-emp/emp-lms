@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Play, Pause, Maximize, List } from "lucide-react";
 
 export interface Chapter {
@@ -19,6 +20,7 @@ function formatTime(seconds: number): string {
 }
 
 export default function VideoPlayer({ videoUrl, chapters = [], onProgress }: VideoPlayerProps) {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressCbRef = useRef(onProgress);
@@ -206,7 +208,7 @@ export default function VideoPlayer({ videoUrl, chapters = [], onProgress }: Vid
                 <button
                   onClick={() => setSidebarOpen((p) => !p)}
                   className="rounded p-1 hover:bg-white/10 transition"
-                  title="Toggle chapters"
+                  title={t("player.toggleChapters")}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -214,7 +216,7 @@ export default function VideoPlayer({ videoUrl, chapters = [], onProgress }: Vid
               <button
                 onClick={goFullscreen}
                 className="rounded p-1 hover:bg-white/10 transition"
-                title="Fullscreen"
+                title={t("player.fullscreen")}
               >
                 <Maximize className="h-4 w-4" />
               </button>

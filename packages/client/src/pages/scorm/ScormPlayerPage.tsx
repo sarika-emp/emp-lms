@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { X, Loader2, AlertCircle, Maximize, Minimize } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { apiGet, apiPost, api } from "@/api/client";
 
 interface ScormLaunch {
@@ -19,6 +20,7 @@ interface ScormTracking {
 }
 
 export default function ScormPlayerPage() {
+  const { t } = useTranslation();
   const { packageId } = useParams<{ packageId: string }>();
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -51,7 +53,7 @@ export default function ScormPlayerPage() {
 
   const tracking = trackingData?.data;
   const launchUrl = launchData?.data?.url;
-  const title = launchData?.data?.title ?? "SCORM Content";
+  const title = launchData?.data?.title ?? t("scorm.defaultTitle");
 
   // Sync tracking progress
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function ScormPlayerPage() {
 
       if (type === "scorm:completed") {
         setProgress(100);
-        toast.success("Course completed!");
+        toast.success(t("scorm.courseCompleted"));
         refetchTracking();
       }
     },
@@ -121,9 +123,9 @@ export default function ScormPlayerPage() {
         completionStatus: tracking?.completionStatus ?? "incomplete",
         progressMeasure: progress / 100,
       });
-      toast.success("Progress saved");
+      toast.success(t("scorm.progressSaved"));
     } catch {
-      toast.error("Could not save progress");
+      toast.error(t("scorm.progressSaveFailed"));
     } finally {
       setSaving(false);
       navigate(-1);
@@ -144,12 +146,12 @@ export default function ScormPlayerPage() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-gray-900 text-white">
         <AlertCircle className="h-12 w-12 text-red-400" />
-        <p className="text-lg">Failed to load SCORM package.</p>
+        <p className="text-lg">{t("scorm.loadFailed")}</p>
         <button
           onClick={() => navigate(-1)}
           className="rounded-md bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition"
         >
-          Go Back
+          {t("common.back")}
         </button>
       </div>
     );
@@ -170,7 +172,7 @@ export default function ScormPlayerPage() {
             ) : (
               <X className="h-4 w-4" />
             )}
-            Exit
+            {t("scorm.exit")}
           </button>
           <h1 className="text-sm font-semibold text-white truncate max-w-md">
             {title}
@@ -193,14 +195,14 @@ export default function ScormPlayerPage() {
 
           {tracking?.completionStatus === "completed" && (
             <span className="rounded-full bg-green-600/20 px-2.5 py-0.5 text-xs font-medium text-green-400">
-              Completed
+              {t("scorm.completed")}
             </span>
           )}
 
           <button
             onClick={toggleFullscreen}
             className="rounded-md p-1.5 text-gray-400 hover:bg-white/10 hover:text-white transition"
-            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            title={isFullscreen ? t("scorm.exitFullscreen") : t("scorm.fullscreen")}
           >
             {isFullscreen ? (
               <Minimize className="h-4 w-4" />

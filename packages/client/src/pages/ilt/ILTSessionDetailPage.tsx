@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -56,6 +57,7 @@ interface SessionStats {
 const MARK_OPTIONS = ["attended", "absent", "excused"] as const;
 
 export function ILTSessionDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
@@ -94,16 +96,16 @@ export function ILTSessionDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
         <CalendarDays className="h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">Session not found</h3>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">{t("ilt.sessionNotFound")}</h3>
         <p className="mt-1 text-sm text-gray-500">
-          This session may have been removed or the link is incorrect.
+          {t("ilt.sessionNotFoundBody")}
         </p>
         <Link
           to="/ilt"
           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to ILT Sessions
+          {t("ilt.backToSessions")}
         </Link>
       </div>
     );
@@ -128,13 +130,13 @@ export function ILTSessionDetailPage() {
     try {
       const res = await apiPost(`/ilt/sessions/${id}/register`);
       if (res.success) {
-        toast.success("Successfully registered!");
+        toast.success(t("ilt.registeredSuccess"));
         refresh();
       } else {
-        toast.error(res.error?.message ?? "Registration failed");
+        toast.error(res.error?.message ?? t("ilt.registrationFailed"));
       }
     } catch (err: any) {
-      toast.error(apiErrorMessage(err, "Registration failed"));
+      toast.error(apiErrorMessage(err, t("ilt.registrationFailed")));
     } finally {
       setRegisterBusy(false);
     }
@@ -145,13 +147,13 @@ export function ILTSessionDetailPage() {
     try {
       const res = await apiPost(`/ilt/sessions/${id}/unregister`);
       if (res.success) {
-        toast.success("Registration cancelled");
+        toast.success(t("ilt.registrationCancelled"));
         refresh();
       } else {
-        toast.error(res.error?.message ?? "Failed to unregister");
+        toast.error(res.error?.message ?? t("ilt.unregisterFailed"));
       }
     } catch (err: any) {
-      toast.error(apiErrorMessage(err, "Failed to unregister"));
+      toast.error(apiErrorMessage(err, t("ilt.unregisterFailed")));
     } finally {
       setRegisterBusy(false);
     }
@@ -163,14 +165,14 @@ export function ILTSessionDetailPage() {
     try {
       const res = await apiPost(`/ilt/sessions/${id}/${confirmAction}`);
       if (res.success) {
-        toast.success(confirmAction === "cancel" ? "Session cancelled" : "Session completed");
+        toast.success(confirmAction === "cancel" ? t("ilt.sessionCancelled") : t("ilt.sessionCompleted"));
         setConfirmAction(null);
         refresh();
       } else {
-        toast.error(res.error?.message ?? "Action failed");
+        toast.error(res.error?.message ?? t("ilt.actionFailed"));
       }
     } catch (err: any) {
-      toast.error(apiErrorMessage(err, "Action failed"));
+      toast.error(apiErrorMessage(err, t("ilt.actionFailed")));
     } finally {
       setActionBusy(false);
     }
@@ -183,13 +185,13 @@ export function ILTSessionDetailPage() {
         attendance: [{ user_id: userId, status }],
       });
       if (res.success) {
-        toast.success("Attendance updated");
+        toast.success(t("ilt.attendanceUpdated"));
         refresh();
       } else {
-        toast.error(res.error?.message ?? "Failed to mark attendance");
+        toast.error(res.error?.message ?? t("ilt.markAttendanceFailed"));
       }
     } catch (err: any) {
-      toast.error(apiErrorMessage(err, "Failed to mark attendance"));
+      toast.error(apiErrorMessage(err, t("ilt.markAttendanceFailed")));
     } finally {
       setMarkingUserId(null);
     }
@@ -212,7 +214,7 @@ export function ILTSessionDetailPage() {
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to ILT Sessions
+        {t("ilt.backToSessions")}
       </Link>
 
       {/* Header card */}
@@ -242,7 +244,7 @@ export function ILTSessionDetailPage() {
                 ) : (
                   <UserPlus className="h-4 w-4" />
                 )}
-                Register
+                {t("ilt.register")}
               </button>
             )}
             {canUnregister && (
@@ -256,7 +258,7 @@ export function ILTSessionDetailPage() {
                 ) : (
                   <UserMinus className="h-4 w-4" />
                 )}
-                Unregister
+                {t("ilt.unregister")}
               </button>
             )}
             {canEdit && (
@@ -265,7 +267,7 @@ export function ILTSessionDetailPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
               >
                 <Pencil className="h-4 w-4" />
-                Edit
+                {t("common.edit")}
               </button>
             )}
             {canComplete && (
@@ -274,7 +276,7 @@ export function ILTSessionDetailPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-50 transition"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Complete
+                {t("ilt.complete")}
               </button>
             )}
             {canCancel && (
@@ -283,7 +285,7 @@ export function ILTSessionDetailPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition"
               >
                 <XCircle className="h-4 w-4" />
-                Cancel Session
+                {t("ilt.cancelSession")}
               </button>
             )}
           </div>
@@ -293,7 +295,7 @@ export function ILTSessionDetailPage() {
           <div className="flex items-center gap-2 text-gray-600">
             <UserCheck className="h-4 w-4 shrink-0 text-gray-400" />
             <span>
-              Instructor:{" "}
+              {t("ilt.instructorLabel")}{" "}
               <span className="font-medium text-gray-900">
                 {session.instructorName ?? "—"}
               </span>
@@ -321,7 +323,7 @@ export function ILTSessionDetailPage() {
                 rel="noopener noreferrer"
                 className="truncate text-brand-600 hover:underline"
               >
-                Join meeting
+                {t("ilt.joinMeeting")}
               </a>
             </div>
           )}
@@ -334,7 +336,7 @@ export function ILTSessionDetailPage() {
                 rel="noopener noreferrer"
                 className="truncate text-brand-600 hover:underline"
               >
-                Session materials
+                {t("ilt.sessionMaterials")}
               </a>
             </div>
           )}
@@ -345,10 +347,13 @@ export function ILTSessionDetailPage() {
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4 text-gray-400" />
-              {session.enrolledCount}/{session.maxAttendees ?? "∞"} enrolled
+              {t("ilt.enrolledCount", {
+                enrolled: session.enrolledCount,
+                max: session.maxAttendees ?? "∞",
+              })}
             </span>
             {capacityPct != null && (
-              <span className="text-xs font-medium text-gray-500">{capacityPct}% full</span>
+              <span className="text-xs font-medium text-gray-500">{t("ilt.percentFull", { pct: capacityPct })}</span>
             )}
           </div>
           {capacityPct != null && (
@@ -368,11 +373,11 @@ export function ILTSessionDetailPage() {
       {isAdmin && stats && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           {[
-            { label: "Registered", value: stats.registered_count, color: "text-gray-900" },
-            { label: "Attended", value: stats.attended_count, color: "text-green-700" },
-            { label: "Absent", value: stats.absent_count, color: "text-red-700" },
-            { label: "Excused", value: stats.excused_count, color: "text-amber-700" },
-            { label: "Attendance Rate", value: `${stats.attendance_rate}%`, color: "text-brand-600" },
+            { label: t("ilt.attendanceStatus.registered"), value: stats.registered_count, color: "text-gray-900" },
+            { label: t("ilt.attendanceStatus.attended"), value: stats.attended_count, color: "text-green-700" },
+            { label: t("ilt.attendanceStatus.absent"), value: stats.absent_count, color: "text-red-700" },
+            { label: t("ilt.attendanceStatus.excused"), value: stats.excused_count, color: "text-amber-700" },
+            { label: t("ilt.attendanceRate"), value: `${stats.attendance_rate}%`, color: "text-brand-600" },
           ].map((s) => (
             <div
               key={s.label}
@@ -389,12 +394,12 @@ export function ILTSessionDetailPage() {
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            Roster ({attendance.length})
+            {t("ilt.roster", { count: attendance.length })}
           </h2>
         </div>
         {attendance.length === 0 ? (
           <p className="px-6 py-8 text-center text-sm text-gray-500">
-            No one has registered for this session yet.
+            {t("ilt.rosterEmpty")}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -402,20 +407,20 @@ export function ILTSessionDetailPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Name
+                    {t("common.name")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Email
+                    {t("common.email")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Status
+                    {t("common.status")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Checked In
+                    {t("ilt.checkedIn")}
                   </th>
                   {isAdmin && (
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Mark Attendance
+                      {t("ilt.markAttendance")}
                     </th>
                   )}
                 </tr>
@@ -451,11 +456,11 @@ export function ILTSessionDetailPage() {
                             className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
                           >
                             <option value="" disabled>
-                              Mark as...
+                              {t("ilt.markAs")}
                             </option>
-                            <option value="attended">Attended</option>
-                            <option value="absent">Absent</option>
-                            <option value="excused">Excused</option>
+                            <option value="attended">{t("ilt.attendanceStatus.attended")}</option>
+                            <option value="absent">{t("ilt.attendanceStatus.absent")}</option>
+                            <option value="excused">{t("ilt.attendanceStatus.excused")}</option>
                           </select>
                           {markingUserId === row.user_id && (
                             <Loader2 className="h-4 w-4 animate-spin text-brand-600" />
@@ -477,7 +482,7 @@ export function ILTSessionDetailPage() {
         initial={session}
         onClose={() => setShowEdit(false)}
         onSaved={() => {
-          toast.success("Session updated");
+          toast.success(t("ilt.sessionUpdated"));
           refresh();
         }}
       />
@@ -485,9 +490,9 @@ export function ILTSessionDetailPage() {
       {/* Cancel / Complete confirm modals */}
       <ConfirmModal
         open={confirmAction === "cancel"}
-        title="Cancel this session?"
-        message={`"${session.title}" will be cancelled and all registered attendees will be notified. This cannot be undone.`}
-        confirmLabel="Cancel Session"
+        title={t("ilt.confirmCancelTitle")}
+        message={t("ilt.confirmCancelMessage", { title: session.title })}
+        confirmLabel={t("ilt.cancelSession")}
         tone="danger"
         busy={actionBusy}
         onConfirm={handleSessionAction}
@@ -495,9 +500,9 @@ export function ILTSessionDetailPage() {
       />
       <ConfirmModal
         open={confirmAction === "complete"}
-        title="Mark session as completed?"
-        message={`"${session.title}" will be marked as completed. Make sure attendance has been recorded first.`}
-        confirmLabel="Complete Session"
+        title={t("ilt.confirmCompleteTitle")}
+        message={t("ilt.confirmCompleteMessage", { title: session.title })}
+        confirmLabel={t("ilt.completeSession")}
         busy={actionBusy}
         onConfirm={handleSessionAction}
         onClose={() => setConfirmAction(null)}

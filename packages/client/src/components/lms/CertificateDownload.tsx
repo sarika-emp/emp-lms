@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, Printer, ShieldCheck, Loader2, X, CheckCircle, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, apiGet } from "@/api/client";
@@ -33,6 +34,7 @@ interface CertificateDownloadProps {
 }
 
 export default function CertificateDownload({ certificateId, className = "", showVerify = false }: CertificateDownloadProps) {
+  const { t } = useTranslation();
   const [downloading, setDownloading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
@@ -54,10 +56,10 @@ export default function CertificateDownload({ certificateId, className = "", sho
       const win = window.open(blobUrl, "_blank");
       // Revoke after the new tab has had time to load the blob.
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-      if (!win) toast.error("Please allow pop-ups to open the certificate.");
+      if (!win) toast.error(t("certificate.popupBlocked"));
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.error?.message || "Failed to open certificate. Please try again.",
+        err?.response?.data?.error?.message || t("certificate.openFailed"),
       );
     } finally {
       setDownloading(false);
@@ -77,7 +79,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
         setVerifyResult({ valid: false });
       }
     } catch {
-      toast.error("Verification request failed");
+      toast.error(t("certificate.verifyFailed"));
       setVerifyResult({ valid: false });
     } finally {
       setVerifying(false);
@@ -103,7 +105,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          Download
+          {t("certificate.download")}
         </button>
 
         {/* Print button — opens the certificate with ?print=1 so the server
@@ -115,7 +117,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
         >
           <Printer className="h-3.5 w-3.5" />
-          Print
+          {t("certificate.print")}
         </button>
 
         {/* Verify button — admin only */}
@@ -130,7 +132,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
             ) : (
               <ShieldCheck className="h-3.5 w-3.5" />
             )}
-            Verify
+            {t("certificate.verify")}
           </button>
         )}
       </div>
@@ -141,7 +143,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
           {verifying ? (
             <div className="flex items-center justify-center py-3">
               <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
-              <span className="ml-2 text-sm text-gray-500">Verifying...</span>
+              <span className="ml-2 text-sm text-gray-500">{t("certificate.verifying")}</span>
             </div>
           ) : verifyResult ? (
             <div className="space-y-3">
@@ -157,7 +159,7 @@ export default function CertificateDownload({ certificateId, className = "", sho
                       verifyResult.valid ? "text-green-700" : "text-red-700"
                     }`}
                   >
-                    {verifyResult.valid ? "Certificate Valid" : "Certificate Invalid"}
+                    {verifyResult.valid ? t("certificate.valid") : t("certificate.invalid")}
                   </span>
                 </div>
                 <button
@@ -172,25 +174,25 @@ export default function CertificateDownload({ certificateId, className = "", sho
                 <dl className="space-y-1 text-xs text-gray-600">
                   {verifyResult.holder && (
                     <div className="flex justify-between">
-                      <dt className="font-medium">Holder</dt>
+                      <dt className="font-medium">{t("certificate.holder")}</dt>
                       <dd>{verifyResult.holder}</dd>
                     </div>
                   )}
                   {verifyResult.courseName && (
                     <div className="flex justify-between">
-                      <dt className="font-medium">Course</dt>
+                      <dt className="font-medium">{t("certificate.course")}</dt>
                       <dd>{verifyResult.courseName}</dd>
                     </div>
                   )}
                   {verifyResult.issuedDate && (
                     <div className="flex justify-between">
-                      <dt className="font-medium">Issued</dt>
+                      <dt className="font-medium">{t("certificate.issued")}</dt>
                       <dd>{verifyResult.issuedDate}</dd>
                     </div>
                   )}
                   {verifyResult.status && (
                     <div className="flex justify-between">
-                      <dt className="font-medium">Status</dt>
+                      <dt className="font-medium">{t("certificate.status")}</dt>
                       <dd className="capitalize">{verifyResult.status}</dd>
                     </div>
                   )}

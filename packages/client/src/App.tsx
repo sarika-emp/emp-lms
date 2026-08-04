@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore, extractSSOToken } from "@/lib/auth-store";
@@ -48,6 +49,7 @@ function LoadingSpinner() {
 
 // ---------- SSO Gate ----------
 function SSOGate({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
   const [checking, setChecking] = useState(true);
 
@@ -65,7 +67,7 @@ function SSOGate({ children }: { children: React.ReactNode }) {
       if (!cancelled) {
         cancelled = true;
         console.error("SSO exchange timed out after 10s");
-        toast.error("SSO login timed out. The server may be unavailable.");
+        toast.error(t("auth.ssoTimeout"));
         setChecking(false);
       }
     }, 10000);
@@ -86,7 +88,7 @@ function SSOGate({ children }: { children: React.ReactNode }) {
           const accessToken = res.data.tokens?.accessToken || res.data.accessToken!;
           const refreshToken = res.data.tokens?.refreshToken || res.data.refreshToken!;
           login(res.data.user, { accessToken, refreshToken });
-          toast.success("Signed in via SSO");
+          toast.success(t("auth.ssoSuccess"));
           // Use window.location.replace instead of navigate to ensure
           // ProtectedRoute sees the updated auth state from localStorage
           // after a full page load (avoids race with zustand hydration)
@@ -96,7 +98,7 @@ function SSOGate({ children }: { children: React.ReactNode }) {
       } catch (err: any) {
         if (cancelled) return;
         clearTimeout(timeout);
-        const message = err?.response?.data?.error?.message || "SSO authentication failed";
+        const message = err?.response?.data?.error?.message || t("auth.ssoFailed");
         console.error("SSO exchange failed:", err);
         toast.error(message);
       } finally {

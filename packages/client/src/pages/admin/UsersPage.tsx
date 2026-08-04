@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation, Trans } from "react-i18next";
 import { Users, Search, Loader2, Info } from "lucide-react";
 import { apiGet } from "@/api/client";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
@@ -32,6 +33,7 @@ const ROLE_STYLES: Record<string, string> = {
 };
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
 
@@ -56,7 +58,7 @@ export default function UsersPage() {
       <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
         <Users className="mx-auto h-12 w-12 text-gray-300" />
         <p className="mt-3 text-sm text-gray-500">
-          The user directory is only available to administrators.
+          {t("users.notAdminAccess")}
         </p>
       </div>
     );
@@ -66,9 +68,9 @@ export default function UsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("users.title")}</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Your organization's user directory.
+          {t("users.subtitle")}
         </p>
       </div>
 
@@ -76,10 +78,13 @@ export default function UsersPage() {
       <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          User accounts, roles, and permissions are managed centrally in the{" "}
-          <span className="font-medium">EmpCloud admin app</span> and apply across
-          all EMP modules. Instructors are assigned per session from{" "}
-          <span className="font-medium">Live Training</span>.
+          <Trans
+            i18nKey="users.managedCentrally"
+            components={{
+              admin: <span className="font-medium" />,
+              live: <span className="font-medium" />,
+            }}
+          />
         </p>
       </div>
 
@@ -90,7 +95,7 @@ export default function UsersPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or email..."
+          placeholder={t("users.searchPlaceholder")}
           className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
       </div>
@@ -104,7 +109,7 @@ export default function UsersPage() {
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
           <Users className="mx-auto h-12 w-12 text-gray-300" />
           <p className="mt-3 text-sm text-gray-500">
-            {debounced ? "No users match your search." : "No users found."}
+            {debounced ? t("users.noMatch") : t("users.noUsers")}
           </p>
         </div>
       ) : (
@@ -114,13 +119,13 @@ export default function UsersPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Name
+                    {t("common.name")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Designation
+                    {t("common.designation")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Role
+                    {t("common.role")}
                   </th>
                 </tr>
               </thead>
@@ -136,7 +141,7 @@ export default function UsersPage() {
                           <p className="text-sm font-medium text-gray-900">
                             {u.first_name} {u.last_name}
                             {u.id === user?.empcloudUserId && (
-                              <span className="ml-1.5 text-xs font-normal text-gray-400">(you)</span>
+                              <span className="ml-1.5 text-xs font-normal text-gray-400">{t("users.you")}</span>
                             )}
                           </p>
                           <p className="truncate text-xs text-gray-500">{u.email}</p>
@@ -152,7 +157,7 @@ export default function UsersPage() {
                           ROLE_STYLES[u.role] || ROLE_STYLES.employee
                         }`}
                       >
-                        {ROLE_LABELS[u.role] || u.role}
+                        {t(`roles.${u.role}`, { defaultValue: ROLE_LABELS[u.role] || u.role })}
                       </span>
                     </td>
                   </tr>
@@ -162,7 +167,7 @@ export default function UsersPage() {
           </div>
           <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
             <p className="text-sm text-gray-500">
-              Showing {users.length} user{users.length === 1 ? "" : "s"}
+              {t("users.showingCount", { count: users.length })}
             </p>
           </div>
         </div>

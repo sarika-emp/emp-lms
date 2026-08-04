@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
@@ -29,6 +30,7 @@ import {
 type Tab = "upcoming" | "past" | "my";
 
 export default function ILTPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("upcoming");
   const [showCreate, setShowCreate] = useState(false);
   const [registeringId, setRegisteringId] = useState<string | null>(null);
@@ -88,22 +90,22 @@ export default function ILTPage() {
     try {
       const res = await apiPost(`/ilt/sessions/${sessionId}/register`);
       if (res.success) {
-        toast.success("Successfully registered!");
+        toast.success(t("ilt.registeredSuccess"));
         queryClient.invalidateQueries({ queryKey: ["ilt"] });
       } else {
-        toast.error(res.error?.message ?? "Registration failed");
+        toast.error(res.error?.message ?? t("ilt.registrationFailed"));
       }
     } catch (err: any) {
-      toast.error(apiErrorMessage(err, "Registration failed"));
+      toast.error(apiErrorMessage(err, t("ilt.registrationFailed")));
     } finally {
       setRegisteringId(null);
     }
   };
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "upcoming", label: "Upcoming" },
-    { key: "past", label: "Past" },
-    { key: "my", label: "My Sessions" },
+    { key: "upcoming", label: t("ilt.tabUpcoming") },
+    { key: "past", label: t("ilt.tabPast") },
+    { key: "my", label: t("ilt.tabMy") },
   ];
 
   return (
@@ -111,7 +113,7 @@ export default function ILTPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <CalendarDays className="h-7 w-7 text-brand-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Instructor-Led Training</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("ilt.title")}</h1>
         </div>
         {isAdmin && (
           <button
@@ -119,7 +121,7 @@ export default function ILTPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition"
           >
             <Plus className="h-4 w-4" />
-            Create Session
+            {t("ilt.createSession")}
           </button>
         )}
       </div>
@@ -127,17 +129,17 @@ export default function ILTPage() {
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex gap-6">
-          {tabs.map((t) => (
+          {tabs.map((tab) => (
             <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={`whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition ${
-                activeTab === t.key
+                activeTab === tab.key
                   ? "border-brand-600 text-brand-600"
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              {t.label}
+              {tab.label}
             </button>
           ))}
         </nav>
@@ -150,13 +152,13 @@ export default function ILTPage() {
       ) : sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <CalendarDays className="h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No sessions found</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t("ilt.noSessionsFound")}</h3>
           <p className="mt-1 text-sm text-gray-500">
             {activeTab === "upcoming"
-              ? "There are no upcoming sessions at this time."
+              ? t("ilt.noUpcomingSessions")
               : activeTab === "past"
-                ? "No past sessions to show."
-                : "You haven't registered for any sessions yet."}
+                ? t("ilt.noPastSessions")
+                : t("ilt.noMySessions")}
           </p>
         </div>
       ) : (
@@ -211,7 +213,7 @@ export default function ILTPage() {
                       ) : (
                         <>
                           <LinkIcon className="h-4 w-4 text-gray-400" />
-                          <span className="text-brand-600">Virtual session</span>
+                          <span className="text-brand-600">{t("ilt.virtualSession")}</span>
                         </>
                       )}
                     </div>
@@ -219,7 +221,10 @@ export default function ILTPage() {
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-gray-400" />
                     <span>
-                      {session.enrolledCount}/{session.maxAttendees ?? "∞"} enrolled
+                      {t("ilt.enrolledCount", {
+                        enrolled: session.enrolledCount,
+                        max: session.maxAttendees ?? "∞",
+                      })}
                     </span>
                   </div>
                 </dl>
@@ -233,12 +238,12 @@ export default function ILTPage() {
                     {registeringId === session.id && (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     )}
-                    Register
+                    {t("ilt.register")}
                   </button>
                 ) : activeTab === "upcoming" && registeredIds.has(session.id) ? (
                   // BUG-13: positive confirmation once registered.
                   <span className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
-                    <UserCheck className="h-4 w-4" /> Registered
+                    <UserCheck className="h-4 w-4" /> {t("ilt.registered")}
                   </span>
                 ) : null}
               </Link>
@@ -251,7 +256,7 @@ export default function ILTPage() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onSaved={() => {
-          toast.success("Session created");
+          toast.success(t("ilt.sessionCreated"));
           queryClient.invalidateQueries({ queryKey: ["ilt"] });
         }}
       />

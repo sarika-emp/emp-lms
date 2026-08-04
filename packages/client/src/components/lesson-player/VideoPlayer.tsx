@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   src: string;
@@ -16,6 +17,7 @@ interface Props {
  * "Mark Complete" button manually for embedded videos.
  */
 export function VideoPlayer({ src, onEnded }: Props) {
+  const { t } = useTranslation();
   const embedded = useMemo(() => {
     if (!src) return null;
     // YouTube
@@ -46,7 +48,7 @@ export function VideoPlayer({ src, onEnded }: Props) {
       <div className="relative aspect-video w-full bg-black">
         <iframe
           src={embedded}
-          title="Lesson video"
+          title={t("player.lessonVideo")}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="absolute inset-0 h-full w-full"

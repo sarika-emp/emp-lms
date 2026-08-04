@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
   Plus,
@@ -117,6 +118,7 @@ function LessonForm({
   onCancel: () => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<LessonFormData>(initial);
 
   const set = (field: keyof LessonFormData, value: any) =>
@@ -125,17 +127,17 @@ function LessonForm({
   const contentPlaceholder = () => {
     switch (form.contentType) {
       case "video":
-        return "Enter video URL (YouTube, Vimeo, etc.)";
+        return t("courseBuilder.placeholder.video");
       case "document":
-        return "Enter document URL";
+        return t("courseBuilder.placeholder.document");
       case "link":
-        return "Enter URL";
+        return t("courseBuilder.placeholder.link");
       case "embed":
-        return "Paste embed code";
+        return t("courseBuilder.placeholder.embed");
       case "scorm":
-        return "Upload SCORM package (.zip) via media manager, then paste the URL here";
+        return t("courseBuilder.placeholder.scorm");
       default:
-        return "Enter lesson content...";
+        return t("courseBuilder.placeholder.default");
     }
   };
 
@@ -146,35 +148,35 @@ function LessonForm({
       {/* Title */}
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
-          Title <span className="text-red-500">*</span>
+          {t("courseBuilder.titleLabel")} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          placeholder="Lesson title"
+          placeholder={t("courseBuilder.lessonTitlePlaceholder")}
         />
       </div>
 
       {/* Description */}
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
-          Description
+          {t("courseBuilder.descriptionLabel")}
         </label>
         <input
           type="text"
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          placeholder="Brief description"
+          placeholder={t("courseBuilder.briefDescriptionPlaceholder")}
         />
       </div>
 
       {/* Content Type */}
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
-          Content Type
+          {t("courseBuilder.contentTypeLabel")}
         </label>
         <select
           value={form.contentType}
@@ -183,7 +185,7 @@ function LessonForm({
         >
           {CONTENT_TYPES.map((ct) => (
             <option key={ct.value} value={ct.value}>
-              {ct.label}
+              {t(`courseBuilder.contentType.${ct.value}`, { defaultValue: ct.label })}
             </option>
           ))}
         </select>
@@ -192,7 +194,7 @@ function LessonForm({
       {/* Content */}
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">
-          Content
+          {t("courseBuilder.contentLabel")}
         </label>
         {form.contentType === "text" ? (
           <textarea
@@ -213,8 +215,7 @@ function LessonForm({
         )}
         {form.contentType === "scorm" && (
           <p className="mt-1 text-xs text-gray-500">
-            Upload your SCORM .zip package through the media manager, then paste
-            the resulting URL above.
+            {t("courseBuilder.scormHint")}
           </p>
         )}
       </div>
@@ -223,7 +224,7 @@ function LessonForm({
       <div className="flex flex-wrap items-end gap-6">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Duration (minutes)
+            {t("courseBuilder.durationLabel")}
           </label>
           <input
             type="number"
@@ -241,7 +242,7 @@ function LessonForm({
             onChange={(e) => set("isMandatory", e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
           />
-          Mandatory
+          {t("courseBuilder.mandatory")}
         </label>
 
         <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -251,7 +252,7 @@ function LessonForm({
             onChange={(e) => set("isPreview", e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
           />
-          Free Preview
+          {t("courseBuilder.freePreview")}
         </label>
       </div>
 
@@ -264,7 +265,7 @@ function LessonForm({
           className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          Save Lesson
+          {t("courseBuilder.saveLesson")}
         </button>
         <button
           type="button"
@@ -272,7 +273,7 @@ function LessonForm({
           className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           <X className="h-4 w-4" />
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </div>
@@ -296,6 +297,7 @@ function ModuleSection({
   onMoveUp: () => void;
   onMoveDown: () => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -315,22 +317,22 @@ function ModuleSection({
         description: editDesc,
       }),
     onSuccess: () => {
-      toast.success("Module updated");
+      toast.success(t("courseBuilder.moduleUpdated"));
       setEditing(false);
       invalidate();
     },
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to update module"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.updateModuleFailed")),
   });
 
   const deleteModule = useMutation({
     mutationFn: () => apiDelete(`/courses/${courseId}/modules/${module.id}`),
     onSuccess: () => {
-      toast.success("Module deleted");
+      toast.success(t("courseBuilder.moduleDeleted"));
       invalidate();
     },
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to delete module"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.deleteModuleFailed")),
   });
 
   // Lesson mutations — server routes are /courses/:courseId/modules/:moduleId/lessons
@@ -338,34 +340,34 @@ function ModuleSection({
     mutationFn: (data: LessonFormData) =>
       apiPost(`/courses/${courseId}/modules/${module.id}/lessons`, lessonToPayload(data)),
     onSuccess: () => {
-      toast.success("Lesson added");
+      toast.success(t("courseBuilder.lessonAdded"));
       setAddingLesson(false);
       invalidate();
     },
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to add lesson"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.addLessonFailed")),
   });
 
   const updateLesson = useMutation({
     mutationFn: ({ id, data }: { id: string; data: LessonFormData }) =>
       apiPut(`/courses/${courseId}/lessons/${id}`, lessonToPayload(data)),
     onSuccess: () => {
-      toast.success("Lesson updated");
+      toast.success(t("courseBuilder.lessonUpdated"));
       setEditingLessonId(null);
       invalidate();
     },
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to update lesson"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.updateLessonFailed")),
   });
 
   const deleteLesson = useMutation({
     mutationFn: (id: string) => apiDelete(`/courses/${courseId}/lessons/${id}`),
     onSuccess: () => {
-      toast.success("Lesson deleted");
+      toast.success(t("courseBuilder.lessonDeleted"));
       invalidate();
     },
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to delete lesson"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.deleteLessonFailed")),
   });
 
   // Reorder lessons
@@ -376,7 +378,7 @@ function ModuleSection({
       }),
     onSuccess: () => invalidate(),
     onError: (err: any) =>
-      toast.error(err?.response?.data?.error?.message || "Failed to reorder lessons"),
+      toast.error(err?.response?.data?.error?.message || t("courseBuilder.reorderLessonsFailed")),
   });
 
   const moveLessonUp = (idx: number) => {
@@ -396,7 +398,7 @@ function ModuleSection({
   const handleDeleteModule = () => {
     if (
       window.confirm(
-        `Delete module "${module.title}" and all its lessons? This cannot be undone.`
+        t("courseBuilder.confirmDeleteModule", { title: module.title })
       )
     ) {
       deleteModule.mutate();
@@ -406,7 +408,7 @@ function ModuleSection({
   const handleDeleteLesson = (lesson: Lesson) => {
     if (
       window.confirm(
-        `Delete lesson "${lesson.title}"? This cannot be undone.`
+        t("courseBuilder.confirmDeleteLesson", { title: lesson.title })
       )
     ) {
       deleteLesson.mutate(lesson.id);
@@ -438,7 +440,7 @@ function ModuleSection({
               onClick={onMoveUp}
               disabled={index === 0}
               className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
-              title={index === 0 ? "Already at the top" : "Move up"}
+              title={index === 0 ? t("courseBuilder.alreadyAtTop") : t("courseBuilder.moveUp")}
             >
               <ChevronUp className="h-4 w-4" />
             </button>
@@ -447,7 +449,7 @@ function ModuleSection({
               onClick={onMoveDown}
               disabled={index === total - 1}
               className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
-              title={index === total - 1 ? "Already at the bottom" : "Move down"}
+              title={index === total - 1 ? t("courseBuilder.alreadyAtBottom") : t("courseBuilder.moveDown")}
             >
               <ChevronDown className="h-4 w-4" />
             </button>
@@ -463,14 +465,14 @@ function ModuleSection({
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                placeholder="Module title"
+                placeholder={t("courseBuilder.moduleTitlePlaceholder")}
               />
               <input
                 type="text"
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
                 className="rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                placeholder="Description"
+                placeholder={t("courseBuilder.descriptionLabel")}
               />
               <button
                 type="button"
@@ -479,7 +481,7 @@ function ModuleSection({
                 className="inline-flex items-center gap-1 rounded bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 <Save className="h-3.5 w-3.5" />
-                Save
+                {t("common.save")}
               </button>
               <button
                 type="button"
@@ -491,7 +493,7 @@ function ModuleSection({
                 className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
               >
                 <X className="h-3.5 w-3.5" />
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ) : (
@@ -505,7 +507,7 @@ function ModuleSection({
                     title already starts with a "Module <n>:" prefix. */}
                 {/^\s*module\s+\d+\s*:/i.test(module.title)
                   ? module.title
-                  : `Module ${index + 1}: ${module.title}`}
+                  : t("courseBuilder.modulePrefix", { num: index + 1, title: module.title })}
               </h3>
               {module.description && (
                 <p className="text-xs text-gray-500">{module.description}</p>
@@ -516,7 +518,7 @@ function ModuleSection({
 
         {/* Lesson count badge */}
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-          {module.lessons.length} lesson{module.lessons.length !== 1 ? "s" : ""}
+          {t("courseBuilder.lessonCount", { count: module.lessons.length })}
         </span>
 
         {/* Module actions */}
@@ -526,7 +528,7 @@ function ModuleSection({
               type="button"
               onClick={() => setEditing(true)}
               className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              title="Edit module"
+              title={t("courseBuilder.editModule")}
             >
               <Edit className="h-4 w-4" />
             </button>
@@ -534,7 +536,7 @@ function ModuleSection({
               type="button"
               onClick={handleDeleteModule}
               className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-              title="Delete module"
+              title={t("courseBuilder.deleteModule")}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -547,7 +549,7 @@ function ModuleSection({
         <div className="p-4">
           {sortedLessons.length === 0 && !addingLesson && (
             <p className="py-4 text-center text-sm text-gray-400">
-              No lessons yet. Add the first lesson below.
+              {t("courseBuilder.noLessonsYet")}
             </p>
           )}
 
@@ -605,19 +607,19 @@ function ModuleSection({
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="capitalize">
-                          {lesson.contentType}
+                          {t(`courseBuilder.contentType.${lesson.contentType}`, { defaultValue: lesson.contentType })}
                         </span>
                         {lesson.duration > 0 && (
-                          <span>{lesson.duration} min</span>
+                          <span>{t("courseBuilder.minutesShort", { count: lesson.duration })}</span>
                         )}
                         {lesson.isMandatory && (
                           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-700">
-                            Mandatory
+                            {t("courseBuilder.mandatory")}
                           </span>
                         )}
                         {lesson.isPreview && (
                           <span className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">
-                            Preview
+                            {t("courseBuilder.preview")}
                           </span>
                         )}
                       </div>
@@ -627,7 +629,7 @@ function ModuleSection({
                       type="button"
                       onClick={() => setEditingLessonId(lesson.id)}
                       className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                      title="Edit lesson"
+                      title={t("courseBuilder.editLesson")}
                     >
                       <Edit className="h-3.5 w-3.5" />
                     </button>
@@ -635,7 +637,7 @@ function ModuleSection({
                       type="button"
                       onClick={() => handleDeleteLesson(lesson)}
                       className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                      title="Delete lesson"
+                      title={t("courseBuilder.deleteLesson")}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -662,7 +664,7 @@ function ModuleSection({
               className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:border-brand-400 hover:text-brand-600"
             >
               <Plus className="h-4 w-4" />
-              Add Lesson
+              {t("courseBuilder.addLesson")}
             </button>
           )}
         </div>
@@ -674,6 +676,7 @@ function ModuleSection({
 // --------------- Main Page ---------------
 
 export default function CourseBuilderPage() {
+  const { t } = useTranslation();
   const { id: courseId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
 
@@ -713,20 +716,20 @@ export default function CourseBuilderPage() {
         description: newModuleDesc,
       }),
     onSuccess: () => {
-      toast.success("Module created");
+      toast.success(t("courseBuilder.moduleCreated"));
       setNewModuleTitle("");
       setNewModuleDesc("");
       setShowAddModule(false);
       invalidate();
     },
-    onError: () => toast.error("Failed to create module"),
+    onError: () => toast.error(t("courseBuilder.createModuleFailed")),
   });
 
   const reorderModules = useMutation({
     mutationFn: (moduleIds: string[]) =>
       apiPost(`/courses/${courseId}/modules/reorder`, { ordered_ids: moduleIds }),
     onSuccess: () => invalidate(),
-    onError: () => toast.error("Failed to reorder modules"),
+    onError: () => toast.error(t("courseBuilder.reorderModulesFailed")),
   });
 
   const sortedModules = course?.modules
@@ -761,9 +764,9 @@ export default function CourseBuilderPage() {
     return (
       <div className="py-12 text-center">
         <p className="text-gray-500">
-          Failed to load course.{" "}
+          {t("courseBuilder.loadFailed")}{" "}
           <Link to="/courses" className="text-brand-600 hover:underline">
-            Back to courses
+            {t("courseBuilder.backToCourses")}
           </Link>
         </p>
       </div>
@@ -778,10 +781,10 @@ export default function CourseBuilderPage() {
           to={`/courses/${courseId}`}
           className="text-sm text-brand-600 hover:underline"
         >
-          &larr; Back to Course
+          &larr; {t("courseBuilder.backToCourse")}
         </Link>
         <h1 className="mt-1 text-2xl font-bold text-gray-900">
-          Course Builder
+          {t("courseBuilder.courseBuilderTitle")}
         </h1>
         <p className="text-sm text-gray-500">{course.title}</p>
       </div>
@@ -805,7 +808,7 @@ export default function CourseBuilderPage() {
         <div className="rounded-lg border-2 border-dashed border-gray-200 py-12 text-center">
           <BookOpen className="mx-auto h-10 w-10 text-gray-300" />
           <p className="mt-2 text-sm text-gray-500">
-            No modules yet. Start building your course content.
+            {t("courseBuilder.noModulesYet")}
           </p>
         </div>
       )}
@@ -814,31 +817,31 @@ export default function CourseBuilderPage() {
       {showAddModule ? (
         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-gray-900">
-            New Module
+            {t("courseBuilder.newModule")}
           </h3>
           <div className="space-y-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Title <span className="text-red-500">*</span>
+                {t("courseBuilder.titleLabel")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={newModuleTitle}
                 onChange={(e) => setNewModuleTitle(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                placeholder="Module title"
+                placeholder={t("courseBuilder.moduleTitlePlaceholder")}
               />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Description
+                {t("courseBuilder.descriptionLabel")}
               </label>
               <input
                 type="text"
                 value={newModuleDesc}
                 onChange={(e) => setNewModuleDesc(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                placeholder="Brief description (optional)"
+                placeholder={t("courseBuilder.moduleDescOptionalPlaceholder")}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -849,7 +852,7 @@ export default function CourseBuilderPage() {
                 className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
-                Create Module
+                {t("courseBuilder.createModule")}
               </button>
               <button
                 type="button"
@@ -861,7 +864,7 @@ export default function CourseBuilderPage() {
                 className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 <X className="h-4 w-4" />
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -873,7 +876,7 @@ export default function CourseBuilderPage() {
           className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
-          Add Module
+          {t("courseBuilder.addModule")}
         </button>
       )}
     </div>

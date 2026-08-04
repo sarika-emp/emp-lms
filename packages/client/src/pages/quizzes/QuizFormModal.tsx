@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { apiPost, apiPut } from "@/api/client";
@@ -18,6 +19,7 @@ interface QuizFormModalProps {
 }
 
 export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalProps) {
+  const { t } = useTranslation();
   const isEdit = Boolean(quiz);
   const queryClient = useQueryClient();
 
@@ -50,12 +52,14 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
     mutationFn: (body: Record<string, any>) =>
       isEdit ? apiPut<any>(`/quizzes/${quiz.id}`, body) : apiPost<any>("/quizzes", body),
     onSuccess: () => {
-      toast.success(isEdit ? "Quiz updated" : "Quiz created");
+      toast.success(isEdit ? t("quizzes.toast.quizUpdated") : t("quizzes.toast.quizCreated"));
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       onClose();
     },
     onError: (err: any) => {
-      toast.error(getErrorMessage(err, isEdit ? "Failed to update quiz" : "Failed to create quiz"));
+      toast.error(
+        getErrorMessage(err, isEdit ? t("quizzes.toast.updateQuizFailed") : t("quizzes.toast.createQuizFailed"))
+      );
     },
   });
 
@@ -63,28 +67,28 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
     setFormError(null);
 
     if (!isEdit && !courseId) {
-      setFormError("Please select a course.");
+      setFormError(t("quizzes.errors.selectCourse"));
       return;
     }
     if (title.trim().length < 2) {
-      setFormError("Title must be at least 2 characters.");
+      setFormError(t("quizzes.errors.titleMin"));
       return;
     }
     const score = Number(passingScore);
     if (!Number.isInteger(score) || score < 0 || score > 100) {
-      setFormError("Passing score must be a whole number between 0 and 100.");
+      setFormError(t("quizzes.errors.passingScoreRange"));
       return;
     }
     const attempts = Number(maxAttempts);
     if (!Number.isInteger(attempts) || attempts < 1) {
-      setFormError("Attempts allowed must be a whole number of at least 1.");
+      setFormError(t("quizzes.errors.attemptsMin"));
       return;
     }
     let limit: number | null = null;
     if (timeLimit.trim() !== "") {
       limit = Number(timeLimit);
       if (!Number.isInteger(limit) || limit < 1) {
-        setFormError("Time limit must be a whole number of minutes (or left blank).");
+        setFormError(t("quizzes.errors.timeLimitInvalid"));
         return;
       }
     }
@@ -118,13 +122,13 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            {isEdit ? "Edit Quiz" : "Create Quiz"}
+            {isEdit ? t("quizzes.editQuizTitle") : t("quizzes.createQuiz")}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -134,14 +138,14 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
           {!isEdit && (
             <div>
               <label className={labelClass}>
-                Course <span className="text-red-500">*</span>
+                {t("quizzes.form.course")} <span className="text-red-500">*</span>
               </label>
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
                 className={inputClass}
               >
-                {courses.length === 0 && <option value="">No courses available</option>}
+                {courses.length === 0 && <option value="">{t("quizzes.form.noCourses")}</option>}
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
@@ -153,39 +157,39 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
 
           <div>
             <label className={labelClass}>
-              Title <span className="text-red-500">*</span>
+              {t("quizzes.form.title")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Module 1 Knowledge Check"
+              placeholder={t("quizzes.form.titlePlaceholder")}
               className={inputClass}
             />
           </div>
 
           <div>
-            <label className={labelClass}>Description</label>
+            <label className={labelClass}>{t("quizzes.form.description")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              placeholder="What does this quiz cover?"
+              placeholder={t("quizzes.form.descriptionPlaceholder")}
               className={inputClass}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Type</label>
+              <label className={labelClass}>{t("quizzes.form.type")}</label>
               <select value={type} onChange={(e) => setType(e.target.value)} className={inputClass}>
-                <option value="graded">Graded</option>
-                <option value="practice">Practice</option>
-                <option value="survey">Survey</option>
+                <option value="graded">{t("quizzes.quizType.graded")}</option>
+                <option value="practice">{t("quizzes.quizType.practice")}</option>
+                <option value="survey">{t("quizzes.quizType.survey")}</option>
               </select>
             </div>
             <div>
-              <label className={labelClass}>Passing score (%)</label>
+              <label className={labelClass}>{t("quizzes.form.passingScore")}</label>
               <input
                 type="number"
                 min={0}
@@ -196,18 +200,18 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
               />
             </div>
             <div>
-              <label className={labelClass}>Time limit (minutes)</label>
+              <label className={labelClass}>{t("quizzes.form.timeLimit")}</label>
               <input
                 type="number"
                 min={1}
                 value={timeLimit}
                 onChange={(e) => setTimeLimit(e.target.value)}
-                placeholder="No limit"
+                placeholder={t("quizzes.noLimit")}
                 className={inputClass}
               />
             </div>
             <div>
-              <label className={labelClass}>Attempts allowed</label>
+              <label className={labelClass}>{t("quizzes.form.attempts")}</label>
               <input
                 type="number"
                 min={1}
@@ -226,7 +230,7 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
                 onChange={(e) => setShuffleQuestions(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
-              Shuffle question order for each attempt
+              {t("quizzes.form.shuffle")}
             </label>
             <label className="inline-flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -235,7 +239,7 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
                 onChange={(e) => setShowAnswers(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
-              Show correct answers after submission
+              {t("quizzes.form.showAnswers")}
             </label>
           </div>
 
@@ -251,7 +255,7 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
             disabled={mutation.isPending}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -260,7 +264,7 @@ export default function QuizFormModal({ courses, quiz, onClose }: QuizFormModalP
             className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isEdit ? "Save Changes" : "Create Quiz"}
+            {isEdit ? t("quizzes.saveChanges") : t("quizzes.createQuiz")}
           </button>
         </div>
       </div>

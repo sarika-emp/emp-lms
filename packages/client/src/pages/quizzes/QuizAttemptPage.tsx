@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Clock,
   ChevronLeft,
@@ -47,6 +48,7 @@ interface QuizData {
 }
 
 export default function QuizAttemptPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useQuiz(id!);
@@ -130,7 +132,7 @@ export default function QuizAttemptPage() {
     // Without an enrollment we can't submit — surface a clear message instead
     // of failing silently (part of BUG-01 was that no error was ever shown).
     if (!enrollmentId) {
-      toast.error("You must be enrolled in this course to submit the quiz.");
+      toast.error(t("quizAttempt.mustBeEnrolled"));
       return;
     }
     try {
@@ -144,12 +146,12 @@ export default function QuizAttemptPage() {
       });
       setResult(res.data);
       setSubmitted(true);
-      toast.success("Quiz submitted!");
+      toast.success(t("quizAttempt.submitSuccess"));
     } catch (err: any) {
       toast.error(
         err?.response?.data?.error?.message ||
           err?.message ||
-          "Failed to submit quiz. Please try again.",
+          t("quizAttempt.submitFailed"),
       );
     }
   }, [submitMutation, id, enrollmentId, answers]);
@@ -164,7 +166,7 @@ export default function QuizAttemptPage() {
 
   if (isError || !quiz) {
     return (
-      <div className="text-center py-20 text-red-600">Failed to load quiz. Please try again.</div>
+      <div className="text-center py-20 text-red-600">{t("quizAttempt.loadError")}</div>
     );
   }
 
@@ -182,29 +184,29 @@ export default function QuizAttemptPage() {
             <XCircle className="mx-auto h-16 w-16 text-red-500 mb-4" />
           )}
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {passed ? "Congratulations!" : "Not Quite"}
+            {passed ? t("quizAttempt.congratulations") : t("quizAttempt.notQuite")}
           </h2>
           <p className="text-gray-600 mb-6">
             {passed
-              ? "You passed the quiz!"
-              : "You did not reach the passing score. You can try again."}
+              ? t("quizAttempt.passedBody")
+              : t("quizAttempt.failedBody")}
           </p>
 
           <div className="flex items-center justify-center gap-8 mb-8">
             <div>
               <p className="text-3xl font-bold text-gray-900">{result.score ?? 0}%</p>
-              <p className="text-sm text-gray-500">Your Score</p>
+              <p className="text-sm text-gray-500">{t("quizAttempt.yourScore")}</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-gray-900">{passingScore}%</p>
-              <p className="text-sm text-gray-500">Passing Score</p>
+              <p className="text-sm text-gray-500">{t("quizAttempt.passingScore")}</p>
             </div>
           </div>
 
           {/* Correct answers review */}
           {showAnswers && result.review && (
             <div className="text-left border-t pt-6 mt-6 space-y-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Answer Review</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">{t("quizAttempt.answerReview")}</h3>
               {questions.map((q, idx) => {
                 const reviewItem = result.review.find((r: any) => r.question_id === q.id);
                 const isCorrect = reviewItem?.correct;
@@ -221,11 +223,11 @@ export default function QuizAttemptPage() {
                       </p>
                     </div>
                     <p className="text-sm text-gray-500 ml-7">
-                      Your answer: {String(answers[q.id] ?? "—")}
+                      {t("quizAttempt.yourAnswer", { answer: String(answers[q.id] ?? "—") })}
                     </p>
                     {!isCorrect && reviewItem?.correct_answer != null && (
                       <p className="text-sm text-green-700 ml-7">
-                        Correct answer: {String(reviewItem.correct_answer)}
+                        {t("quizAttempt.correctAnswer", { answer: String(reviewItem.correct_answer) })}
                       </p>
                     )}
                   </div>
@@ -238,7 +240,7 @@ export default function QuizAttemptPage() {
             onClick={() => navigate(-1)}
             className="mt-8 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go Back
+            {t("quizAttempt.goBack")}
           </button>
         </div>
       </div>
@@ -253,7 +255,7 @@ export default function QuizAttemptPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">{quiz.title}</h1>
           <p className="text-sm text-gray-500">
-            {answeredCount} of {questions.length} answered
+            {t("quizAttempt.answeredOfTotal", { answered: answeredCount, total: questions.length })}
           </p>
         </div>
         {timeLeft !== null && (
@@ -296,7 +298,7 @@ export default function QuizAttemptPage() {
       {currentQuestion && (
         <div className="bg-white border rounded-xl p-6 shadow-sm mb-6">
           <p className="text-sm text-gray-500 mb-2">
-            Question {currentIndex + 1} of {questions.length}
+            {t("quizAttempt.questionProgress", { current: currentIndex + 1, total: questions.length })}
           </p>
           <p className="text-lg font-medium text-gray-900 mb-6">{currentQuestion.text}</p>
 
@@ -372,7 +374,9 @@ export default function QuizAttemptPage() {
                       : "border-gray-200 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  {val.charAt(0).toUpperCase() + val.slice(1)}
+                  {t(`quizAttempt.boolean.${val}`, {
+                    defaultValue: val.charAt(0).toUpperCase() + val.slice(1),
+                  })}
                 </button>
               ))}
             </div>
@@ -384,7 +388,7 @@ export default function QuizAttemptPage() {
               type="text"
               value={answers[currentQuestion.id] ?? ""}
               onChange={(e) => setAnswer(currentQuestion.id, e.target.value)}
-              placeholder="Type your answer..."
+              placeholder={t("quizAttempt.typeAnswerPlaceholder")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           )}
@@ -394,7 +398,7 @@ export default function QuizAttemptPage() {
             <textarea
               value={answers[currentQuestion.id] ?? ""}
               onChange={(e) => setAnswer(currentQuestion.id, e.target.value)}
-              placeholder="Write your answer..."
+              placeholder={t("quizAttempt.writeAnswerPlaceholder")}
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             />
@@ -410,7 +414,7 @@ export default function QuizAttemptPage() {
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          {t("common.previous")}
         </button>
 
         {currentIndex < questions.length - 1 ? (
@@ -418,7 +422,7 @@ export default function QuizAttemptPage() {
             onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Next
+            {t("common.next")}
             <ChevronRight className="h-4 w-4" />
           </button>
         ) : (
@@ -428,7 +432,7 @@ export default function QuizAttemptPage() {
             className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
             <Send className="h-4 w-4" />
-            {submitMutation.isPending ? "Submitting..." : "Submit Quiz"}
+            {submitMutation.isPending ? t("quizAttempt.submitting") : t("quizAttempt.submitQuiz")}
           </button>
         )}
       </div>
@@ -438,13 +442,13 @@ export default function QuizAttemptPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl p-6 shadow-xl max-w-sm w-full mx-4">
             <AlertTriangle className="mx-auto h-10 w-10 text-yellow-500 mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Submit Quiz?</h3>
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">{t("quizAttempt.submitQuizConfirm")}</h3>
             <p className="text-sm text-gray-600 text-center mb-1">
-              You have answered {answeredCount} of {questions.length} questions.
+              {t("quizAttempt.answeredOfTotalQuestions", { answered: answeredCount, total: questions.length })}
             </p>
             {answeredCount < questions.length && (
               <p className="text-sm text-yellow-600 text-center mb-4">
-                {questions.length - answeredCount} question(s) are unanswered.
+                {t("quizAttempt.unanswered", { count: questions.length - answeredCount })}
               </p>
             )}
             <div className="flex gap-3 mt-5">
@@ -452,14 +456,14 @@ export default function QuizAttemptPage() {
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitMutation.isPending}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
               >
-                {submitMutation.isPending ? "Submitting..." : "Confirm"}
+                {submitMutation.isPending ? t("quizAttempt.submitting") : t("common.confirm")}
               </button>
             </div>
           </div>

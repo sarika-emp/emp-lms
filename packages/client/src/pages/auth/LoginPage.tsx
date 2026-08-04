@@ -6,6 +6,7 @@ import { GraduationCap, Eye, EyeOff, Loader2, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiPost } from "@/api/client";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface LoginResponse {
   user: {
@@ -81,7 +82,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="relative flex min-h-screen">
+      <div className="absolute right-4 top-4 z-20 rounded-lg border border-gray-200 bg-white shadow-sm sm:right-6 sm:top-6">
+        <LanguageSwitcher />
+      </div>
+
       {/* Left brand panel — hidden on mobile */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-brand-600 to-brand-800 p-12">
         <div className="max-w-md text-white">

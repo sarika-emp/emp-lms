@@ -22,6 +22,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { apiGet, apiPost } from "@/api/client";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { formatDateTime, formatTime } from "@/lib/utils";
 import {
   IltSession,
   normalizeSession,
@@ -304,8 +305,8 @@ export function ILTSessionDetailPage() {
           <div className="flex items-center gap-2 text-gray-600">
             <Clock className="h-4 w-4 shrink-0 text-gray-400" />
             <span>
-              {dayjs(session.startTime).format("ddd, MMM D, YYYY h:mm A")}
-              {session.endTime && ` – ${dayjs(session.endTime).format("h:mm A")}`}
+              {formatDateTime(session.startTime)}
+              {session.endTime && ` – ${formatTime(session.endTime!)}`}
             </span>
           </div>
           {session.location && (
@@ -439,7 +440,7 @@ export function ILTSessionDetailPage() {
                     </td>
                     <td className="whitespace-nowrap px-6 py-3 text-gray-500">
                       {row.checked_in_at
-                        ? dayjs(row.checked_in_at).format("MMM D, YYYY h:mm A")
+                        ? formatDateTime(row.checked_in_at)
                         : "—"}
                     </td>
                     {isAdmin && (

@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 import { useCourses, useDiscussions } from "@/api/hooks";
 import { apiPost, apiPatch, apiDelete } from "@/api/client";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { formatDateTime } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -152,13 +153,7 @@ export default function DiscussionsPage() {
   // ── Helpers ────────────────────────────────────────────────────────────
   function formatDate(dateStr: string) {
     if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateTime(dateStr);
   }
 
   function canDelete(authorId: number | string | undefined) {

@@ -48,12 +48,12 @@ export default function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden py-1">
+        <div className="lms-language-menu absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden py-1">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleChange(lang.code)}
-              className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors ${
+              className={`lms-language-option w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors ${
                 i18n.language === lang.code
                   ? "bg-brand-50 text-brand-700 font-medium"
                   : "text-gray-700"

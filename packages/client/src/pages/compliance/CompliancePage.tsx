@@ -40,6 +40,7 @@ import {
 } from "@/api/hooks";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
 import { apiGet } from "@/api/client";
+import { formatDate } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super Admin",
@@ -678,7 +679,7 @@ function AdminComplianceDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-800">{a.name}</p>
                     <p className="text-xs text-gray-500">
-                      {t("compliance.dueDate", { date: dayjs(a.dueDate ?? a.due_date).format("MMM D, YYYY") })}
+                      {t("compliance.dueDate", { date: formatDate(a.dueDate ?? a.due_date) })}
                       {" \u00b7 "}
                       {assignType === "all" ? t("compliance.allEmployees") : assignType}
                     </p>
@@ -777,7 +778,7 @@ function AdminComplianceDashboard() {
                       <div className="flex flex-col">
                         <span>
                           {record.due_date || record.dueDate
-                            ? dayjs(record.due_date ?? record.dueDate).format("MMM D, YYYY")
+                            ? formatDate(record.due_date ?? record.dueDate)
                             : "\u2014"}
                         </span>
                         {deadlineIndicator(record.due_date ?? record.dueDate, record.status, t)}
@@ -881,7 +882,7 @@ function PolicyAcceptanceCard({
           </p>
           {(item.dueDate ?? item.due_date) && (
             <p className="mt-1 text-xs text-gray-500">
-              {t("compliance.dueBy", { date: dayjs(item.dueDate ?? item.due_date).format("MMM D, YYYY") })}
+              {t("compliance.dueBy", { date: formatDate(item.dueDate ?? item.due_date) })}
               {" \u00b7 "}
               {deadlineIndicator(item.dueDate ?? item.due_date, item.status, t)}
             </p>
@@ -1042,7 +1043,7 @@ function EmployeeComplianceView() {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                       <div className="flex flex-col">
-                        <span>{dayjs(item.dueDate ?? item.due_date).format("MMM D, YYYY")}</span>
+                        <span>{formatDate(item.dueDate ?? item.due_date)}</span>
                         {deadlineIndicator(item.dueDate ?? item.due_date, item.status, t)}
                       </div>
                     </td>

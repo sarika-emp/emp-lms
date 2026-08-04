@@ -6,4 +6,40 @@
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
   }
+
+  [dir="rtl"] body {
+    text-align: right;
+  }
+}
+
+@layer utilities {
+  [dir="rtl"] .lms-sidebar {
+    left: auto;
+    right: 0;
+    border-right-width: 0;
+    border-left-width: 1px;
+  }
+
+  [dir="rtl"] .lms-sidebar.lms-sidebar-closed {
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] .lms-sidebar .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  [dir="rtl"] .lms-language-menu {
+    left: 0;
+    right: auto;
+  }
+
+  [dir="rtl"] .lms-language-option,
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-right {
+    text-align: left;
+  }
 }

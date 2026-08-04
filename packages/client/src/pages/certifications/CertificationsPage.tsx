@@ -21,6 +21,7 @@ import {
 } from "@/api/hooks";
 import CertificateDownload from "@/components/lms/CertificateDownload";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { formatDate } from "@/lib/utils";
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
@@ -174,13 +175,13 @@ function VerifyCertificateDialog({ onClose }: { onClose: () => void }) {
                 {result.issued_at && (
                   <div className="flex justify-between">
                     <dt className="text-gray-500">{t("certifications.issued")}</dt>
-                    <dd className="text-gray-800">{dayjs(result.issued_at).format("MMM D, YYYY")}</dd>
+                    <dd className="text-gray-800">{formatDate(result.issued_at)}</dd>
                   </div>
                 )}
                 {result.expires_at && (
                   <div className="flex justify-between">
                     <dt className="text-gray-500">{t("certifications.expires")}</dt>
-                    <dd className="text-gray-800">{dayjs(result.expires_at).format("MMM D, YYYY")}</dd>
+                    <dd className="text-gray-800">{formatDate(result.expires_at)}</dd>
                   </div>
                 )}
               </dl>
@@ -225,7 +226,7 @@ function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean
         </div>
         <div className="flex justify-between">
           <dt>{t("certifications.issued")}</dt>
-          <dd>{dayjs(cert.issuedDate).format("MMM D, YYYY")}</dd>
+          <dd>{formatDate(cert.issuedDate)}</dd>
         </div>
         {cert.expiryDate && (
           <div className="flex justify-between">
@@ -239,7 +240,7 @@ function CertCard({ cert, showOwner, isAdmin }: { cert: any; showOwner?: boolean
                     : ""
               }
             >
-              {dayjs(cert.expiryDate).format("MMM D, YYYY")}
+              {formatDate(cert.expiryDate)}
             </dd>
           </div>
         )}

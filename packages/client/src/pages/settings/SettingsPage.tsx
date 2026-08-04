@@ -51,10 +51,14 @@ const DIFFICULTY_OPTIONS = [
 
 const LANGUAGE_OPTIONS = [
   { value: "en", label: "English" },
+  { value: "hi", label: "हिन्दी" },
   { value: "es", label: "Spanish" },
   { value: "fr", label: "French" },
   { value: "de", label: "German" },
+  { value: "ar", label: "العربية" },
   { value: "pt", label: "Portuguese" },
+  { value: "ja", label: "日本語" },
+  { value: "zh", label: "中文" },
 ];
 
 function Toggle({
@@ -125,7 +129,7 @@ function SectionCard({
 }
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
   const [hasReviewedAll, setHasReviewedAll] = useState(false);
@@ -134,6 +138,11 @@ export default function SettingsPage() {
   const categories: any[] = catData?.data ?? [];
   const user = useAuthStore((s) => s.user);
   const isAdmin = isAdminRole(user?.role);
+
+  useEffect(() => {
+    const language = i18n.resolvedLanguage || i18n.language || "en";
+    setPrefs((prev) => (prev.language === language ? prev : { ...prev, language }));
+  }, [i18n.language, i18n.resolvedLanguage]);
 
   // Only enable Save once the user has scrolled past the last section.
   // The layout's <main> has overflow-y-auto, so we need to find that scroll
@@ -178,6 +187,7 @@ export default function SettingsPage() {
 
   const update = <K extends keyof Preferences>(key: K, value: Preferences[K]) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));
+    if (key === "language") void i18n.changeLanguage(String(value));
   };
 
   const toggleCategory = (catId: string) => {

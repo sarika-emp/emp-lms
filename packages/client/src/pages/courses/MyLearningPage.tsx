@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BookOpen, Clock, Calendar, Play, CheckCircle, Library } from "lucide-react";
 import { useMyEnrollments } from "@/api/hooks";
+import { formatDate } from "@/lib/utils";
 
 type Tab = "in-progress" | "completed" | "all";
 
@@ -139,7 +140,7 @@ export default function MyLearningPage() {
                   {lastAccessed && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4" />
-                      {t("myLearning.lastAccessed", { date: new Date(lastAccessed).toLocaleDateString() })}
+                      {t("myLearning.lastAccessed", { date: formatDate(lastAccessed) })}
                     </span>
                   )}
                 </div>

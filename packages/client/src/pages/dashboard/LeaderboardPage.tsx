@@ -2,6 +2,7 @@ import { Trophy, Flame, Loader2, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLeaderboard, useMyPoints } from "@/api/hooks";
 import { useAuthStore } from "@/lib/auth-store";
+import { formatNumber } from "@/lib/utils";
 
 function initials(name: string) {
   return name
@@ -51,7 +52,7 @@ export default function LeaderboardPage() {
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-brand-600" />
             <span className="text-sm font-medium text-brand-900">
-              {t("leaderboard.yourPoints")} <span className="text-lg font-bold">{myPoints.totalPoints?.toLocaleString() ?? 0}</span>
+              {t("leaderboard.yourPoints")} <span className="text-lg font-bold">{formatNumber(myPoints.totalPoints ?? 0)}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -102,7 +103,7 @@ export default function LeaderboardPage() {
                 <p className={`mt-1 text-sm font-semibold ${isMe ? "text-brand-600" : "text-gray-900"}`}>
                   {entry.name}
                 </p>
-                <p className="text-xs text-gray-500">{entry.points?.toLocaleString()} {t("leaderboard.pts")}</p>
+                <p className="text-xs text-gray-500">{formatNumber(entry.points ?? 0)} {t("leaderboard.pts")}</p>
               </div>
             );
           })}
@@ -184,7 +185,7 @@ export default function LeaderboardPage() {
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">
-                      {entry.points?.toLocaleString()}
+                      {formatNumber(entry.points ?? 0)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                       {entry.coursesCompleted ?? 0}

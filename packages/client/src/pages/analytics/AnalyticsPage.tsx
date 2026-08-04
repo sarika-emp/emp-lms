@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { useOverviewAnalytics } from "@/api/hooks";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { formatNumber } from "@/lib/utils";
 
 const PIE_COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"];
 
@@ -72,7 +73,7 @@ export default function AnalyticsPage() {
     {
       icon: GraduationCap,
       label: t("analytics.totalEnrollments"),
-      value: analytics?.totalEnrollments?.toLocaleString() ?? 0,
+      value: formatNumber(analytics?.totalEnrollments ?? 0),
       color: "bg-indigo-500",
     },
     {
@@ -90,7 +91,7 @@ export default function AnalyticsPage() {
     {
       icon: Users,
       label: t("analytics.activeLearners"),
-      value: analytics?.activeLearners?.toLocaleString() ?? 0,
+      value: formatNumber(analytics?.activeLearners ?? 0),
       color: "bg-cyan-500",
     },
   ];

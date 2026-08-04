@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { apiGet, apiPost } from "@/api/client";
 import { useAuthStore, isAdminRole } from "@/lib/auth-store";
+import { formatDateTime, formatTime } from "@/lib/utils";
 import {
   IltSession,
   normalizeSession,
@@ -199,8 +200,8 @@ export default function ILTPage() {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <span>
-                      {dayjs(session.startTime).format("MMM D, YYYY h:mm A")}
-                      {session.endTime && ` - ${dayjs(session.endTime).format("h:mm A")}`}
+                      {formatDateTime(session.startTime)}
+                      {session.endTime && ` - ${formatTime(session.endTime!)}`}
                     </span>
                   </div>
                   {(session.location || session.meetingUrl) && (

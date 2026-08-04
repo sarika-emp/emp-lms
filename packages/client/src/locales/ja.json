@@ -76,6 +76,7 @@
     "openSidebar": "サイドバーを開く",
     "closeSidebar": "サイドバーを閉じる",
     "defaultRole": "学習者",
+    "userFallback": "ユーザー",
     "changeLanguage": "言語を変更"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "動画が終了すると完了になります。またはボタンをタップしてください。",
     "autoCompleteArticle": "記事の最後に到達すると完了になります。",
     "autoCompleteManual": "完了したらボタンをタップしてください。",
+    "noTextContent": "このレッスンにはテキストコンテンツがありません。",
     "lessonDocument": "レッスン資料",
     "lessonVideo": "レッスン動画",
     "toggleChapters": "チャプターの切り替え",

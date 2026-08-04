@@ -76,6 +76,7 @@
     "openSidebar": "Abrir barra lateral",
     "closeSidebar": "Cerrar barra lateral",
     "defaultRole": "Alumno",
+    "userFallback": "Usuario",
     "changeLanguage": "Cambiar idioma"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "Se marca como completado cuando el video termina, o toca el botón.",
     "autoCompleteArticle": "Se marca como completado cuando llegas al final del artículo.",
     "autoCompleteManual": "Toca el botón cuando termines.",
+    "noTextContent": "Esta lección no tiene contenido de texto.",
     "lessonDocument": "Documento de la lección",
     "lessonVideo": "Video de la lección",
     "toggleChapters": "Alternar capítulos",

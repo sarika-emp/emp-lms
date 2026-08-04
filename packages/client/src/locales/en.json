@@ -76,6 +76,7 @@
     "openSidebar": "Open sidebar",
     "closeSidebar": "Close sidebar",
     "defaultRole": "Learner",
+    "userFallback": "User",
     "changeLanguage": "Change language"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "Marks complete when the video finishes, or tap the button.",
     "autoCompleteArticle": "Marks complete when you reach the end of the article.",
     "autoCompleteManual": "Tap the button when you're done.",
+    "noTextContent": "This lesson has no text content.",
     "lessonDocument": "Lesson document",
     "lessonVideo": "Lesson video",
     "toggleChapters": "Toggle chapters",

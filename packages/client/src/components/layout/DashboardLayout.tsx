@@ -126,7 +126,7 @@ export default function DashboardLayout() {
 
   const firstName = user?.firstName ?? "";
   const lastName = user?.lastName ?? "";
-  const displayName = `${firstName} ${lastName}`.trim() || "User";
+  const displayName = `${firstName} ${lastName}`.trim() || t("nav.userFallback");
   // Prefer a translated role label; fall back to a prettified version of the
   // raw role for any role not in the `roles` namespace.
   const prettifyRole = (r: string) =>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   text: string;
@@ -11,6 +12,7 @@ interface Props {
  * fits within the viewport (no scroll needed to read it).
  */
 export function ArticleReader({ text, onScrolledToEnd }: Props) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const firedRef = useRef(false);
 
@@ -48,7 +50,7 @@ export function ArticleReader({ text, onScrolledToEnd }: Props) {
   if (!text) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-gray-400">
-        This lesson has no text content.
+        {t("player.noTextContent")}
       </div>
     );
   }

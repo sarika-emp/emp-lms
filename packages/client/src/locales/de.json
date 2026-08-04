@@ -76,6 +76,7 @@
     "openSidebar": "Seitenleiste öffnen",
     "closeSidebar": "Seitenleiste schließen",
     "defaultRole": "Lernende(r)",
+    "userFallback": "Benutzer",
     "changeLanguage": "Sprache ändern"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "Wird als abgeschlossen markiert, wenn das Video endet, oder tippen Sie auf die Schaltfläche.",
     "autoCompleteArticle": "Wird als abgeschlossen markiert, wenn Sie das Ende des Artikels erreichen.",
     "autoCompleteManual": "Tippen Sie auf die Schaltfläche, wenn Sie fertig sind.",
+    "noTextContent": "Diese Lektion enthält keinen Textinhalt.",
     "lessonDocument": "Lektionsdokument",
     "lessonVideo": "Lektionsvideo",
     "toggleChapters": "Kapitel umschalten",

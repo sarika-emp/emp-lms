@@ -76,6 +76,7 @@
     "openSidebar": "فتح الشريط الجانبي",
     "closeSidebar": "إغلاق الشريط الجانبي",
     "defaultRole": "متعلم",
+    "userFallback": "المستخدم",
     "changeLanguage": "تغيير اللغة"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "يُوضع علامة مكتمل عند انتهاء الفيديو، أو اضغط على الزر.",
     "autoCompleteArticle": "يُوضع علامة مكتمل عند وصولك إلى نهاية المقال.",
     "autoCompleteManual": "اضغط على الزر عند الانتهاء.",
+    "noTextContent": "لا يحتوي هذا الدرس على محتوى نصي.",
     "lessonDocument": "مستند الدرس",
     "lessonVideo": "فيديو الدرس",
     "toggleChapters": "تبديل الفصول",

@@ -76,6 +76,7 @@
     "openSidebar": "साइडबार खोलें",
     "closeSidebar": "साइडबार बंद करें",
     "defaultRole": "शिक्षार्थी",
+    "userFallback": "उपयोगकर्ता",
     "changeLanguage": "भाषा बदलें"
   },
   "roles": {
@@ -1154,6 +1155,7 @@
     "autoCompleteVideo": "वीडियो समाप्त होने पर पूर्ण चिह्नित होता है, या बटन टैप करें।",
     "autoCompleteArticle": "लेख के अंत तक पहुँचने पर पूर्ण चिह्नित होता है।",
     "autoCompleteManual": "काम पूरा होने पर बटन टैप करें।",
+    "noTextContent": "इस पाठ में कोई पाठ्य सामग्री नहीं है।",
     "lessonDocument": "पाठ दस्तावेज़",
     "lessonVideo": "पाठ वीडियो",
     "toggleChapters": "अध्याय टॉगल करें",
